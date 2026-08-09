@@ -1,0 +1,692 @@
+/* ==========================================================================
+   STUDENT APPLICATION DETAILS PAGE — STYLES
+   ========================================================================== */
+
+.sad-page {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 0 40px 0;
+  font-family: "Poppins", system-ui, -apple-system, sans-serif;
+  color: #0F172A;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sad-nav-bar {
+  margin-bottom: 16px;
+}
+
+.sad-btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: #F47C20;
+  font-weight: 700;
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 6px 0;
+  transition: opacity 0.2s ease;
+}
+
+.sad-btn-back:hover {
+  text-decoration: underline;
+}
+
+/* Base Card */
+.sad-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
+  padding: 22px 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 10px -2px rgba(15, 23, 42, 0.04);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.sad-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #F1F5F9;
+  gap: 12px;
+}
+
+.sad-card-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0F172A;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+/* Hero Header Card */
+.sad-hero-card {
+  background: linear-gradient(135deg, #FFFFFF 0%, #FFFBF8 100%);
+  border-color: rgba(244, 124, 32, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.sad-hero-content {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex: 1;
+  min-width: 0;
+}
+
+.sad-logo-box {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.sad-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 6px;
+}
+
+.sad-logo-text {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #F47C20;
+}
+
+.sad-hero-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.sad-hero-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.sad-hero-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #0F172A;
+  margin: 0 0 4px 0;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.sad-hero-company {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #64748B;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  flex-wrap: wrap;
+}
+
+.sad-hero-loc {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #475569;
+}
+
+/* Badges */
+.sad-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.sad-badge-success { background: #ECFDF5; color: #047857; border: 1px solid #A7F3D0; }
+.sad-badge-green   { background: #F0FDF4; color: #15803D; border: 1px solid #BBF7D0; }
+.sad-badge-purple  { background: #F3E8FF; color: #7E22CE; border: 1px solid #DDD6FE; }
+.sad-badge-warning { background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A; }
+.sad-badge-danger  { background: #FEF2F2; color: #B91C1C; border: 1px solid #FECACA; }
+.sad-badge-info    { background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; }
+.sad-badge-neutral { background: #F1F5F9; color: #475569; border: 1px solid #E2E8F0; }
+
+/* Timeline */
+.sad-app-id-tag {
+  font-family: monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #F47C20;
+  background: #FFF4EB;
+  border: 1px solid rgba(244, 124, 32, 0.3);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.sad-timeline {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-top: 14px;
+  position: relative;
+}
+
+.sad-timeline-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+}
+
+.sad-step-marker {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  border: 2px solid #CBD5E1;
+  background: #FFFFFF;
+  color: #94A3B8;
+  z-index: 2;
+}
+
+.sad-step-completed .sad-step-marker {
+  background: #10B981;
+  border-color: #10B981;
+  color: #FFFFFF;
+}
+
+.sad-step-current .sad-step-marker {
+  background: #F47C20;
+  border-color: #F47C20;
+  color: #FFFFFF;
+  box-shadow: 0 0 0 4px rgba(244, 124, 32, 0.2);
+}
+
+.sad-step-rejected .sad-step-marker {
+  background: #EF4444;
+  border-color: #EF4444;
+  color: #FFFFFF;
+}
+
+.sad-step-label {
+  font-size: 0.78125rem;
+  font-weight: 800;
+  color: #0F172A;
+  line-height: 1.2;
+}
+
+.sad-step-desc {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: #64748B;
+  margin-top: 2px;
+}
+
+/* Grid Layout */
+.sad-grid-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.sad-col-main, .sad-col-side {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+/* Metrics Grid */
+.sad-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.sad-metric-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.sad-metric-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #FFF4EB;
+  color: #F47C20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sad-metric-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: #94A3B8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sad-metric-val {
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: #0F172A;
+  margin-top: 2px;
+}
+
+/* Eligibility List */
+.sad-eligibility-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sad-eligibility-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  gap: 12px;
+}
+
+.sad-eligibility-key {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.sad-eligibility-val {
+  font-size: 0.8125rem;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+/* Description Prose */
+.sad-description-box {
+  padding: 4px 0;
+}
+
+.sad-prose {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #334155;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.sad-empty-desc {
+  font-size: 0.8125rem;
+  color: #94A3B8;
+  font-style: italic;
+}
+
+/* Skills Chips */
+.sad-skills-flex {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sad-skill-chip {
+  background: #FFF4EB;
+  color: #F47C20;
+  border: 1px solid rgba(244, 124, 32, 0.3);
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 0.78125rem;
+  font-weight: 700;
+}
+
+/* Screening Answers */
+.sad-screening-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sad-screening-item {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.sad-screening-q {
+  font-size: 0.84375rem;
+  font-weight: 800;
+  color: #0F172A;
+  margin-bottom: 6px;
+}
+
+.sad-q-num {
+  color: #F47C20;
+}
+
+.sad-screening-a {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #1E293B;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.sad-a-tag {
+  color: #64748B;
+  font-weight: 700;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 2px;
+}
+
+/* Company Information */
+.sad-company-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sad-company-meta-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  font-size: 0.8125rem;
+  color: #475569;
+  background: #F8FAFC;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #E2E8F0;
+}
+
+.sad-link {
+  color: #F47C20;
+  font-weight: 700;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sad-company-desc {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: #475569;
+  margin: 0;
+}
+
+/* Right Column Side Summary */
+.sad-summary-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sad-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8125rem;
+  border-bottom: 1px solid #F1F5F9;
+  padding-bottom: 8px;
+}
+
+.sad-summary-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.sad-summary-label {
+  color: #64748B;
+  font-weight: 600;
+}
+
+.sad-summary-val {
+  font-weight: 800;
+  color: #0F172A;
+}
+
+/* Resume Box */
+.sad-resume-info-box {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sad-resume-file-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #FFF4EB;
+  border: 1px solid rgba(244, 124, 32, 0.3);
+  padding: 12px;
+  border-radius: 12px;
+}
+
+.sad-resume-file-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sad-resume-name {
+  font-size: 0.8125rem;
+  font-weight: 800;
+  color: #0F172A;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sad-resume-status {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #F47C20;
+}
+
+.sad-resume-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Buttons */
+.sad-btn-orange {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  background: #F47C20;
+  color: #FFFFFF;
+  border: 1px solid #F47C20;
+  cursor: pointer;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.sad-btn-orange-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  background: #FFFFFF;
+  color: #F47C20;
+  border: 1.5px solid #F47C20;
+  cursor: pointer;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.sad-btn-full {
+  margin-top: 4px;
+}
+
+/* Note block */
+.sad-note-block {
+  margin-bottom: 10px;
+}
+
+.sad-note-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748B;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.sad-note-text {
+  font-size: 0.8125rem;
+  color: #1E293B;
+  background: #F8FAFC;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #E2E8F0;
+}
+
+/* Error Card */
+.sad-error-card {
+  max-width: 500px;
+  margin: 60px auto;
+  text-align: center;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 20px;
+  padding: 40px 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.sad-error-icon-box {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #FFF4EB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 18px auto;
+}
+
+.sad-error-title {
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: #0F172A;
+  margin: 0 0 8px 0;
+}
+
+.sad-error-desc {
+  font-size: 0.875rem;
+  color: #64748B;
+  margin: 0 0 24px 0;
+  line-height: 1.5;
+}
+
+/* RESPONSIVE BREAKPOINTS */
+
+@media (max-width: 1023px) {
+  .sad-grid-layout {
+    grid-template-columns: 1fr;
+  }
+  .sad-timeline {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+@media (max-width: 767px) {
+  .sad-hero-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .sad-hero-actions {
+    width: 100%;
+  }
+  .sad-btn-orange, .sad-btn-orange-outline {
+    width: 100%;
+  }
+  .sad-timeline {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .sad-timeline-step {
+    flex-direction: row;
+    align-items: flex-start;
+    text-align: left;
+    gap: 12px;
+  }
+  .sad-step-marker {
+    margin-bottom: 0;
+  }
+  .sad-metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .sad-eligibility-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sad-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+  .sad-hero-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* NO HOVER EFFECTS PER USER REQUIREMENT */
+.sad-btn-orange:hover,
+.sad-btn-orange-outline:hover,
+.sad-card:hover {
+  transform: none !important;
+}

@@ -1,0 +1,104 @@
+.custom-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: #ffffff !important;
+  color: #F47C20 !important;
+  border: 1px solid #F47C20 !important;
+  outline: none;
+  font-family: inherit;
+}
+
+.custom-btn:hover,
+.custom-btn:active,
+.custom-btn:focus,
+.custom-btn.selected,
+.custom-btn[aria-selected="true"] {
+  background-color: #ffffff !important;
+  color: #F47C20 !important;
+  border-color: #F47C20 !important;
+}
+
+.custom-btn:focus-visible {
+  outline: 2px solid #F47C20 !important;
+  outline-offset: 2px !important;
+}
+
+.custom-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #ffffff !important;
+  color: #f97316 !important;
+  border-color: #fdba74 !important;
+  box-shadow: none !important;
+}
+
+/* Sizes */
+.btn-sm {
+  padding: 6px 14px;
+  font-size: 12px;
+}
+
+.btn-md {
+  padding: 10px 20px;
+  font-size: 14px;
+}
+
+.btn-lg {
+  padding: 12px 28px;
+  font-size: 16px;
+}
+
+.btn-full-width {
+  width: 100%;
+}
+
+/* Variants - White Background, Orange Text & Border */
+.btn-primary,
+.btn-secondary,
+.btn-outline,
+.btn-ghost {
+  background-color: #ffffff !important;
+  border: 1px solid #F47C20 !important;
+  color: #F47C20 !important;
+  box-shadow: 0 1px 2px rgba(244, 124, 32, 0.05);
+}
+
+.btn-primary:hover,
+.btn-secondary:hover,
+.btn-outline:hover,
+.btn-ghost:hover,
+.btn-primary:active,
+.btn-secondary:active,
+.btn-outline:active,
+.btn-ghost:active,
+.btn-primary:focus,
+.btn-secondary:focus,
+.btn-outline:focus,
+.btn-ghost:focus {
+  background-color: #ffffff !important;
+  color: #F47C20 !important;
+  border-color: #F47C20 !important;
+}
+
+.btn-danger {
+  background-color: #ffffff !important;
+  border: 1px solid #ef4444 !important;
+  color: #ef4444 !important;
+}
+
+.btn-success {
+  background-color: #ffffff !important;
+  border: 1px solid #10b981 !important;
+  color: #10b981 !important;
+}
+
+.button-icon-svg {
+  flex-shrink: 0;
+  color: inherit !important;
+}

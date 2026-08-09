@@ -1,0 +1,16 @@
+.admin-job-item-padded {
+  padding: 0.75rem 1.5rem;
+}
+
+.admin-job-title-sm {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.admin-job-company-sm {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin: 0;
+}

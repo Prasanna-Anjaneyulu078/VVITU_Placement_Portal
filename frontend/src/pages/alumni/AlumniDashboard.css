@@ -1,0 +1,76 @@
+.alumni-dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.alumni-dashboard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+}
+
+.alumni-main-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.alumni-side-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.alumni-section-card {
+  margin-bottom: 1.5rem;
+}
+
+.post-job-btn {
+  background-color: var(--primary);
+  color: white;
+  font-weight: 600;
+  padding: 12px 24px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px rgba(240, 128, 108, 0.2);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  .alumni-dashboard-header {
+    margin-bottom: 24px;
+  }
+
+  .post-job-btn {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+  }
+  
+  .alumni-dashboard-grid {
+    grid-template-columns: 1fr; /* Stack columns on tablet */
+    gap: 24px;
+  }
+
+  .alumni-section-card {
+    margin-bottom: 24px;
+  }
+}
+
+@media (max-width: 1280px) {
+  .alumni-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .alumni-dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}

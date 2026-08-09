@@ -1,0 +1,79 @@
+.alumni-job-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.alumni-job-item {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  gap: 1rem;
+  transition: background-color 0.2s;
+}
+
+.alumni-job-item:last-child {
+  border-bottom: none;
+}
+
+.alumni-job-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background-color: rgba(37, 99, 235, 0.1);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.alumni-job-details {
+  flex: 1;
+}
+
+.alumni-job-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.25rem;
+}
+
+.alumni-job-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.alumni-job-company {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0 0 0.5rem 0;
+}
+
+.alumni-job-meta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
+}
+
+.alumni-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.alumni-empty-state {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.alumni-view-all {
+  font-size: 0.875rem;
+  color: var(--primary);
+  font-weight: 600;
+  cursor: pointer;
+}

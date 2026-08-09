@@ -1,0 +1,11 @@
+@import '../student/StudentProfile.css';
+
+.alumni-profile-avatar {
+  background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAZ9DLi4BgXceGmSKjSA_39HBkXE62LglH-2wee_P1xtdANabeZ1QTaHptOfmQjlk8h6S_sclHLTMnBQ5mxk5gTvLsLTxjfjPE85s3ffoTGOeCA3epPNT43-igGzHAV9ht4HjOCO4AkKCNwEZ79LWSz01m5QRPgyPuUKfhK5Y8u1LTKPIMY3QQB0zvVcEYKS4t1uc9HJC03hFdW2NjJGMhPCPQ0FYr6h1B1bfQ2ie-Hupx1RTQnTUhCRKQp8NP5uaxtrgX9arnYy2s');
+}
+
+.work-item-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}

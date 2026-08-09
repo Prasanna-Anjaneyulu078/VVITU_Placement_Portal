@@ -1,0 +1,148 @@
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--bg-white);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.data-table th {
+  background-color: var(--bg-light);
+  padding: 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.data-table td {
+  padding: 16px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 14px;
+  color: var(--text-main);
+  vertical-align: middle;
+}
+
+/* Responsive Table */
+@media (max-width: 768px) {
+  .data-table th, .data-table td {
+    padding: 12px;
+  }
+  
+  .action-btn-group {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .btn-sm {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+}
+
+.data-table tr:last-child td {
+  border-bottom: none;
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.status-badge.pending {
+  background-color: #fff7ed;
+  color: #c2410c;
+}
+
+.status-badge.verified, .status-badge.approved, .status-badge.active {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.status-badge.rejected, .status-badge.closed {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+/* Button styles removed to avoid conflict with Button.css */
+.action-btn-group {
+  display: flex;
+  gap: 8px;
+}
+
+/* Section Header & Search/Filter Styles */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-light);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 0 16px;
+  flex: 1;
+  min-width: 200px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-bar:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.search-input {
+  border: none;
+  background: transparent;
+  padding: 12px 8px;
+  width: 100%;
+  font-size: 14px;
+  color: var(--text-main);
+  outline: none;
+}
+
+.filter-group {
+  display: flex;
+  gap: 12px;
+}
+
+.filter-select {
+  padding: 10px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background-color: var(--bg-white);
+  font-size: 14px;
+  color: var(--text-main);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.filter-select:focus {
+  border-color: var(--primary);
+}
+
+@media (max-width: 640px) {
+  .section-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .search-bar {
+    max-width: none !important;
+  }
+}

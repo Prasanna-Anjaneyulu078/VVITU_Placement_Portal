@@ -1,0 +1,65 @@
+.admin-verifications-section-card {
+  background-color: var(--bg-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.admin-verifications-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  gap: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+@media (max-width: 768px) {
+  .admin-verifications-section-header {
+    flex-direction: column;
+    align-items: stretch;
+    min-width: unset;
+  }
+  
+  .admin-verifications-search-bar {
+    max-width: 100%;
+  }
+}
+
+.admin-verifications-search-bar {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-light);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 0 16px;
+  transition: border-color 0.2s;
+}
+
+.admin-verifications-search-bar:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(240, 128, 108, 0.15);
+}
+
+.admin-verifications-empty-state {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.admin-verifications-table-wrapper {
+  min-width: 800px;
+}
+
+.admin-verifications-name-cell {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.admin-verifications-icon {
+  margin-right: 4px;
+  vertical-align: middle;
+}

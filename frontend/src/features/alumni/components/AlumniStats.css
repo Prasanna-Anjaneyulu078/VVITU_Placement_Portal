@@ -1,0 +1,52 @@
+.alumni-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.alumni-stats-grid .stats-card {
+  background-color: var(--bg-white);
+  padding: 24px;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+  height: 100%;
+}
+
+.alumni-stat-box {
+  background-color: var(--bg-white);
+  padding: 24px;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  .alumni-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+
+  .alumni-stats-grid .stats-card {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 1280px) {
+  .alumni-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .alumni-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}

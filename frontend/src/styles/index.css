@@ -1,0 +1,172 @@
+@import "tailwindcss";
+
+:root {
+  /* Brand Colors */
+  --color-primary: #F47C20;
+  --color-secondary: #0A4D8C;
+  --color-white: #FFFFFF;
+
+  /* Typography Colors */
+  --text-dark: #1e293b;
+  --text-muted: #64748b;
+  --border-light: #e2e8f0;
+
+  /* Shadows & Radius */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  /* Mapped Variables for Compatibility */
+  --primary: var(--color-primary);
+  --primary-hover: #d96914; /* Darker shade of VVIT Orange */
+  --secondary: var(--color-secondary);
+  --bg-light: #f8fafc;
+  --bg-white: var(--color-white);
+  --text-main: var(--text-dark);
+  --text-secondary: var(--text-muted);
+  --border-color: var(--border-light);
+  
+  /* Status Colors (kept from previous) */
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+
+  /* Layout Variables */
+  --sidebar-width: 260px;
+  --header-height: 64px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Poppins', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-light);
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: Arial, sans-serif;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-top: 0;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Utilities */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+.gap-2 { gap: 0.5rem; }
+.gap-4 { gap: 1rem; }
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+.text-sm { font-size: 0.875rem; }
+.font-bold { font-weight: 700; }
+.text-primary { color: var(--primary); }
+.bg-primary { background-color: var(--primary); }
+.bg-primary-hover { background-color: var(--primary-hover); }
+.border-primary { border-color: var(--primary); }
+
+/* Global Action Button Design System Standard */
+/* Background: White | Text: Orange | Border: Orange across Normal, Hover, Active, Focus, Selected */
+
+.btn,
+.custom-btn,
+.btn-primary,
+.btn-secondary,
+.btn-outline,
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  line-height: 1.4;
+  white-space: nowrap;
+  background-color: #ffffff !important;
+  color: #F47C20 !important;
+  border: 1px solid #F47C20 !important;
+  box-shadow: 0 1px 2px rgba(244, 124, 32, 0.05);
+  outline: none;
+}
+
+/* Hover, Active, Focus, Selected States — Orange text is NEVER changed */
+.btn:hover, .btn:active, .btn:focus, .btn.selected, .btn[aria-selected="true"],
+.custom-btn:hover, .custom-btn:active, .custom-btn:focus, .custom-btn.selected, .custom-btn[aria-selected="true"],
+.btn-primary:hover, .btn-primary:active, .btn-primary:focus, .btn-primary.selected,
+.btn-secondary:hover, .btn-secondary:active, .btn-secondary:focus, .btn-secondary.selected,
+.btn-outline:hover, .btn-outline:active, .btn-outline:focus, .btn-outline.selected,
+.btn-ghost:hover, .btn-ghost:active, .btn-ghost:focus, .btn-ghost.selected {
+  background-color: #ffffff !important;
+  color: #F47C20 !important;
+  border-color: #F47C20 !important;
+  box-shadow: 0 2px 4px rgba(244, 124, 32, 0.12) !important;
+}
+
+/* Accessible Focus Visible Indicator */
+.btn:focus-visible, .custom-btn:focus-visible, button:focus-visible {
+  outline: 2px solid #F47C20 !important;
+  outline-offset: 2px !important;
+}
+
+.btn:disabled, .custom-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+  background-color: #ffffff !important;
+  color: #f97316 !important;
+  border-color: #fdba74 !important;
+}
+
+.btn-sm {
+  padding: 6px 14px;
+  font-size: 12px;
+  border-radius: 8px;
+}
+
+.btn-lg {
+  padding: 12px 28px;
+  font-size: 16px;
+  border-radius: 12px;
+}
+
+.btn-icon {
+  padding: 8px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+}
+

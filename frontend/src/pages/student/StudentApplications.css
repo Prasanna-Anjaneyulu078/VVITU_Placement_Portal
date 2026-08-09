@@ -1,0 +1,137 @@
+.app-details-modal-footer {
+  padding: 24px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.app-details-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.app-details-header {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.app-details-logo {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  background-color: white;
+  padding: 4px;
+}
+
+.app-details-logo-placeholder {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-light);
+  border-radius: 12px;
+  color: var(--text-secondary);
+}
+
+.app-details-info {
+  flex: 1;
+}
+
+.app-details-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.app-details-role {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  color: var(--text-main);
+}
+
+.app-details-company {
+  color: var(--text-secondary);
+  margin: 0;
+  font-size: 14px;
+}
+
+.app-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+}
+
+.app-details-box {
+  background-color: var(--bg-light);
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+}
+
+.app-details-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.app-details-value {
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-main);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.app-details-section {
+  margin-top: 8px;
+}
+
+.app-details-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-main);
+}
+
+.app-details-text {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+  font-size: 14px;
+}
+
+.app-details-skills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .app-details-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .app-details-title-row {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .app-details-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}

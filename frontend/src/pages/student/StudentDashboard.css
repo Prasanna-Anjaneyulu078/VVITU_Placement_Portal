@@ -1,0 +1,915 @@
+/* ==========================================================================
+   STUDENT DASHBOARD — RESPONSIVE DESIGN SYSTEM
+   Desktop (≥1024px): 2-Column Layout (Preserved Unchanged)
+   Tablet (768px–1023px): Single-Column Layout (100% Width Cards)
+   Mobile (320px–767px): Optimized Single-Column Layout with Touch Targets
+   ========================================================================== */
+
+.sd-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 0 32px 0;
+  font-family: "Poppins", system-ui, -apple-system, sans-serif;
+  color: #0F172A;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* --------------------------------------------------------------------------
+   HEADER
+   -------------------------------------------------------------------------- */
+.sd-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sd-header-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.sd-header-title {
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: #0F172A;
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.sd-header-sub {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #64748B;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* --------------------------------------------------------------------------
+   LAYOUT GRID (DESKTOP DEFAULT)
+   -------------------------------------------------------------------------- */
+.sd-layout {
+  display: grid;
+  grid-template-columns: 40% minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sd-col-left, .sd-col-right {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* --------------------------------------------------------------------------
+   DASHBOARD CARDS BASE
+   -------------------------------------------------------------------------- */
+.sd-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
+  padding: 22px 24px;
+  box-shadow: 0 2px 12px -2px rgba(15, 23, 42, 0.05);
+  transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.sd-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid #F1F5F9;
+  gap: 12px;
+}
+
+.sd-card-title {
+  font-size: 0.9375rem;
+  font-weight: 800;
+  color: #0F172A;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.sd-card-subtitle {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #94A3B8;
+  margin-top: 3px;
+  line-height: 1.3;
+}
+
+.sd-card-link {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #F47C20;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+  text-decoration: none;
+  min-height: 36px;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+.sd-card-link:focus-visible {
+  outline: 2px solid #F47C20;
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   PROFILE CARD
+   -------------------------------------------------------------------------- */
+.sd-profile-card {
+  background: linear-gradient(150deg, #FFFFFF 0%, #FAFBFD 100%);
+  border-color: rgba(244, 124, 32, 0.18);
+}
+
+.sd-avatar {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #FFFFFF;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+}
+
+.sd-avatar-wrap {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  flex-shrink: 0;
+}
+
+.sd-avatar-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background: #FFFFFF;
+  border-radius: 50%;
+  padding: 3px;
+  box-shadow: 0 2px 6px rgba(15,23,42,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sd-profile-name {
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: #0F172A;
+  letter-spacing: -0.015em;
+  margin: 0 0 2px 0;
+  line-height: 1.25;
+  word-break: break-word;
+}
+
+.sd-profile-roll {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #F47C20;
+  margin: 0 0 3px 0;
+}
+
+.sd-profile-dept {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #475569;
+  margin: 0;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.sd-verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  background: #ECFDF5;
+  color: #065F46;
+  border: 1px solid #A7F3D0;
+  white-space: nowrap;
+}
+
+.sd-profile-chips {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #F1F5F9;
+}
+
+.sd-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  min-width: 0;
+}
+
+.sd-chip-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: #FFF4EB;
+  color: #F47C20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sd-chip-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #94A3B8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  margin-bottom: 3px;
+}
+
+.sd-chip-value {
+  font-size: 0.9375rem;
+  font-weight: 900;
+  color: #0F172A;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sd-view-profile-btn {
+  margin-top: 14px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  background: #FFF4EB;
+  color: #F47C20;
+  border: 1px solid rgba(244,124,32,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.sd-view-profile-btn:focus-visible {
+  outline: 2px solid #F47C20;
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   PLACEMENT PROGRESS
+   -------------------------------------------------------------------------- */
+.sd-progress-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.sd-progress-stat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 14px;
+  min-width: 0;
+}
+
+.sd-progress-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sd-progress-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #94A3B8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sd-progress-value {
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: #0F172A;
+  line-height: 1;
+}
+
+/* --------------------------------------------------------------------------
+   RECENT APPLICATIONS
+   -------------------------------------------------------------------------- */
+.sd-app-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.sd-app-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 13px;
+  min-height: 48px;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  background: #FFFFFF;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.sd-app-item:focus-visible {
+  outline: 2px solid #F47C20;
+  outline-offset: 2px;
+}
+
+.sd-app-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #F1F5F9;
+  border: 1px solid #E2E8F0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 0.6875rem;
+  color: #F47C20;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+.sd-app-meta { flex: 1; min-width: 0; }
+
+.sd-app-company {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #64748B;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sd-app-role {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #0F172A;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sd-app-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.sd-app-date {
+  font-size: 0.625rem;
+  font-weight: 500;
+  color: #94A3B8;
+  white-space: nowrap;
+}
+
+/* Status Badges */
+.sd-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.sd-badge-success { background:#ECFDF5; color:#047857; border:1px solid #A7F3D0; }
+.sd-badge-warning { background:#FEF3C7; color:#B45309; border:1px solid #FDE68A; }
+.sd-badge-purple  { background:#F3E8FF; color:#7E22CE; border:1px solid #DDD6FE; }
+.sd-badge-info    { background:#EFF6FF; color:#1D4ED8; border:1px solid #BFDBFE; }
+.sd-badge-danger  { background:#FEF2F2; color:#B91C1C; border:1px solid #FECACA; }
+.sd-badge-neutral { background:#F1F5F9; color:#475569; border:1px solid #E2E8F0; }
+
+/* --------------------------------------------------------------------------
+   LATEST JOBS
+   -------------------------------------------------------------------------- */
+.sd-jobs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 11px;
+}
+
+.sd-job-card {
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 14px;
+  background: #FFFFFF;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.sd-job-card:focus-visible {
+  outline: 2px solid #F47C20;
+  outline-offset: 2px;
+}
+
+.sd-job-logo {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #F1F5F9;
+  border: 1px solid #E2E8F0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 0.6875rem;
+  color: #F47C20;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.sd-job-company {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #64748B;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sd-job-role {
+  font-size: 0.8125rem;
+  font-weight: 800;
+  color: #0F172A;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sd-job-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 9px;
+}
+
+.sd-job-tag {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 7px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sd-job-tag-location { background:#F8FAFC; color:#64748B; border:1px solid #E2E8F0; }
+.sd-job-tag-pkg      { background:#F0FDF4; color:#15803D; border:1px solid #BBF7D0; font-weight:700; }
+
+.sd-job-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #F1F5F9;
+  font-size: 0.6875rem;
+}
+
+.sd-job-deadline {
+  color: #94A3B8;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sd-job-apply {
+  color: #F47C20;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.sd-job-bookmark {
+  padding: 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  margin: -8px -8px -8px 0;
+  transition: background 0.2s ease;
+}
+
+.sd-job-bookmark:focus-visible {
+  outline: 2px solid #F47C20;
+  outline-offset: 2px;
+}
+
+.sd-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 16px;
+  text-align: center;
+  border: 1.5px dashed #E2E8F0;
+  border-radius: 14px;
+  background: #FAFBFC;
+}
+
+.sd-empty p {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #64748B;
+  margin: 8px 0 0;
+}
+
+/* --------------------------------------------------------------------------
+   BUTTONS & UTILITIES
+   -------------------------------------------------------------------------- */
+.sd-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  min-height: 44px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  background: #F47C20;
+  color: #FFFFFF;
+  border: 1px solid #F47C20;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+  box-sizing: border-box;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+}
+
+.sd-btn-primary:focus-visible {
+  outline: 2px solid #F47C20;
+  outline-offset: 2px;
+}
+
+.sd-skeleton {
+  background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%);
+  background-size: 200% 100%;
+  animation: sd-shimmer 1.4s infinite ease-in-out;
+  border-radius: 12px;
+}
+
+@keyframes sd-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ==========================================================================
+   RESPONSIVE BREAKPOINTS
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   TABLET (768px – 1023px)
+   Single-Column Grid Layout — 100% Width Cards Stacked Vertically
+   -------------------------------------------------------------------------- */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .sd-page {
+    padding: 0 0 28px 0;
+  }
+
+  .sd-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .sd-header-title {
+    font-size: 1.5rem;
+  }
+
+  .sd-header-sub {
+    font-size: 0.8125rem;
+  }
+
+  /* Single Column Dashboard Grid Layout for Tablet */
+  .sd-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+  }
+
+  .sd-col-left,
+  .sd-col-right {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+  }
+
+  .sd-card {
+    width: 100%;
+    padding: 20px 22px;
+    border-radius: 16px;
+  }
+
+  .sd-progress-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  .sd-jobs-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+
+  .sd-btn-primary {
+    width: auto;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   MOBILE (320px – 767px)
+   Single-Column Layout — 100% Width Cards & Large Touch Targets
+   -------------------------------------------------------------------------- */
+@media (max-width: 767px) {
+  .sd-page {
+    padding: 0 0 24px 0;
+  }
+
+  .sd-header {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .sd-header-title {
+    font-size: 1.35rem;
+    line-height: 1.25;
+  }
+
+  .sd-header-sub {
+    font-size: 0.8125rem;
+  }
+
+  .sd-btn-primary {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+    padding: 12px 18px;
+    font-size: 0.875rem;
+  }
+
+  /* Single Column Dashboard Grid Layout for Mobile */
+  .sd-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+  }
+
+  .sd-col-left,
+  .sd-col-right {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+  }
+
+  .sd-card {
+    width: 100%;
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .sd-card-header {
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+  }
+
+  .sd-card-title {
+    font-size: 0.875rem;
+  }
+
+  .sd-card-link {
+    min-height: 36px;
+    font-size: 0.72rem;
+  }
+
+  .sd-avatar {
+    width: 72px;
+    height: 72px;
+  }
+
+  .sd-avatar-wrap {
+    width: 72px;
+    height: 72px;
+  }
+
+  .sd-profile-name {
+    font-size: 1.15rem;
+  }
+
+  .sd-profile-chips {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 12px;
+  }
+
+  .sd-chip {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+
+  .sd-chip-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+  }
+
+  .sd-chip-label {
+    font-size: 0.58rem;
+  }
+
+  .sd-chip-value {
+    font-size: 0.875rem;
+  }
+
+  .sd-view-profile-btn {
+    min-height: 44px;
+    padding: 12px 16px;
+    font-size: 0.8125rem;
+  }
+
+  .sd-progress-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .sd-progress-stat {
+    padding: 12px 10px;
+    gap: 8px;
+  }
+
+  .sd-progress-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+  }
+
+  .sd-progress-value {
+    font-size: 1.15rem;
+  }
+
+  .sd-progress-label {
+    font-size: 0.56rem;
+  }
+
+  /* One Job Card Per Row on Mobile */
+  .sd-jobs-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .sd-job-card {
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .sd-job-bookmark {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .sd-app-list {
+    gap: 10px;
+  }
+
+  .sd-app-item {
+    padding: 10px 12px;
+    min-height: 48px;
+    gap: 10px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   EXTRA NARROW MOBILE SCREENS (320px – 374px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 374px) {
+  .sd-progress-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sd-profile-chips {
+    grid-template-columns: 1fr;
+  }
+
+  .sd-card {
+    padding: 14px;
+  }
+
+  .sd-header-title {
+    font-size: 1.25rem;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   TOUCH ACCESSIBILITY & HOVER OVERRIDES
+   -------------------------------------------------------------------------- */
+@media (hover: none) {
+  .sd-card:hover,
+  .sd-job-card:hover,
+  .sd-app-item:hover,
+  .sd-btn-primary:hover,
+  .sd-view-profile-btn:hover {
+    transform: none !important;
+    box-shadow: 0 2px 12px -2px rgba(15, 23, 42, 0.05) !important;
+  }
+  
+  .sd-btn-primary:active,
+  .sd-view-profile-btn:active,
+  .sd-job-card:active,
+  .sd-app-item:active {
+    opacity: 0.85;
+  }
+}

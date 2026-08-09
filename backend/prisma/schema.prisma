@@ -1,0 +1,299 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  SUPER_ADMIN
+  STUDENT
+  ALUMNI
+}
+
+enum AccountStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  NEEDS_CORRECTION
+}
+
+enum JobStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+enum ApplicationStatus {
+  APPLIED
+  SHORTLISTED
+  INTERVIEW_SCHEDULED
+  SELECTED
+  OFFER_RELEASED
+  REJECTED
+}
+
+enum StudentAcademicStatus {
+  PURSUING
+  GRADUATED
+  SUSPENDED
+  DISCONTINUED
+}
+
+model User {
+  id              BigInt        @id @default(autoincrement())
+  name            String?       @db.VarChar(255)
+  email           String        @unique @db.VarChar(255)
+  password        String?       @db.VarChar(255)
+  role            Role          @default(STUDENT)
+  accountStatus   AccountStatus @default(ACTIVE) @map("account_status")
+  lastLogin       DateTime?     @map("last_login")
+  passwordChanged Boolean       @default(false) @map("password_changed")
+  createdAt       DateTime?     @default(now()) @map("created_at")
+  updatedAt       DateTime?     @updatedAt @map("updated_at")
+  deletedAt       DateTime?     @map("deleted_at")
+
+  student      Student?
+  alumni       Alumni?
+  adminProfile AdminProfile?
+
+  @@map("users")
+}
+
+model Student {
+  id                 BigInt                 @id @default(autoincrement())
+  userId             BigInt                 @unique @map("user_id")
+  rollNumber         String                 @unique @map("roll_number") @db.VarChar(255)
+  department         String?                @db.VarChar(255)
+  mobileNumber       String?                @map("mobile_number") @db.VarChar(255)
+  location           String?                @db.VarChar(255)
+  githubUrl          String?                @map("github_url") @db.VarChar(255)
+  linkedinUrl        String?                @map("linkedin_url") @db.VarChar(255)
+  leetcodeUrl        String?                @map("leetcode_url") @db.VarChar(255)
+  codechefUrl        String?                @map("codechef_url") @db.VarChar(255)
+  gfgUrl             String?                @map("gfg_url") @db.VarChar(255)
+  hackerrankUrl      String?                @map("hackerrank_url") @db.VarChar(255)
+  profileImageUrl    String?                @map("profile_image_url") @db.VarChar(255)
+  cgpa               Float?
+  semester           Int?
+  backlogs           Int                    @default(0)
+  academicYear       String?                @map("academic_year") @db.VarChar(255)
+  academicStatus     StudentAcademicStatus? @default(PURSUING) @map("academic_status")
+  verificationStatus VerificationStatus?    @default(PENDING) @map("verification_status")
+  deletedAt          DateTime?              @map("deleted_at")
+
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resumes      Resume[]
+  skills       StudentSkill[]
+  projects     StudentProject[]
+  applications Application[]
+
+  @@map("students")
+}
+
+model Alumni {
+  id                             BigInt              @id @default(autoincrement())
+  userId                         BigInt?             @unique @map("user_id")
+  company                        String?             @db.VarChar(255)
+  designation                    String?             @db.VarChar(255)
+  passingYear                    Int?                @map("passing_year")
+  verificationStatus             VerificationStatus? @default(PENDING) @map("verification_status")
+  linkedinUrl                    String?             @map("linkedin_url") @db.VarChar(255)
+  degree                         String?             @db.VarChar(255)
+  rollNumber                     String?             @unique @map("roll_number") @db.VarChar(255)
+  department                     String?             @db.VarChar(255)
+  mobileNumber                   String?             @map("mobile_number") @db.VarChar(255)
+  gender                         String?             @db.VarChar(255)
+  profileImageUrl                String?             @map("profile_image_url") @db.VarChar(255)
+  verificationDocumentUrl        String?             @map("verification_document_url") @db.VarChar(255)
+  verificationDocumentName       String?             @map("verification_document_name") @db.VarChar(255)
+  verificationDocumentUploadDate DateTime?           @map("verification_document_upload_date")
+  isActive                       Boolean?            @default(true) @map("is_active")
+  rejectionReason                String?             @map("rejection_reason") @db.Text
+  rejectedDate                   DateTime?           @map("rejected_date")
+  ocrVerified                    Boolean?            @default(false) @map("ocr_verified")
+  ocrExtractedName               String?             @map("ocr_extracted_name") @db.VarChar(255)
+  ocrExtractedRollNumber         String?             @map("ocr_extracted_roll_number") @db.VarChar(255)
+  ocrDetectedCollege             String?             @map("ocr_detected_college") @db.VarChar(255)
+  ocrConfidenceScore             Float?              @map("ocr_confidence_score")
+  manualReviewRequired           Boolean?            @default(false) @map("manual_review_required")
+  deletedAt                      DateTime?           @map("deleted_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobs Job[]
+
+  @@map("alumni")
+}
+
+model AdminProfile {
+  id              BigInt    @id @default(autoincrement())
+  userId          BigInt    @unique @map("user_id")
+  mobileNumber    String?   @map("mobile_number") @db.VarChar(255)
+  location        String?   @db.VarChar(255)
+  gender          String?   @db.VarChar(255)
+  department      String?   @db.VarChar(255)
+  designation     String?   @db.VarChar(255)
+  employeeId      String?   @map("employee_id") @db.VarChar(255)
+  officeLocation  String?   @map("office_location") @db.VarChar(255)
+  profileImageUrl String?   @map("profile_image_url") @db.LongText
+  deletedAt       DateTime? @map("deleted_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("admin_profiles")
+}
+
+model Job {
+  id                  BigInt    @id @default(autoincrement())
+  title               String?   @db.VarChar(255)
+  companyName         String?   @map("company") @db.VarChar(255)
+  description         String?   @db.Text
+  location            String?   @db.VarChar(255)
+  jobType             String?   @map("job_type") @db.VarChar(255)
+  salaryPackage       String?   @map("package_details") @db.VarChar(255)
+  experienceRequired  String?   @map("experience_required") @db.VarChar(255)
+  requiredSkills      String?   @map("required_skills") @db.Text
+  applicationLink     String?   @map("application_link") @db.VarChar(255)
+  imageUrl            String?   @map("company_logo_url") @db.VarChar(255)
+  industry            String?   @map("industry") @db.VarChar(255)
+  companySize         String?   @map("company_size") @db.VarChar(255)
+  openings            Int?
+  requiredCgpa        Float?    @map("min_cgpa")
+  eligibleSemester    Int?      @map("eligible_semester")
+  maxBacklogs         Int?      @map("max_backlogs")
+  eligibleDepartments String?   @map("eligible_departments") @db.VarChar(500)
+  postedByAlumniId    BigInt?   @map("posted_by_id")
+  status              JobStatus? @default(PENDING)
+  applicationDeadline DateTime? @map("expiry_date")
+  rejectionReason     String?   @map("rejection_reason") @db.VarChar(255)
+  enableScreening     Boolean?  @default(false) @map("enable_screening")
+  useDefaultScreening Boolean?  @default(true) @map("use_default_screening")
+  createdAt           DateTime? @default(now()) @map("created_at")
+  deletedAt           DateTime? @map("deleted_at")
+
+  postedByAlumni Alumni?       @relation(fields: [postedByAlumniId], references: [id], onDelete: SetNull)
+  applications   Application[]
+
+  @@map("jobs")
+}
+
+model Application {
+  id        BigInt            @id @default(autoincrement())
+  jobId     BigInt            @map("job_id")
+  studentId BigInt            @map("student_id")
+  status    ApplicationStatus @default(APPLIED)
+  appliedAt DateTime?         @default(now()) @map("applied_at")
+  deletedAt DateTime?         @map("deleted_at")
+
+  job       Job                          @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  student   Student                      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  answers   ApplicationScreeningAnswer[]
+
+  @@map("applications")
+}
+
+model ApplicationScreeningAnswer {
+  id            BigInt @id @default(autoincrement())
+  applicationId BigInt @map("application_id")
+  question      String @db.Text
+  answer        String @db.Text
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@map("application_screening_answers")
+}
+
+model Resume {
+  id         BigInt    @id @default(autoincrement())
+  studentId  BigInt?   @unique @map("student_id")
+  filePath   String?   @map("file_path") @db.VarChar(255)
+  fileName   String?   @map("file_name") @db.VarChar(255)
+  fileType   String?   @map("file_type") @db.VarChar(255)
+  version    Int?      @default(1)
+  uploadedAt DateTime? @default(now()) @map("uploaded_at")
+  deletedAt  DateTime? @map("deleted_at")
+
+  student Student? @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("resumes")
+}
+
+model StudentSkill {
+  id        BigInt    @id @default(autoincrement())
+  studentId BigInt?   @map("student_id")
+  skillName String?   @map("name") @db.VarChar(255)
+  deletedAt DateTime? @map("deleted_at")
+
+  student Student? @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("skills")
+}
+
+model StudentProject {
+  id          BigInt    @id @default(autoincrement())
+  studentId   BigInt?   @map("student_id")
+  title       String?   @db.VarChar(255)
+  description String?   @db.Text
+  techStack   String?   @map("tech_stack") @db.VarChar(255)
+  demoUrl     String?   @map("demo_url") @db.VarChar(255)
+  sourceUrl   String?   @map("source_url") @db.VarChar(255)
+  deletedAt   DateTime? @map("deleted_at")
+
+  student Student? @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("projects")
+}
+
+model StudentMaster {
+  id             BigInt    @id @default(autoincrement())
+  rollNumber     String    @unique @map("roll_number") @db.VarChar(255)
+  fullName       String    @map("full_name") @db.VarChar(255)
+  department     String?   @db.VarChar(255)
+  graduationYear Int?      @map("graduation_year")
+  email          String?   @db.VarChar(255)
+  deletedAt      DateTime? @map("deleted_at")
+
+  @@map("student_master")
+}
+
+model AuditLog {
+  id          BigInt    @id @default(autoincrement())
+  action      String?   @db.VarChar(255)
+  performedBy BigInt?   @map("performed_by")
+  details     String?   @db.Text
+  timestamp   DateTime? @default(now())
+  deletedAt   DateTime? @map("deleted_at")
+
+  @@map("audit_logs")
+}
+
+model OcrAuditLog {
+  id            BigInt    @id @default(autoincrement())
+  performedBy   BigInt?   @map("performed_by")
+  fileName      String?   @map("file_name") @db.VarChar(255)
+  matchedStatus String?   @map("matched_status") @db.VarChar(50)
+  extractedText String?   @map("extracted_text") @db.Text
+  timestamp     DateTime? @default(now())
+
+  @@map("ocr_audit_logs")
+}
+
+model AdminSetting {
+  id           BigInt    @id @default(autoincrement())
+  settingKey   String    @unique @map("setting_key") @db.VarChar(255)
+  settingValue String?   @map("setting_value") @db.VarChar(255)
+  createdAt    DateTime? @default(now()) @map("created_at")
+  updatedAt    DateTime? @updatedAt @map("updated_at")
+
+  @@map("admin_settings")
+}

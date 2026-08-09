@@ -1,0 +1,332 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { X, FolderGit2, Loader2, Plus, Edit2, AlertCircle } from 'lucide-react';
+import { toast } from 'react-toastify';
+import api from '../../utils/axiosConfig';
+
+export default function ProjectDrawer({
+  isOpen,
+  onClose,
+  project = null, // null for Add, project object for Edit
+  onSuccess
+}) {
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    technologies: '',
+    role: '',
+    projectType: 'Academic',
+    githubUrl: '',
+    liveDemoUrl: '',
+    duration: '',
+    status: 'Completed'
+  });
+
+  const [initialData, setInitialData] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const firstInputRef = useRef(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      const data = project ? {
+        title: project.title || '',
+        description: project.description || '',
+        technologies: project.technologies || '',
+        role: project.role || '',
+        projectType: project.projectType || 'Academic',
+        githubUrl: project.githubUrl || '',
+        liveDemoUrl: project.liveDemoUrl || '',
+        duration: project.duration || '',
+        status: project.status || 'Completed'
+      } : {
+        title: '',
+        description: '',
+        technologies: '',
+        role: '',
+        projectType: 'Academic',
+        githubUrl: '',
+        liveDemoUrl: '',
+        duration: '',
+        status: 'Completed'
+      };
+
+      setFormData(data);
+      setInitialData(data);
+
+      // Focus first input on drawer open
+      setTimeout(() => {
+        if (firstInputRef.current) {
+          firstInputRef.current.focus();
+        }
+      }, 100);
+    }
+  }, [project, isOpen]);
+
+  // Check if form is modified
+  const isDirty = initialData && JSON.stringify(formData) !== JSON.stringify(initialData);
+
+  const handleSafeClose = () => {
+    if (isDirty && !isSubmitting) {
+      if (window.confirm("You have unsaved changes. Are you sure you want to close?")) {
+        onClose();
+      }
+    } else {
+      onClose();
+    }
+  };
+
+  // Keyboard ESC listener
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isOpen && !isSubmitting) {
+        handleSafeClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, isDirty, isSubmitting]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!formData.title.trim()) {
+      toast.error('Project Title is required.');
+      return;
+    }
+    if (!formData.description.trim()) {
+      toast.error('Project Description is required.');
+      return;
+    }
+    if (!formData.technologies.trim()) {
+      toast.error('At least one technology is required.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      if (project && project.id) {
+        await api.put(`/student/projects/${project.id}`, formData);
+        toast.success(`Project "${formData.title}" updated successfully.`);
+      } else {
+        await api.post('/student/projects', formData);
+        toast.success(`Project "${formData.title}" added successfully.`);
+      }
+
+      onClose();
+      if (onSuccess) onSuccess();
+    } catch (err) {
+      const errMsg = err.response?.data?.message || err.response?.data || err.message || 'Failed to save project.';
+      toast.error(errMsg);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-hidden bg-slate-900/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">
+      {/* Click Backdrop */}
+      <div className="absolute inset-0" onClick={handleSafeClose} aria-hidden="true" />
+
+      <div className="absolute inset-y-0 right-0 max-w-full flex pl-10">
+        <div className="w-screen max-w-xl md:max-w-2xl bg-white shadow-2xl flex flex-col border-l border-slate-200 animate-in slide-in-from-right duration-300">
+          
+          {/* Drawer Header */}
+          <div className="px-6 py-5 border-b border-slate-200 flex items-center justify-between bg-white sticky top-0 z-10 shadow-2xs">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-[#FFF4EB] border border-orange-200 text-[#F47C20] flex items-center justify-center shrink-0">
+                <FolderGit2 size={20} />
+              </div>
+              <div>
+                <p className="text-[11px] font-extrabold text-[#F47C20] uppercase tracking-wider">
+                  {project ? 'Edit Project' : 'Add New Project'}
+                </p>
+                <h3 className="text-lg font-black text-slate-900 leading-tight">
+                  {project ? project.title : 'Project Details'}
+                </h3>
+              </div>
+            </div>
+
+            <button
+              onClick={handleSafeClose}
+              className="p-2 text-[#F47C20] hover:text-[#d96916] bg-[#FFF4EB] hover:bg-orange-100 rounded-xl border border-[#F47C20]/40 transition-all focus:outline-none focus:ring-2 focus:ring-[#F47C20]"
+              title="Close drawer (Esc)"
+            >
+              <X size={20} className="text-[#F47C20]" />
+            </button>
+          </div>
+
+          {/* Drawer Form Body */}
+          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
+            
+            {/* Project Title */}
+            <div>
+              <label className="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-1.5">
+                Project Title <span className="text-red-500">*</span>
+              </label>
+              <input
+                ref={firstInputRef}
+                type="text"
+                required
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                placeholder="e.g. Placement Management System"
+                className="w-full h-11 px-3.5 text-xs font-semibold text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#F47C20] focus:ring-2 focus:ring-[#F47C20]/20 transition-all"
+              />
+            </div>
+
+            {/* Role & Project Type Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-1.5">
+                  Your Role / Contribution
+                </label>
+                <input
+                  type="text"
+                  value={formData.role}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                  placeholder="e.g. Full Stack Developer, Team Lead"
+                  className="w-full h-11 px-3.5 text-xs font-semibold text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#F47C20] focus:ring-2 focus:ring-[#F47C20]/20 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-1.5">
+                  Project Type
+                </label>
+                <select
+                  value={formData.projectType}
+                  onChange={(e) => setFormData({ ...formData, projectType: e.target.value })}
+                  className="w-full h-11 px-3.5 text-xs font-semibold text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#F47C20] focus:ring-2 focus:ring-[#F47C20]/20 transition-all cursor-pointer"
+                >
+                  <option value="Academic">Academic</option>
+                  <option value="Personal">Personal</option>
+                  <option value="Internship">Internship</option>
+                  <option value="Freelance">Freelance</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Technologies */}
+            <div>
+              <label className="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-1.5">
+                Technologies Used <span className="text-red-500">*</span> (comma-separated)
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.technologies}
+                onChange={(e) => setFormData({ ...formData, technologies: e.target.value })}
+                placeholder="e.g. Java, Spring Boot, React, MySQL, Docker, Git"
+                className="w-full h-11 px-3.5 text-xs font-semibold text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#F47C20] focus:ring-2 focus:ring-[#F47C20]/20 transition-all"
+              />
+            </div>
+
+            {/* Duration & Status Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-1.5">
+                  Duration / Timeline
+                </label>
+                <input
+                  type="text"
+                  value={formData.duration}
+                  onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                  placeholder="e.g. Jan 2026 – Apr 2026"
+                  className="w-full h-11 px-3.5 text-xs font-semibold text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#F47C20] focus:ring-2 focus:ring-[#F47C20]/20 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-1.5">
+                  Status
+                </label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  className="w-full h-11 px-3.5 text-xs font-semibold text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#F47C20] focus:ring-2 focus:ring-[#F47C20]/20 transition-all cursor-pointer"
+                >
+                  <option value="Completed">Completed</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Ongoing">Ongoing</option>
+                </select>
+              </div>
+            </div>
+
+            {/* URLs Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-1.5">
+                  GitHub Repository URL
+                </label>
+                <input
+                  type="url"
+                  value={formData.githubUrl}
+                  onChange={(e) => setFormData({ ...formData, githubUrl: e.target.value })}
+                  placeholder="https://github.com/username/repo"
+                  className="w-full h-11 px-3.5 text-xs font-semibold text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#F47C20] focus:ring-2 focus:ring-[#F47C20]/20 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-1.5">
+                  Live Demo URL
+                </label>
+                <input
+                  type="url"
+                  value={formData.liveDemoUrl}
+                  onChange={(e) => setFormData({ ...formData, liveDemoUrl: e.target.value })}
+                  placeholder="https://demo-app.com"
+                  className="w-full h-11 px-3.5 text-xs font-semibold text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#F47C20] focus:ring-2 focus:ring-[#F47C20]/20 transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-1.5">
+                Project Description <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                required
+                rows={4}
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Describe key features, architecture, tools, and technical impact..."
+                className="w-full p-3.5 text-xs font-medium text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#F47C20] focus:ring-2 focus:ring-[#F47C20]/20 transition-all leading-relaxed"
+              />
+            </div>
+
+            {/* Footer Actions */}
+            <div className="pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-end gap-3 sticky bottom-0 bg-white pb-2">
+              <button
+                type="button"
+                onClick={handleSafeClose}
+                disabled={isSubmitting}
+                className="w-full sm:w-auto px-5 py-2.5 bg-[#FFF4EB] hover:bg-orange-100 border border-[#F47C20] text-[#F47C20] text-xs font-extrabold rounded-xl transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full sm:w-auto px-6 py-2.5 bg-[#FFF4EB] hover:bg-orange-100 border border-[#F47C20] text-[#F47C20] text-xs font-extrabold rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 size={15} className="animate-spin text-[#F47C20]" />
+                    <span>{project ? 'Updating...' : 'Saving...'}</span>
+                  </>
+                ) : (
+                  <span>{project ? 'Update Project' : 'Save Project'}</span>
+                )}
+              </button>
+            </div>
+
+          </form>
+
+        </div>
+      </div>
+    </div>
+  );
+}

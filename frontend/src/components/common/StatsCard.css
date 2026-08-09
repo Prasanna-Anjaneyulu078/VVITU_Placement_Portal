@@ -1,0 +1,78 @@
+.stats-card {
+  padding: 24px;
+  background-color: var(--bg-white);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stats-card-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.stats-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stats-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin: 0;
+}
+
+.stats-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.stats-trend {
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.trend-up {
+  color: #10b981; /* Green */
+}
+
+.trend-down {
+  color: #ef4444; /* Red */
+}
+
+.stats-icon-wrapper {
+  padding: 12px;
+  background-color: var(--bg-light);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+}
+
+/* Variants */
+.stats-card-warning .stats-icon-wrapper {
+  background-color: #fff7ed;
+  color: #f97316;
+}
+
+.stats-card-success .stats-icon-wrapper {
+  background-color: #ecfdf5;
+  color: #10b981;
+}
+
+.stats-card-primary .stats-icon-wrapper {
+  background-color: #eff6ff;
+  color: #3b82f6;
+}

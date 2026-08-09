@@ -1,0 +1,12 @@
+.admin-action-icons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-review-link {
+  font-size: 0.8rem;
+  color: var(--primary);
+  font-weight: 600;
+  cursor: pointer;
+}

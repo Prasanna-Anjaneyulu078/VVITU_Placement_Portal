@@ -1,0 +1,236 @@
+/* ==========================================================================
+   STUDENT EDIT PROFILE FORMS — RESPONSIVE DESIGN SYSTEM
+   Desktop (≥1024px): Multi-column grid (Preserved Unchanged)
+   Tablet (768px–1023px): Single-Column Layout (100% Width Inputs, 1 Field Per Row)
+   Mobile (320px–767px): Optimized Single-Column Layout (Full Width, 44px Min Tap Targets)
+   ========================================================================== */
+
+.student-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.student-form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.student-form-section-title {
+  font-size: 0.8125rem;
+  font-weight: 800;
+  color: #0F172A;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+/* Desktop Grid Layouts (2-col default for Desktop >= 1024px) */
+.student-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  width: 100%;
+}
+
+.student-form-links-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  width: 100%;
+}
+
+.student-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.student-form-group-full {
+  grid-column: 1 / -1;
+}
+
+.student-form-label {
+  font-size: 0.78125rem;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 2px;
+}
+
+.student-form-input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0F172A;
+  background-color: #F8FAFC;
+  border: 1px solid #CBD5E1;
+  border-radius: 12px;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.student-form-input:focus-visible,
+.student-form-input:focus {
+  outline: none;
+  border-color: #F47C20;
+  box-shadow: 0 0 0 3px rgba(244, 124, 32, 0.15);
+  background-color: #FFFFFF;
+}
+
+.student-input-disabled {
+  background-color: #F1F5F9;
+  color: #64748B;
+  cursor: not-allowed;
+  border-color: #E2E8F0;
+}
+
+/* Icon Input Wrapper */
+.student-input-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.student-input-icon {
+  position: absolute;
+  left: 14px;
+  color: #F47C20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.student-input-has-icon {
+  padding-left: 44px;
+}
+
+/* Action Buttons Container */
+.student-form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid #F1F5F9;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.student-btn-save {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  background: #FFF4EB;
+  color: #F47C20;
+  border: 1px solid #F47C20;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+}
+
+.student-btn-save:focus-visible {
+  outline: 2px solid #F47C20;
+  outline-offset: 2px;
+}
+
+.student-btn-cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  background: #FFFFFF;
+  color: #64748B;
+  border: 1px solid #CBD5E1;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+}
+
+.student-btn-cancel:focus-visible {
+  outline: 2px solid #64748B;
+  outline-offset: 2px;
+}
+
+/* Validation Message */
+.student-field-error {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #DC2626;
+  margin-top: 4px;
+  word-break: break-word;
+}
+
+/* ==========================================================================
+   RESPONSIVE BREAKPOINTS
+   ========================================================================== */
+
+/* TABLET (768px – 1023px) — Single Column Layout (1 Field Per Row) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .student-form-grid,
+  .student-form-links-grid {
+    grid-template-columns: 1fr !important;
+    gap: 18px !important;
+  }
+}
+
+/* MOBILE (320px – 767px) — Touch-Optimized Single Column Layout */
+@media (max-width: 767px) {
+  .student-form-grid,
+  .student-form-links-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .student-form-actions {
+    flex-direction: column-reverse;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .student-btn-save,
+  .student-btn-cancel {
+    width: 100%;
+  }
+
+  .student-form-input {
+    font-size: 0.875rem;
+  }
+}
+
+/* Touch device hover override per requirements */
+@media (hover: none) {
+  .student-btn-save:hover,
+  .student-btn-cancel:hover {
+    transform: none !important;
+  }
+  .student-btn-save:active,
+  .student-btn-cancel:active {
+    opacity: 0.85;
+  }
+}

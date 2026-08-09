@@ -1,0 +1,199 @@
+.alumni-section-card {
+  background-color: var(--bg-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.alumni-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  gap: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+@media (max-width: 768px) {
+  .alumni-section-header {
+    flex-direction: column;
+    align-items: stretch;
+    min-width: unset;
+  }
+  
+  .alumni-search-bar {
+    max-width: 100%;
+  }
+}
+
+.alumni-search-bar {
+  width: 100%;
+  max-width: 300px;
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-light);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 0 16px;
+  transition: border-color 0.2s;
+}
+
+.alumni-search-bar:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(240, 128, 108, 0.15);
+}
+
+.alumni-table-wrapper {
+  min-width: 800px;
+}
+
+.alumni-empty-state {
+  padding: 48px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.alumni-profile-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.alumni-avatar-sm {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  background-color: var(--bg-light);
+  flex-shrink: 0;
+}
+
+.alumni-name {
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--primary);
+  transition: color 0.2s;
+}
+
+.alumni-role {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.alumni-grad-year {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Modal Styles */
+.alumni-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.alumni-profile-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.alumni-avatar-xl {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  background-color: var(--bg-light);
+  border: 4px solid white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.alumni-header-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.alumni-profile-name {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.alumni-profile-email {
+  font-size: 14px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.alumni-status-pill {
+  margin-top: 4px;
+  font-size: 13px;
+  padding: 4px 12px;
+}
+
+.alumni-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.alumni-detail-box {
+  background-color: var(--bg-light);
+  padding: 20px;
+  border-radius: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  border: 1px solid var(--border-color);
+}
+
+.alumni-detail-icon {
+  color: var(--primary);
+  background-color: white;
+  padding: 10px;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.alumni-detail-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin: 0 0 6px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
+.alumni-detail-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.alumni-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .alumni-details-grid {
+    grid-template-columns: 1fr;
+  }
+}

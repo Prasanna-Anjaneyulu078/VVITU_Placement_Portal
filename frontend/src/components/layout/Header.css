@@ -1,0 +1,91 @@
+/* ==========================================================================
+   ENTERPRISE MINIMAL TOP NAVIGATION BAR (Header.css)
+   Contains strictly: Hamburger Menu (Mobile & Tablet) | Page Title
+   ========================================================================== */
+
+.top-header {
+  height: 64px;
+  background-color: #FFFFFF;
+  border-bottom: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.03), 0 1px 2px -1px rgba(15, 23, 42, 0.02);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  border-radius: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Left Side: Hamburger Menu + Page Title */
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+/* Hamburger Button (Mobile & Tablet: <1024px) */
+.hamburger-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid #E2E8F0;
+  background-color: #FFFFFF;
+  color: #334155; /* Slate-700 */
+  cursor: pointer;
+  margin-right: 12px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.hamburger-btn:focus-visible {
+  outline: 2px solid #F47C20;
+  outline-offset: 2px;
+}
+
+.hamburger-btn:active {
+  transform: scale(0.95);
+}
+
+.header-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0F172A; /* Slate-900 */
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  user-select: none;
+}
+
+/* Responsive Design */
+
+/* Desktop (>= 1024px): Permanent sidebar, hide hamburger */
+@media (min-width: 1024px) {
+  .hamburger-btn {
+    display: none !important;
+  }
+}
+
+/* Tablet (768px - 1023px) */
+@media (max-width: 1023px) {
+  .header-title {
+    font-size: 20px;
+  }
+}
+
+/* Mobile (<768px) */
+@media (max-width: 767px) {
+  .top-header {
+    padding: 0 16px;
+    height: 64px;
+  }
+
+  .header-title {
+    font-size: 18px;
+  }
+}
