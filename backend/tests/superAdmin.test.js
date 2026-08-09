@@ -10,21 +10,21 @@ describe('SuperAdmin Management API Endpoints (/api/super-admin/admins)', () => 
 
   beforeAll(() => {
     superAdminToken = generateAccessToken({ id: 100, email: 'superadmin@vvit.edu.in', role: 'SUPER_ADMIN' });
-    adminToken = generateAccessToken({ id: 1, email: 'admin@vvit.ac.in', role: 'ADMIN' });
-    studentToken = generateAccessToken({ id: 2, email: 'student@vvit.ac.in', role: 'STUDENT' });
+    adminToken = generateAccessToken({ id: 1, email: 'admin@example.test', role: 'ADMIN' });
+    studentToken = generateAccessToken({ id: 2, email: 'student@example.test', role: 'STUDENT' });
 
     jest.spyOn(SuperAdminService, 'getAllAdmins').mockResolvedValue([
-      { id: 1, name: 'System Admin', email: 'admin@vvit.ac.in', role: 'ADMIN', accountStatus: 'ACTIVE' }
+      { id: 1, name: 'System Admin', email: 'admin@example.test', role: 'ADMIN', accountStatus: 'ACTIVE' }
     ]);
 
     jest.spyOn(SuperAdminService, 'getAdminById').mockImplementation(async (id) => {
       if (id === '999') throw { statusCode: 404, message: 'Admin profile not found with ID: 999' };
-      return { id: 1, name: 'System Admin', email: 'admin@vvit.ac.in', role: 'ADMIN', accountStatus: 'ACTIVE' };
+      return { id: 1, name: 'System Admin', email: 'admin@example.test', role: 'ADMIN', accountStatus: 'ACTIVE' };
     });
 
     jest.spyOn(SuperAdminService, 'createAdmin').mockResolvedValue({
       name: 'New Admin',
-      email: 'newadmin@vvit.ac.in',
+      email: 'newadmin@example.test',
       password: 'VVIT@Admin123',
       role: 'ADMIN'
     });
@@ -37,7 +37,7 @@ describe('SuperAdmin Management API Endpoints (/api/super-admin/admins)', () => 
 
     jest.spyOn(SuperAdminService, 'resetAdminPassword').mockResolvedValue({
       name: 'System Admin',
-      email: 'admin@vvit.ac.in',
+      email: 'admin@example.test',
       password: 'VVIT@Admin456'
     });
   });
@@ -71,16 +71,16 @@ describe('SuperAdmin Management API Endpoints (/api/super-admin/admins)', () => 
       .set('Cookie', [`accessToken=${superAdminToken}`]);
     expect(res.statusCode).toEqual(200);
     expect(Array.isArray(res.body)).toBe(true);
-    expect(res.body[0].email).toEqual('admin@vvit.ac.in');
+    expect(res.body[0].email).toEqual('admin@example.test');
   });
 
   it('POST /api/super-admin/admins should return 200 and created admin credentials when called by SUPER_ADMIN', async () => {
     const res = await request(app)
       .post('/api/super-admin/admins')
       .set('Cookie', [`accessToken=${superAdminToken}`])
-      .send({ name: 'New Admin', email: 'newadmin@vvit.ac.in' });
+      .send({ name: 'New Admin', email: 'newadmin@example.test' });
     expect(res.statusCode).toEqual(200);
-    expect(res.body.email).toEqual('newadmin@vvit.ac.in');
+    expect(res.body.email).toEqual('newadmin@example.test');
   });
 
   it('PUT /api/super-admin/admins/1/status should return 200 and updated status', async () => {

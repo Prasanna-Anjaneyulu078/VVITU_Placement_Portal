@@ -8,7 +8,7 @@ app.use(express.json());
 
 // Mock auth middleware for testing
 app.use((req, res, next) => {
-  req.user = { id: 1, email: 'admin@vvit.net', role: 'ADMIN' };
+  req.user = { id: 1, email: 'admin@example.test', role: 'ADMIN' };
   next();
 });
 

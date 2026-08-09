@@ -9,13 +9,13 @@ describe('Student Dashboard Fix — GET /api/student/profile, /skills, /projects
   let studentToken;
 
   beforeAll(() => {
-    studentToken = jwtUtils.generateAccessToken({ id: 888, email: 'student_dash@vvit.net', role: 'STUDENT' });
+    studentToken = jwtUtils.generateAccessToken({ id: 888, email: 'student_dash@example.test', role: 'STUDENT' });
   });
 
   beforeEach(() => {
     jest.spyOn(prisma.user, 'findUnique').mockResolvedValue({
       id: 888,
-      email: 'student_dash@vvit.net',
+      email: 'student_dash@example.test',
       name: 'Venkata Prasanna',
       role: 'STUDENT',
       accountStatus: 'ACTIVE',
@@ -33,12 +33,12 @@ describe('Student Dashboard Fix — GET /api/student/profile, /skills, /projects
       userId: 888,
       name: 'Venkata Prasanna',
       studentName: 'Venkata Prasanna',
-      email: 'student_dash@vvit.net',
+      email: 'student_dash@example.test',
       rollNumber: '20BQ1A0501',
       department: 'CSE',
       cgpa: 8.9,
       verificationStatus: 'VERIFIED',
-      user: { id: 888, name: 'Venkata Prasanna', email: 'student_dash@vvit.net', role: 'STUDENT' },
+      user: { id: 888, name: 'Venkata Prasanna', email: 'student_dash@example.test', role: 'STUDENT' },
       skills: [],
       projects: []
     };

@@ -4,16 +4,16 @@ const { hashPassword } = require('../utils/password.utils');
 async function main() {
   console.log('🌱 Seeding database default accounts...');
 
-  const adminPassword = await hashPassword('Admin@123');
-  const alumniPassword = await hashPassword('Alumni@123');
+  const adminPassword = await hashPassword('TEST_ADMIN_123');
+  const alumniPassword = await hashPassword('TEST_ALUMNI_123');
 
   // 1. Seed System Admin
   const adminUser = await prisma.user.upsert({
-    where: { email: 'admin@vvit.ac.in' },
+    where: { email: 'admin@example.test' },
     update: {},
     create: {
       name: 'System Admin',
-      email: 'admin@vvit.ac.in',
+      email: 'admin@example.test',
       password: adminPassword,
       role: 'ADMIN',
       accountStatus: 'ACTIVE'
@@ -32,11 +32,11 @@ async function main() {
 
   // 2. Seed Default Alumni
   const alumniUser = await prisma.user.upsert({
-    where: { email: 'alumni@vvit.ac.in' },
+    where: { email: 'alumni@example.test' },
     update: {},
     create: {
       name: 'Jane Smith',
-      email: 'alumni@vvit.ac.in',
+      email: 'alumni@example.test',
       password: alumniPassword,
       role: 'ALUMNI',
       accountStatus: 'ACTIVE'
@@ -56,8 +56,8 @@ async function main() {
   });
 
   console.log('✅ Seeding completed successfully!');
-  console.log('👤 ADMIN:  admin@vvit.ac.in / Admin@123');
-  console.log('🏢 ALUMNI: alumni@vvit.ac.in / Alumni@123');
+  console.log('👤 ADMIN:  admin@example.test / TEST_ADMIN_123');
+  console.log('🏢 ALUMNI: alumni@example.test / TEST_ALUMNI_123');
 }
 
 main()

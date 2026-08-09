@@ -24,10 +24,10 @@ describe('IDOR Security Audit — Unauthorized Resource Access', () => {
 
   beforeAll(() => {
     // User IDs: A=101, B=102 for students; A=201, B=202 for alumni
-    studentAToken = generateAccessToken({ id: 101, email: 'student_a@vvit.ac.in', role: 'STUDENT' });
-    studentBToken = generateAccessToken({ id: 102, email: 'student_b@vvit.ac.in', role: 'STUDENT' });
-    alumniAToken  = generateAccessToken({ id: 201, email: 'alumni_a@vvit.ac.in', role: 'ALUMNI' });
-    alumniBToken  = generateAccessToken({ id: 202, email: 'alumni_b@vvit.ac.in', role: 'ALUMNI' });
+    studentAToken = generateAccessToken({ id: 101, email: 'student_a@example.test', role: 'STUDENT' });
+    studentBToken = generateAccessToken({ id: 102, email: 'student_b@example.test', role: 'STUDENT' });
+    alumniAToken  = generateAccessToken({ id: 201, email: 'alumni_a@example.test', role: 'ALUMNI' });
+    alumniBToken  = generateAccessToken({ id: 202, email: 'alumni_b@example.test', role: 'ALUMNI' });
   });
 
   // ---------------------------------------------------------------------------

@@ -14,7 +14,7 @@ async function testStudentManagement() {
 
     console.log('\n3. Testing AdminService.addStudent()...');
     const testRoll = '22A91A0599';
-    const testEmail = 'ravi.test.student@vvit.ac.in';
+    const testEmail = 'ravi.test.student@example.test';
 
     // Purge test student & user if existing
     const existingStudent = await prisma.student.findUnique({ where: { rollNumber: testRoll } });

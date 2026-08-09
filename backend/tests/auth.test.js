@@ -14,7 +14,7 @@ describe('Authentication API Endpoints - POST /api/auth/login', () => {
       user: {
         id: 1,
         name: 'Student User',
-        email: 'student@vvit.net',
+        email: 'student@example.test',
         role: 'STUDENT',
         verificationStatus: 'VERIFIED'
       }
@@ -22,12 +22,12 @@ describe('Authentication API Endpoints - POST /api/auth/login', () => {
 
     const res = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'student@vvit.net', password: 'Password@123' });
+      .send({ email: 'student@example.test', password: 'Password@123' });
 
     expect(res.statusCode).toEqual(200);
     expect(res.body.role).toBe('STUDENT');
     expect(res.body.name).toBe('Student User');
-    expect(res.body.email).toBe('student@vvit.net');
+    expect(res.body.email).toBe('student@example.test');
     expect(res.body.verificationStatus).toBe('VERIFIED');
     expect(res.body.id).toBe(1);
     expect(res.headers['set-cookie']).toBeDefined();
@@ -42,7 +42,7 @@ describe('Authentication API Endpoints - POST /api/auth/login', () => {
 
     const res = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'student@vvit.net', password: 'WrongPassword' });
+      .send({ email: 'student@example.test', password: 'WrongPassword' });
 
     expect(res.statusCode).toEqual(401);
   });
@@ -55,7 +55,7 @@ describe('Authentication API Endpoints - POST /api/auth/login', () => {
 
     const res = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'nonexistent@vvit.net', password: 'Password@123' });
+      .send({ email: 'nonexistent@example.test', password: 'Password@123' });
 
     expect(res.statusCode).toEqual(401);
   });
@@ -68,7 +68,7 @@ describe('Authentication API Endpoints - POST /api/auth/login', () => {
 
     const res = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'student@vvit.net' });
+      .send({ email: 'student@example.test' });
 
     expect(res.statusCode).toEqual(400);
   });
@@ -94,7 +94,7 @@ describe('Authentication API Endpoints - POST /api/auth/login', () => {
 
     const res = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'blocked@vvit.net', password: 'Password@123' });
+      .send({ email: 'blocked@example.test', password: 'Password@123' });
 
     expect(res.statusCode).toEqual(401);
   });
@@ -104,7 +104,7 @@ describe('Authentication API Endpoints - POST /api/auth/login', () => {
 
     const res = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'student@vvit.net', password: 'Password@123' });
+      .send({ email: 'student@example.test', password: 'Password@123' });
 
     expect(res.statusCode).toEqual(500);
     expect(res.body.password).toBeUndefined();

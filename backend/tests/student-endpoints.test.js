@@ -9,13 +9,13 @@ describe('Student Endpoints — GET /api/student/jobs/open, GET /api/student/job
   let studentToken;
 
   beforeAll(() => {
-    studentToken = jwtUtils.generateAccessToken({ id: 999, email: 'student_test@vvit.net', role: 'STUDENT' });
+    studentToken = jwtUtils.generateAccessToken({ id: 999, email: 'student_test@example.test', role: 'STUDENT' });
   });
 
   beforeEach(() => {
     jest.spyOn(prisma.user, 'findUnique').mockResolvedValue({
       id: 999,
-      email: 'student_test@vvit.net',
+      email: 'student_test@example.test',
       name: 'Test Student',
       role: 'STUDENT',
       accountStatus: 'ACTIVE',

@@ -9,8 +9,8 @@ describe('Admin Student Import & Export API Endpoints', () => {
   let studentToken;
 
   beforeAll(() => {
-    adminToken = generateAccessToken({ id: 1, email: 'admin@vvit.ac.in', role: 'ADMIN' });
-    studentToken = generateAccessToken({ id: 2, email: 'student@vvit.ac.in', role: 'STUDENT' });
+    adminToken = generateAccessToken({ id: 1, email: 'admin@example.test', role: 'ADMIN' });
+    studentToken = generateAccessToken({ id: 2, email: 'student@example.test', role: 'STUDENT' });
 
     jest.spyOn(AdminExportService, 'exportStudents').mockImplementation(async (data) => {
       const format = (data.format || 'CSV').toUpperCase();
@@ -28,7 +28,7 @@ describe('Admin Student Import & Export API Endpoints', () => {
         };
       }
       return {
-        fileBuffer: Buffer.from('Roll Number,Name,Email\n218X1A0501,John,john@vvit.ac.in'),
+        fileBuffer: Buffer.from('Roll Number,Name,Email\n218X1A0501,John,john@example.test'),
         contentType: 'text/csv',
         filename: 'Students_Export_2026-08-08.csv'
       };
@@ -39,7 +39,7 @@ describe('Admin Student Import & Export API Endpoints', () => {
       skipped: 0,
       failed: 0,
       importedStudents: [
-        { name: 'Jane Doe', email: 'jane@vvit.ac.in', password: 'vvitu@210502', rollNumber: '218X1A0502' }
+        { name: 'Jane Doe', email: 'jane@example.test', password: 'TEST_PASSWORD_123', rollNumber: '218X1A0502' }
       ]
     });
   });
@@ -93,7 +93,7 @@ describe('Admin Student Import & Export API Endpoints', () => {
     const res = await request(app)
       .post('/api/admin/users/students/import')
       .set('Cookie', [`accessToken=${adminToken}`])
-      .attach('file', Buffer.from('Roll Number,Name,Email\n218X1A0502,Jane Doe,jane@vvit.ac.in'), 'students.csv');
+      .attach('file', Buffer.from('Roll Number,Name,Email\n218X1A0502,Jane Doe,jane@example.test'), 'students.csv');
     expect(res.statusCode).toEqual(200);
     expect(res.body.created).toEqual(1);
     expect(res.body.importedStudents.length).toEqual(1);

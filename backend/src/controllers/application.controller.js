@@ -3,7 +3,8 @@ const ApplicationService = require('../services/application.service');
 class ApplicationController {
   static async applyForJob(req, res, next) {
     try {
-      const { jobId, screeningAnswers } = req.body;
+      const jobId = req.params.jobId || req.body.jobId;
+      const { screeningAnswers } = req.body;
       const result = await ApplicationService.applyForJob(req.user.id, jobId, screeningAnswers);
       res.status(201).json(result);
     } catch (err) {

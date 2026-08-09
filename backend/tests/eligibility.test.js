@@ -7,7 +7,7 @@ describe('Job Eligibility Engine API Endpoints (/api/eligibility)', () => {
   let studentToken;
 
   beforeAll(() => {
-    studentToken = generateAccessToken({ id: 10, email: 'eligible.student@vvit.ac.in', role: 'STUDENT' });
+    studentToken = generateAccessToken({ id: 10, email: 'eligible.student@example.test', role: 'STUDENT' });
 
     jest.spyOn(EligibilityService, 'validateEligibility').mockImplementation(async (userId, jobId) => {
       if (jobId === '999') {

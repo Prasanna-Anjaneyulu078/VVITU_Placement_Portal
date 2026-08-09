@@ -8,11 +8,11 @@ describe('Admin User Management API Endpoints', () => {
   let studentToken;
 
   beforeAll(() => {
-    adminToken = generateAccessToken({ id: 1, email: 'admin@vvit.ac.in', role: 'ADMIN' });
-    studentToken = generateAccessToken({ id: 2, email: 'student@vvit.ac.in', role: 'STUDENT' });
+    adminToken = generateAccessToken({ id: 1, email: 'admin@example.test', role: 'ADMIN' });
+    studentToken = generateAccessToken({ id: 2, email: 'student@example.test', role: 'STUDENT' });
 
     jest.spyOn(AdminService, 'getAllStudents').mockResolvedValue([
-      { id: 1, name: 'John Doe', email: 'john@vvit.ac.in', rollNumber: '218X1A0501' }
+      { id: 1, name: 'John Doe', email: 'john@example.test', rollNumber: '218X1A0501' }
     ]);
 
     jest.spyOn(AdminService, 'deleteStudent').mockImplementation(async (id) => {
@@ -28,9 +28,9 @@ describe('Admin User Management API Endpoints', () => {
       }
       return {
         name: 'John Doe',
-        email: 'john@vvit.ac.in',
-        password: 'vvitu@210501',
-        temporaryPassword: 'vvitu@210501',
+        email: 'john@example.test',
+        password: 'TEST_PASSWORD_123',
+        temporaryPassword: 'TEST_PASSWORD_123',
         rollNumber: '218X1A0501'
       };
     });
@@ -124,8 +124,8 @@ describe('Admin User Management API Endpoints', () => {
       .post('/api/admin/users/students/1/reset-password')
       .set('Cookie', [`accessToken=${adminToken}`]);
     expect(res.statusCode).toEqual(200);
-    expect(res.body.email).toEqual('john@vvit.ac.in');
-    expect(res.body.password).toEqual('vvitu@210501');
+    expect(res.body.email).toEqual('john@example.test');
+    expect(res.body.password).toEqual('TEST_PASSWORD_123');
     expect(res.body.rollNumber).toEqual('218X1A0501');
   });
 
@@ -134,6 +134,6 @@ describe('Admin User Management API Endpoints', () => {
       .post('/api/admin/students/1/reset-password')
       .set('Cookie', [`accessToken=${adminToken}`]);
     expect(res.statusCode).toEqual(200);
-    expect(res.body.password).toEqual('vvitu@210501');
+    expect(res.body.password).toEqual('TEST_PASSWORD_123');
   });
 });

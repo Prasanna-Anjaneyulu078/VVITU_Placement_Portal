@@ -37,12 +37,12 @@ const validatePasswordRequirements = (password) => {
 
 const generateDefaultPassword = (rollNumber) => {
   if (!rollNumber || rollNumber.trim().length < 6) {
-    return 'vvitu@123456';
+    return process.env.DEFAULT_PASSWORD || 'TempPass@123456';
   }
   const cleanRoll = rollNumber.trim();
   const firstTwo = cleanRoll.substring(0, 2);
   const lastFour = cleanRoll.substring(cleanRoll.length - 4);
-  return 'vvitu@' + firstTwo + lastFour;
+  return (process.env.DEFAULT_PASSWORD_PREFIX || 'TempPass@') + firstTwo + lastFour;
 };
 
 module.exports = {

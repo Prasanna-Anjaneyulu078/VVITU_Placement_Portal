@@ -10,8 +10,8 @@ describe('Alumni Manage Job Endpoints — GET /api/alumni/jobs/:jobId/statistics
   let otherAlumniToken;
 
   beforeAll(() => {
-    alumniToken = jwtUtils.generateAccessToken({ id: 50, email: 'alumni_owner@vvit.net', role: 'ALUMNI' });
-    otherAlumniToken = jwtUtils.generateAccessToken({ id: 51, email: 'alumni_other@vvit.net', role: 'ALUMNI' });
+    alumniToken = jwtUtils.generateAccessToken({ id: 50, email: 'alumni_owner@example.test', role: 'ALUMNI' });
+    otherAlumniToken = jwtUtils.generateAccessToken({ id: 51, email: 'alumni_other@example.test', role: 'ALUMNI' });
   });
 
   afterEach(() => {
@@ -21,7 +21,7 @@ describe('Alumni Manage Job Endpoints — GET /api/alumni/jobs/:jobId/statistics
   it('GET /api/alumni/jobs/:jobId/statistics — returns 200 and statistics for authorized alumni owner', async () => {
     jest.spyOn(prisma.user, 'findUnique').mockResolvedValue({
       id: 50,
-      email: 'alumni_owner@vvit.net',
+      email: 'alumni_owner@example.test',
       role: 'ALUMNI',
       accountStatus: 'ACTIVE',
       deletedAt: null
@@ -60,7 +60,7 @@ describe('Alumni Manage Job Endpoints — GET /api/alumni/jobs/:jobId/statistics
   it('GET /api/alumni/jobs/:jobId/statistics — returns 403 Forbidden when requested by another alumni', async () => {
     jest.spyOn(prisma.user, 'findUnique').mockResolvedValue({
       id: 51,
-      email: 'alumni_other@vvit.net',
+      email: 'alumni_other@example.test',
       role: 'ALUMNI',
       accountStatus: 'ACTIVE',
       deletedAt: null
@@ -87,7 +87,7 @@ describe('Alumni Manage Job Endpoints — GET /api/alumni/jobs/:jobId/statistics
   it('GET /api/applications/job/:jobId — returns 200 and applicants for authorized alumni owner', async () => {
     jest.spyOn(prisma.user, 'findUnique').mockResolvedValue({
       id: 50,
-      email: 'alumni_owner@vvit.net',
+      email: 'alumni_owner@example.test',
       role: 'ALUMNI',
       accountStatus: 'ACTIVE',
       deletedAt: null

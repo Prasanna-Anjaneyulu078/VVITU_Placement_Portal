@@ -9,8 +9,8 @@ describe('Admin Settings API Endpoints (/api/admin/settings)', () => {
   let mockSettings;
 
   beforeAll(() => {
-    adminToken = generateAccessToken({ id: 1, email: 'admin@vvit.ac.in', role: 'ADMIN' });
-    studentToken = generateAccessToken({ id: 2, email: 'student@vvit.ac.in', role: 'STUDENT' });
+    adminToken = generateAccessToken({ id: 1, email: 'admin@example.test', role: 'ADMIN' });
+    studentToken = generateAccessToken({ id: 2, email: 'student@example.test', role: 'STUDENT' });
 
     mockSettings = {
       emailNotifications: 'true',

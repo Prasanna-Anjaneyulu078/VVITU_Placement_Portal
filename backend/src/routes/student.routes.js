@@ -39,6 +39,9 @@ router.post('/resume/upload', upload.single('resume'), StudentController.uploadR
 router.post('/resume/upload-file', upload.single('file'), StudentController.uploadResume);
 
 // Jobs
+const ApplicationController = require('../controllers/application.controller');
+router.post('/jobs/:jobId/apply', ApplicationController.applyForJob);
+
 router.get('/jobs/open', StudentController.getOpenJobs);
 router.get('/jobs/closed', StudentController.getClosedJobs);
 router.get('/jobs/applied', StudentController.getAppliedJobs);
