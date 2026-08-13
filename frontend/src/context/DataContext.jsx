@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../utils/axiosConfig';
 
+import { resolveImageUrl, withCacheBust } from '../utils/imageUrl';
+
 const DataContext = createContext();
 
 export const useData = () => useContext(DataContext);
@@ -9,7 +11,12 @@ export const DataProvider = ({ children }) => {
   const [jobs, setJobs] = useState([]);
   const [applications, setApplications] = useState([]);
   const [users, setUsers] = useState([]);
-  const [profileImage, setProfileImage] = useState(localStorage.getItem('profileImage') || '');
+  
+  // Clear legacy base64 data from localStorage to prevent payload bloat
+  const initialStorageImage = localStorage.getItem('profileImage') || '';
+  let initialImage = resolveImageUrl(initialStorageImage) || '';
+
+  const [profileImage, setProfileImage] = useState(initialImage);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -38,12 +45,20 @@ export const DataProvider = ({ children }) => {
   }, []);
 
   const updateProfileImage = (url) => {
-    setProfileImage(url || '');
-    if (url) {
-      localStorage.setItem('profileImage', url);
-    } else {
-      localStorage.removeItem('profileImage');
+    const resolved = resolveImageUrl(url);
+    if (!resolved) {
+      if (profileImage !== '') {
+        setProfileImage('');
+        localStorage.removeItem('profileImage');
+      }
+      return;
     }
+
+    const freshUrl = withCacheBust(resolved);
+    if (profileImage === freshUrl) return;
+
+    setProfileImage(freshUrl);
+    localStorage.setItem('profileImage', freshUrl);
   };
 
   const addJob = (job) => {

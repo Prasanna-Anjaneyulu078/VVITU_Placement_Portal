@@ -16,11 +16,22 @@ const server = app.listen(PORT, async () => {
   // Verify database connectivity at startup
   try {
     await prisma.$queryRaw`SELECT 1`;
-    console.log('[DATABASE] ✅ Prisma connected to MySQL successfully');
+    console.log('[DATABASE] ✅ Prisma connected to PostgreSQL successfully');
   } catch (err) {
     console.error('[DATABASE] ❌ Prisma connection failed:', err.message);
     console.error('[DATABASE] The server will remain running but database queries will fail.');
     console.error('[DATABASE] Check DATABASE_URL in server/.env');
+  }
+
+  // Verify PDF library at startup
+  try {
+    const pdfParse = require('pdf-parse');
+    if (typeof pdfParse !== 'function') {
+      throw new Error('pdf-parse is not a function (check version)');
+    }
+    console.log('[DEPENDENCY] ✅ pdf-parse API resolved correctly');
+  } catch (err) {
+    console.error('[DEPENDENCY] ❌ pdf-parse initialization failed:', err.message);
   }
 
   // Initialize Automatic Job Expiry Scheduler

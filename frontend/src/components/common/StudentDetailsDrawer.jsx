@@ -65,7 +65,7 @@ export default function StudentDetailsDrawer({
     const targetAppId = applicationId || details.id;
     setIsUpdating(true);
     try {
-      await api.put(`/applications/${targetAppId}/status`, null, { params: { status: newStatus } });
+      await api.patch(`/applications/${targetAppId}/status`, { status: newStatus });
       toast.success(`Application status updated to ${newStatus.replace('_', ' ')}`);
       setDetails(prev => prev ? { ...prev, status: newStatus } : null);
       if (onStatusUpdate) onStatusUpdate(targetAppId, newStatus);

@@ -1,0 +1,14 @@
+target/
+logs/
+uploads/
+.git/
+.mvn/
+mvnw
+mvnw.cmd
+.idea/
+.vscode/
+*.class
+*.jar
+*.log
+.env
+.env.*

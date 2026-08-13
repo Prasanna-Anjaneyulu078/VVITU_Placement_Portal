@@ -14,22 +14,36 @@ export default function ProjectCard({
 
   if (!project) return null;
 
+  const cleanUrl = (str) => {
+    if (!str || typeof str !== 'string') return null;
+    const trimmed = str.trim();
+    if (!trimmed) return null;
+
+    const httpMatches = trimmed.match(/https?:\/\/[^\s]+/gi);
+    if (httpMatches && httpMatches.length > 0) {
+      return httpMatches[0].trim();
+    }
+
+    if (trimmed.includes('.') || trimmed.includes('/')) {
+      return `https://${trimmed.replace(/^https?:\/\//i, '')}`;
+    }
+
+    return trimmed;
+  };
+
   const isUrl = (str) => {
-    if (!str || typeof str !== 'string') return false;
-    const clean = str.trim();
-    return clean.startsWith('http://') || clean.startsWith('https://');
+    const url = cleanUrl(str);
+    return Boolean(url && (url.startsWith('http://') || url.startsWith('https://')));
   };
 
   const formatUrl = (str) => {
-    if (!str) return '#';
-    const clean = str.trim();
-    return clean.startsWith('http') ? clean : `https://${clean}`;
+    return cleanUrl(str) || '#';
   };
 
   const getTechList = (techStr) => {
     if (!techStr) return [];
-    if (Array.isArray(techStr)) return techStr;
-    return techStr.split(/[,•|]+/).map(t => t.trim()).filter(Boolean);
+    const rawList = Array.isArray(techStr) ? techStr : techStr.split(/[,•|]+/).map(t => t.trim()).filter(Boolean);
+    return rawList.filter(t => !t.startsWith('http://') && !t.startsWith('https://') && !t.includes('github.com'));
   };
 
   const getBadgeColor = (type) => {
@@ -59,9 +73,9 @@ export default function ProjectCard({
     }
   };
 
-  const techList = getTechList(project.technologies || project.tech);
-  const githubLink = project.githubUrl || project.sourceUrl;
-  const demoLink = project.liveDemoUrl || project.demoUrl;
+  const techList = getTechList(project.technologies || project.tech || project.techStack);
+  const githubLink = cleanUrl(project.githubUrl || project.sourceUrl || project.gitUrl || project.githubURL || project.githubLink);
+  const demoLink = cleanUrl(project.liveDemoUrl || project.demoUrl || project.liveLink || project.liveDemoURL);
 
   return (
     <div className="bg-white border border-slate-200/90 hover:border-orange-200 rounded-2xl p-5 shadow-2xs space-y-3.5 transition-all">

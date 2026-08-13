@@ -1,6 +1,15 @@
 const AlumniService = require('../services/alumni.service');
 
 class AlumniController {
+  static async getDashboardStats(req, res, next) {
+    try {
+      const stats = await AlumniService.getDashboardStats(req.user.id);
+      res.status(200).json(stats);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   static async getProfile(req, res, next) {
     try {
       const profile = await AlumniService.getProfile(req.user.id);
@@ -13,6 +22,15 @@ class AlumniController {
   static async updateProfile(req, res, next) {
     try {
       const result = await AlumniService.updateProfile(req.user.id, req.body);
+      res.status(200).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async uploadProfileImage(req, res, next) {
+    try {
+      const result = await AlumniService.updateProfileImage(req.user.id, req.file);
       res.status(200).json(result);
     } catch (err) {
       next(err);
@@ -79,6 +97,75 @@ class AlumniController {
 
       const stats = await JobService.getJobStatistics(jobId);
       res.status(200).json(stats);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async getMyVerificationDocumentMetadata(req, res, next) {
+    try {
+      const prisma = require('../config/db');
+      const alumni = await prisma.alumni.findUnique({
+        where: { userId: BigInt(req.user.id) }
+      });
+
+      if (!alumni) {
+        return res.status(404).json({ success: false, message: 'Alumni profile not found' });
+      }
+
+      if (!alumni.verificationDocumentUrl) {
+        return res.status(404).json({ success: false, message: 'Verification document not found' });
+      }
+
+      res.status(200).json({
+        success: true,
+        documentName: alumni.verificationDocumentName || 'Verification_Document.pdf',
+        uploadDate: alumni.verificationDocumentUploadDate || null,
+        documentType: 'Verification Document',
+        url: '/api/alumni/documents/my-document/file'
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async getMyVerificationDocumentFile(req, res, next) {
+    try {
+      const prisma = require('../config/db');
+      const alumni = await prisma.alumni.findUnique({
+        where: { userId: BigInt(req.user.id) }
+      });
+
+      if (!alumni) {
+        return res.status(404).json({ success: false, message: 'Alumni profile not found' });
+      }
+
+      if (!alumni.verificationDocumentUrl) {
+        return res.status(404).json({ success: false, message: 'Verification document not found' });
+      }
+
+      const { resolveResumeFilePath } = require('../utils/file.utils');
+      const diskPath = resolveResumeFilePath(alumni.verificationDocumentUrl);
+
+      const fs = require('fs');
+      if (!diskPath || !fs.existsSync(diskPath)) {
+        return res.status(404).json({ success: false, message: 'Verification document is missing from storage.' });
+      }
+
+      const path = require('path');
+      const ext = path.extname(diskPath).toLowerCase();
+      
+      let mimeType = 'application/octet-stream';
+      if (ext === '.pdf') mimeType = 'application/pdf';
+      else if (ext === '.jpg' || ext === '.jpeg') mimeType = 'image/jpeg';
+      else if (ext === '.png') mimeType = 'image/png';
+      else if (ext === '.webp') mimeType = 'image/webp';
+      else if (ext === '.doc') mimeType = 'application/msword';
+      else if (ext === '.docx') mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+      res.setHeader('Content-Type', mimeType);
+      const readStream = fs.createReadStream(diskPath);
+      readStream.pipe(res);
     } catch (err) {
       next(err);
     }

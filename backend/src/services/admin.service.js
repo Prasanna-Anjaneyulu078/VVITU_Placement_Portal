@@ -75,7 +75,7 @@ class AdminService {
       designation: p.designation || 'System Admin',
       employeeId: p.employeeId || '',
       officeLocation: p.officeLocation || '',
-      profileImageUrl: p.profileImageUrl || null,
+      profileImageUrl: p.profileImageUrl ? `/api/public/admin/${user.id}/profile-image` : null,
       role: user.role || 'ADMIN',
       status: user.accountStatus || 'ACTIVE',
       accountCreatedDate: user.createdAt ? user.createdAt.toISOString() : null
@@ -141,13 +141,27 @@ class AdminService {
 
     if (!user) throw { statusCode: 404, message: 'Admin user not found' };
 
-    await prisma.adminProfile.upsert({
-      where: { userId: user.id },
-      create: { userId: user.id, profileImageUrl: imageUrl },
-      update: { profileImageUrl: imageUrl }
-    });
+    const now = new Date();
 
-    return { success: true, imageUrl };
+    await prisma.$transaction([
+      prisma.adminProfile.upsert({
+        where: { userId: user.id },
+        create: { userId: user.id, profileImageUrl: imageUrl },
+        update: { profileImageUrl: imageUrl }
+      }),
+      prisma.user.update({
+        where: { id: user.id },
+        data: { updatedAt: now }
+      })
+    ]);
+
+    return { 
+      success: true, 
+      imageUrl, 
+      profileImageUrl: imageUrl,
+      url: imageUrl,
+      updatedAt: now.toISOString() 
+    };
   }
 
   static async deleteAdminProfileImage(userIdOrEmail) {
@@ -213,7 +227,7 @@ class AdminService {
         cgpa: s.cgpa || null,
         academicYear: s.academicYear || '',
         mobileNumber: s.mobileNumber || '',
-        profileImageUrl: s.profileImageUrl || null,
+        profileImageUrl: s.profileImageUrl ? `/api/public/student/${s.id}/profile-image` : null,
         user: {
           id: u.id ? Number(u.id) : null,
           name: u.name || '',
@@ -226,7 +240,7 @@ class AdminService {
             cgpa: s.cgpa || null,
             academicYear: s.academicYear || '',
             mobileNumber: s.mobileNumber || '',
-            profileImageUrl: s.profileImageUrl || null
+            profileImageUrl: s.profileImageUrl ? `/api/public/student/${s.id}/profile-image` : null
           }
         }
       };
@@ -263,7 +277,7 @@ class AdminService {
         location: s.location,
         githubUrl: s.githubUrl,
         linkedinUrl: s.linkedinUrl,
-        profileImageUrl: s.profileImageUrl,
+        profileImageUrl: s.profileImageUrl ? `/api/public/student/${s.id}/profile-image` : null,
         cgpa: s.cgpa,
         backlogs: s.backlogs,
         verificationStatus: 'VERIFIED',
@@ -283,6 +297,45 @@ class AdminService {
       console.warn('[ADMIN-SERVICE] getAllStudents database fallback:', err.message);
       return [];
     }
+  }
+
+  static async getAlumniDocument(id) {
+    const alumni = await prisma.alumni.findUnique({
+      where: { id: BigInt(id) }
+    });
+
+    if (!alumni) {
+      throw { statusCode: 404, message: 'Alumni not found' };
+    }
+
+    if (!alumni.verificationDocumentUrl) {
+      throw { statusCode: 404, message: 'No verification document uploaded.' };
+    }
+
+    const { resolveResumeFilePath } = require('../utils/file.utils');
+    const diskPath = resolveResumeFilePath(alumni.verificationDocumentUrl);
+
+    const fs = require('fs');
+    if (!diskPath || !fs.existsSync(diskPath)) {
+      throw { statusCode: 404, message: 'Verification document is missing from storage. Please request the alumni to upload the document again.' };
+    }
+
+    const path = require('path');
+    const ext = path.extname(diskPath).toLowerCase();
+    
+    let mimeType = 'application/octet-stream';
+    if (ext === '.pdf') mimeType = 'application/pdf';
+    else if (ext === '.jpg' || ext === '.jpeg') mimeType = 'image/jpeg';
+    else if (ext === '.png') mimeType = 'image/png';
+    else if (ext === '.webp') mimeType = 'image/webp';
+    else if (ext === '.doc') mimeType = 'application/msword';
+    else if (ext === '.docx') mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+    return {
+      diskPath,
+      mimeType,
+      fileName: alumni.verificationDocumentName || `alumni_${id}_document${ext}`
+    };
   }
 
   static async getAllAlumni(query = {}) {
@@ -324,7 +377,7 @@ class AdminService {
       designation: a.designation,
       passingYear: a.passingYear,
       verificationStatus: a.verificationStatus,
-      profileImageUrl: a.profileImageUrl,
+      profileImageUrl: a.profileImageUrl ? `/api/public/alumni/${a.id}/profile-image` : null,
       department: a.department,
       rollNumber: a.rollNumber,
       mobileNumber: a.mobileNumber,
@@ -338,12 +391,24 @@ class AdminService {
       throw { statusCode: 400, message: 'Invalid verification status' };
     }
 
-    const updated = await prisma.alumni.update({
-      where: { id: BigInt(alumniId) },
-      data: { verificationStatus: status }
+    const alumni = await prisma.alumni.findUnique({
+      where: { id: BigInt(alumniId) }
     });
 
-    return { success: true, message: `Alumni verification status updated to ${status}`, alumni: updated };
+    if (!alumni) {
+      throw { statusCode: 404, message: 'Alumni account not found.' };
+    }
+
+    const updated = await prisma.alumni.update({
+      where: { id: BigInt(alumniId) },
+      data: { 
+        verificationStatus: status,
+        manualReviewRequired: false
+      }
+    });
+
+    const actionText = status === 'VERIFIED' ? 'approved' : status === 'REJECTED' ? 'rejected' : 'updated';
+    return { success: true, message: `Alumni ${actionText} successfully.`, alumni: updated };
   }
 
   static async getAllJobs() {
@@ -440,6 +505,75 @@ class AdminService {
     return {
       success: true,
       message: 'Student account has been permanently deleted.'
+    };
+  }
+
+  static async deleteAlumni(alumniId, operatorEmail = null, ipAddress = null) {
+    let alumni;
+    try {
+      alumni = await prisma.alumni.findUnique({
+        where: { id: BigInt(alumniId) },
+        include: { user: true }
+      });
+    } catch (err) {
+      throw { statusCode: 404, message: 'Alumni account not found.' };
+    }
+
+    if (!alumni) {
+      throw { statusCode: 404, message: 'Alumni account not found.' };
+    }
+
+    if (alumni.user?.role === 'ADMIN' || alumni.user?.role === 'SUPER_ADMIN') {
+      throw { statusCode: 403, message: 'Cannot delete admin accounts through this endpoint.' };
+    }
+
+    const aid = alumni.id;
+    const uid = alumni.userId;
+    const alumniName = alumni.user?.name || 'Unknown';
+    const userEmail = alumni.user?.email || '';
+
+    // Delete associated files (profile image, verification document)
+    const fs = require('fs');
+    const { resolveResumeFilePath } = require('../utils/file.utils');
+    const path = require('path');
+    const env = require('../config/env');
+
+    if (alumni.profileImageUrl) {
+      const pPath = path.join(env.uploadDir, 'images', path.basename(alumni.profileImageUrl));
+      if (fs.existsSync(pPath)) {
+        try { fs.unlinkSync(pPath); } catch (e) {}
+      }
+    }
+
+    if (alumni.verificationDocumentUrl) {
+      const dPath = resolveResumeFilePath(alumni.verificationDocumentUrl);
+      if (dPath && fs.existsSync(dPath)) {
+        try { fs.unlinkSync(dPath); } catch (e) {}
+      }
+    }
+
+    await prisma.$transaction(async (tx) => {
+      // 1. Delete alumni record
+      await tx.alumni.delete({ where: { id: aid } });
+
+      // 2. Delete user record & audit logs
+      if (uid) {
+        await tx.auditLog.deleteMany({ where: { performedBy: uid } });
+        await tx.ocrAuditLog.deleteMany({ where: { performedBy: uid } });
+        await tx.user.delete({ where: { id: uid } });
+      }
+
+      await tx.auditLog.create({
+        data: {
+          action: 'PERMANENT_ALUMNI_DELETE',
+          details: `Permanently deleted alumni account: Name=${alumniName}, Email=${userEmail}`
+        }
+      });
+    });
+
+    return {
+      success: true,
+      message: 'Alumni account has been permanently deleted.'
     };
   }
 
@@ -653,7 +787,7 @@ class AdminService {
       graduationYear: student.academicYear || '2026',
       cgpa: student.cgpa || null,
       backlogs: student.backlogs || 0,
-      profileImageUrl: student.profileImageUrl || null,
+      profileImageUrl: student.profileImageUrl ? `/api/public/student/${student.id}/profile-image` : null,
       mobileNumber: student.mobileNumber || null,
       location: student.location || null,
       verificationStatus: student.verificationStatus || 'VERIFIED',
@@ -675,8 +809,17 @@ class AdminService {
 
       // Resume
       resumeFileName: resume ? (resume.fileName || `${student.rollNumber || 'Student'}_Resume.pdf`) : null,
-      resumeUrl: resume ? `/admin/students/${sId}/resume/view` : null,
-      resumeDownloadUrl: resume ? `/admin/students/${sId}/resume/download` : null,
+      resumeUrl: resume ? `/api/admin/users/students/${sId}/resume/view` : null,
+      resumeDownloadUrl: resume ? `/api/admin/users/students/${sId}/resume/download` : null,
+      resumeViewUrl: resume ? `/api/admin/users/students/${sId}/resume/view` : null,
+      resume: resume ? {
+        id: Number(resume.id),
+        fileName: resume.fileName || `${student.rollNumber || 'Student'}_Resume.pdf`,
+        originalFileName: resume.fileName || `${student.rollNumber || 'Student'}_Resume.pdf`,
+        fileUrl: resume.filePath,
+        mimeType: resume.fileType || 'application/pdf',
+        uploadedAt: resume.uploadedAt
+      } : null,
 
       // Skills
       skills: (student.skills || []).map(s => s.skillName).filter(Boolean),
@@ -696,6 +839,54 @@ class AdminService {
         projectType: 'Academic',
         status: 'Completed'
       }))
+    };
+  }
+
+  static async getStudentResumeFile(studentIdParam) {
+    let studentId;
+    try {
+      studentId = BigInt(studentIdParam);
+    } catch (err) {
+      throw { statusCode: 400, message: 'Invalid student ID format' };
+    }
+
+    let student = await prisma.student.findUnique({
+      where: { id: studentId }
+    });
+
+    if (!student || student.deletedAt) {
+      student = await prisma.student.findUnique({
+        where: { userId: studentId }
+      });
+    }
+
+    if (!student || student.deletedAt) {
+      throw { statusCode: 404, message: 'Student not found.' };
+    }
+
+    const resumeRecord = await prisma.resume.findFirst({
+      where: { studentId: student.id, deletedAt: null },
+      orderBy: { uploadedAt: 'desc' }
+    });
+
+    if (!resumeRecord) {
+      throw { statusCode: 404, message: 'Student has not uploaded a resume.' };
+    }
+
+    const { resolveResumeFilePath } = require('../utils/file.utils');
+    const physicalPath = resolveResumeFilePath(resumeRecord.filePath);
+
+    if (!physicalPath) {
+      throw { statusCode: 404, message: 'Resume file is missing from storage. Please ask the student to re-upload the resume.' };
+    }
+
+    const mimeType = resumeRecord.fileType || 'application/pdf';
+    const fileName = resumeRecord.fileName || `${student.rollNumber || 'Student'}_Resume.pdf`;
+
+    return {
+      filePath: physicalPath,
+      fileName,
+      mimeType
     };
   }
 }

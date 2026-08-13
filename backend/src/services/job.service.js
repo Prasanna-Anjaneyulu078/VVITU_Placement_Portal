@@ -21,9 +21,9 @@ class JobService {
       deletedAt: null,
       ...(search && {
         OR: [
-          { title: { contains: search } },
-          { companyName: { contains: search } },
-          { description: { contains: search } }
+          { title: { contains: search, mode: 'insensitive' } },
+          { companyName: { contains: search, mode: 'insensitive' } },
+          { description: { contains: search, mode: 'insensitive' } }
         ]
       })
     };
@@ -82,9 +82,9 @@ class JobService {
         AND: [
           {
             OR: [
-              { title: { contains: search } },
-              { companyName: { contains: search } },
-              { description: { contains: search } }
+              { title: { contains: search, mode: 'insensitive' } },
+              { companyName: { contains: search, mode: 'insensitive' } },
+              { description: { contains: search, mode: 'insensitive' } }
             ]
           }
         ]
@@ -257,12 +257,12 @@ class JobService {
     const where = {
       deletedAt: null,
       ...(status && { status: status.toUpperCase() }),
-      ...(department && { eligibleDepartments: { contains: department } }),
+      ...(department && { eligibleDepartments: { contains: department, mode: 'insensitive' } }),
       ...(search && {
         OR: [
-          { title: { contains: search } },
-          { companyName: { contains: search } },
-          { description: { contains: search } }
+          { title: { contains: search, mode: 'insensitive' } },
+          { companyName: { contains: search, mode: 'insensitive' } },
+          { description: { contains: search, mode: 'insensitive' } }
         ]
       })
     };
@@ -375,6 +375,126 @@ class JobService {
       postedByRole: posterRole,
       postedById: job.postedByAlumni?.user?.id ? Number(job.postedByAlumni.user.id) : null,
       applicationCount: job._count.applications,
+      createdAt: job.createdAt || null
+    };
+  }
+
+  static async getStudentJobDetails(userId, jobIdParam) {
+    if (!jobIdParam || isNaN(Number(jobIdParam))) {
+      throw { statusCode: 400, message: 'Invalid job ID.' };
+    }
+
+    const jobId = BigInt(jobIdParam);
+
+    const job = await prisma.job.findUnique({
+      where: { id: jobId },
+      include: {
+        postedByAlumni: {
+          include: { user: { select: { id: true, name: true, email: true, role: true } } }
+        },
+        _count: { select: { applications: true } }
+      }
+    });
+
+    if (!job || job.deletedAt) {
+      throw { statusCode: 404, message: 'Job not found.' };
+    }
+
+    const statusUpper = (job.status || '').toUpperCase();
+    if (statusUpper === 'PENDING' || statusUpper === 'REJECTED') {
+      throw { statusCode: 404, message: 'Job not found or not available.' };
+    }
+
+    let hasApplied = false;
+    let applicationStatus = null;
+
+    const student = await prisma.student.findUnique({
+      where: { userId: BigInt(userId) }
+    });
+
+    if (student) {
+      const existingApp = await prisma.application.findFirst({
+        where: {
+          jobId: job.id,
+          studentId: student.id,
+          deletedAt: null
+        }
+      });
+      if (existingApp) {
+        hasApplied = true;
+        applicationStatus = existingApp.status;
+      }
+    }
+
+    let skillMatchPercentage = 100;
+    let matchedSkills = [];
+    let missingSkills = [];
+    let isEligible = true;
+    let eligibilityDetails = null;
+
+    try {
+      const EligibilityService = require('./eligibility.service');
+      const eligibility = await EligibilityService.validateEligibility(userId, Number(job.id));
+      isEligible = eligibility.isEligible;
+      eligibilityDetails = eligibility;
+      if (eligibility.skillMatch) {
+        skillMatchPercentage = eligibility.skillMatch.skillMatchPercentage ?? 100;
+        matchedSkills = eligibility.skillMatch.matchedSkills || [];
+        missingSkills = eligibility.skillMatch.missingSkills || [];
+      }
+    } catch (e) {
+      // Safe fallback if student profile or eligibility check fails
+    }
+
+    const posterName = job.postedByAlumni?.user?.name || (job.postedByAlumniId ? null : 'Placement Administration');
+    const posterRole = job.postedByAlumni ? 'ALUMNI' : (job.postedByAlumniId ? 'UNKNOWN' : 'ADMIN');
+    const posterType = job.postedByAlumni ? 'Alumni' : (job.postedByAlumniId ? null : 'Admin');
+
+    return {
+      id: Number(job.id),
+      title: job.title || '',
+      companyName: job.companyName || '',
+      company: job.companyName || '',
+      description: job.description || '',
+      location: job.location || '',
+      jobType: job.jobType || '',
+      salaryPackage: job.salaryPackage || '',
+      packageDetails: job.salaryPackage || '',
+      experienceRequired: job.experienceRequired || '',
+      requiredSkills: job.requiredSkills || '',
+      requiredSkillsList: job.requiredSkills ? job.requiredSkills.split(',').map((s) => s.trim()).filter(Boolean) : [],
+      requiredCgpa: job.requiredCgpa || null,
+      minCgpa: job.requiredCgpa || null,
+      eligibleSemester: job.eligibleSemester || null,
+      maxBacklogs: job.maxBacklogs || null,
+      eligibleDepartments: job.eligibleDepartments || '',
+      status: job.status || 'APPROVED',
+      applicationDeadline: job.applicationDeadline || null,
+      expiryDate: job.applicationDeadline || null,
+      openings: job.openings || null,
+      imageUrl: job.imageUrl || null,
+      companyLogoUrl: job.imageUrl || null,
+      rejectionReason: job.rejectionReason || null,
+      enableScreening: job.enableScreening ?? false,
+      useDefaultScreening: job.useDefaultScreening ?? true,
+      postedBy: {
+        id: job.postedByAlumni?.user?.id ? Number(job.postedByAlumni.user.id) : null,
+        name: posterName,
+        role: posterRole,
+        type: posterType
+      },
+      postedByName: posterName,
+      postedByType: posterType,
+      postedByRole: posterRole,
+      postedById: job.postedByAlumni?.user?.id ? Number(job.postedByAlumni.user.id) : null,
+      applicationCount: job._count.applications,
+      hasApplied,
+      applicationStatus,
+      skillMatchPercentage,
+      matchedSkills,
+      missingSkills,
+      isEligible,
+      eligibilityDetails,
       createdAt: job.createdAt || null
     };
   }

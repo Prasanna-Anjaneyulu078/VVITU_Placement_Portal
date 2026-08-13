@@ -7,14 +7,18 @@ import {
   User, Calendar, CheckCircle, ShieldCheck, Save, X, Users, 
   GraduationCap, Briefcase as BriefcaseIcon, Clock, Settings, KeyRound, Check
 } from 'lucide-react';
+import { getImageUrl, withCacheBust } from '../../utils/imageUrl';
 import { LoadingSpinner, Modal, ChangePasswordCard } from '../../components/common';
 import { ProfileLoader } from '../../components/common/loading';
 import { toast } from 'react-toastify';
 import api from '../../utils/axiosConfig';
 import useDepartments from '../../hooks/useDepartments';
 
+import { useData } from '../../context/DataContext';
+
 export default function AdminProfile() {
   const navigate = useNavigate();
+  const { updateProfileImage } = useData();
   const { departments } = useDepartments();
   const [profile, setProfile] = useState(null);
   const [stats, setStats] = useState(null);
@@ -96,9 +100,11 @@ export default function AdminProfile() {
       const res = await api.post('/admin/profile/image', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      setProfile(prev => ({ ...prev, profileImageUrl: res.data.imageUrl }));
+      const rawUrl = res.data.imageUrl || res.data.profileImageUrl || res.data.url;
+      const freshUrl = withCacheBust(rawUrl, res.data.updatedAt);
+      setProfile(prev => ({ ...prev, profileImageUrl: freshUrl }));
+      updateProfileImage(freshUrl);
       toast.success('Profile image uploaded successfully');
-      window.dispatchEvent(new CustomEvent('profileImageUpdated', { detail: res.data.imageUrl }));
     } catch (err) {
       toast.error('Failed to upload image');
       console.error(err);
@@ -214,7 +220,7 @@ export default function AdminProfile() {
                   <div className="relative group">
                     <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-md bg-white">
                       <img 
-                        src={profile?.profileImageUrl || generateAvatarSVG(profile?.name || 'Admin', 'F47C20', 'fff')} 
+                        src={getImageUrl(profile?.profileImageUrl) || generateAvatarSVG(profile?.name || 'Admin', 'F47C20', 'fff')} 
                         onError={(e) => { e.target.onerror = null; e.target.src = generateAvatarSVG(profile?.name || 'Admin', 'F47C20', 'fff'); }}
                         alt="Profile" 
                         className="w-full h-full object-cover"

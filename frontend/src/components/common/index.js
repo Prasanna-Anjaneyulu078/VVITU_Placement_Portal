@@ -39,4 +39,5 @@ export { default as DeleteProjectDialog } from './DeleteProjectDialog';
 export { default as ProjectEmptyState } from './ProjectEmptyState';
 export { default as ProjectCard } from './ProjectCard';
 export { default as ChangePasswordCard } from './ChangePasswordCard';
-
+export { default as SecurityAccountCard } from './SecurityAccountCard';
+export { default as ApplicationStudentTable } from './ApplicationStudentTable';

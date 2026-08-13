@@ -6,7 +6,7 @@ class AlumniService {
       where: { userId: BigInt(userId) },
       include: {
         user: {
-          select: { name: true, email: true, role: true }
+          select: { id: true, name: true, email: true, role: true, accountStatus: true, lastLogin: true, createdAt: true }
         }
       }
     });
@@ -20,12 +20,69 @@ class AlumniService {
       userId: Number(alumni.userId),
       name: alumni.user ? alumni.user.name : null,
       email: alumni.user ? alumni.user.email : null,
+      role: alumni.user ? alumni.user.role : 'ALUMNI',
       company: alumni.company,
       designation: alumni.designation,
       passingYear: alumni.passingYear,
-      location: null,
+      rollNumber: alumni.rollNumber,
+      department: alumni.department,
+      mobileNumber: alumni.mobileNumber,
+      gender: alumni.gender,
+      linkedinUrl: alumni.linkedinUrl,
+      degree: alumni.degree,
       verificationStatus: alumni.verificationStatus,
-      profileImageUrl: alumni.profileImageUrl
+      profileImageUrl: alumni.profileImageUrl ? `/api/public/alumni/${alumni.id}/profile-image` : null,
+      user: alumni.user ? {
+        id: Number(alumni.user.id),
+        name: alumni.user.name,
+        email: alumni.user.email,
+        role: alumni.user.role || 'ALUMNI',
+        accountStatus: alumni.user.accountStatus || 'ACTIVE',
+        lastLogin: alumni.user.lastLogin || null,
+        createdAt: alumni.user.createdAt || alumni.createdAt || null
+      } : null,
+      account: alumni.user ? {
+        email: alumni.user.email,
+        role: alumni.user.role || 'ALUMNI',
+        status: alumni.user.accountStatus || 'ACTIVE',
+        createdAt: alumni.user.createdAt || alumni.createdAt || null,
+        lastLogin: alumni.user.lastLogin || null
+      } : null,
+      accountInformation: alumni.user ? {
+        email: alumni.user.email,
+        role: alumni.user.role || 'ALUMNI',
+        status: alumni.user.accountStatus || 'ACTIVE',
+        createdAt: alumni.user.createdAt || alumni.createdAt || null,
+        lastLogin: alumni.user.lastLogin || null
+      } : null,
+      accountStatus: alumni.user ? (alumni.user.accountStatus || 'ACTIVE') : 'ACTIVE',
+      lastLogin: alumni.user ? alumni.user.lastLogin : null,
+      createdAt: alumni.user ? (alumni.user.createdAt || alumni.createdAt || null) : null
+    };
+  }
+
+  static async getDashboardStats(userId) {
+    const alumni = await prisma.alumni.findUnique({
+      where: { userId: BigInt(userId) }
+    });
+
+    if (!alumni) {
+      throw { statusCode: 404, message: 'Alumni profile not found' };
+    }
+
+    const jobs = await prisma.job.findMany({
+      where: { postedByAlumniId: alumni.id, deletedAt: null },
+      include: { _count: { select: { applications: true } } }
+    });
+
+    const activeJobs = jobs.filter(j => j.status === 'APPROVED').length;
+    const jobsPosted = jobs.length;
+    const totalApplicants = jobs.reduce((acc, job) => acc + job._count.applications, 0);
+
+    return {
+      jobsPosted,
+      activeJobs,
+      totalApplicants
     };
   }
 
@@ -140,6 +197,43 @@ class AlumniService {
     });
 
     return { success: true, message: 'Job submitted for admin approval', job: newJob };
+  }
+
+  static async updateProfileImage(userId, file) {
+    if (!file) {
+      throw { statusCode: 400, message: 'Profile picture file is required' };
+    }
+
+    const alumni = await prisma.alumni.findUnique({
+      where: { userId: BigInt(userId) }
+    });
+
+    if (!alumni) {
+      throw { statusCode: 404, message: 'Alumni profile not found' };
+    }
+
+    const imageUrl = `/uploads/images/${file.filename}`;
+    const now = new Date();
+
+    const [updated] = await prisma.$transaction([
+      prisma.alumni.update({
+        where: { id: alumni.id },
+        data: { profileImageUrl: imageUrl }
+      }),
+      prisma.user.update({
+        where: { id: BigInt(userId) },
+        data: { updatedAt: now }
+      })
+    ]);
+
+    return {
+      success: true,
+      message: 'Profile picture updated successfully',
+      profileImageUrl: imageUrl,
+      url: imageUrl,
+      updatedAt: now.toISOString(),
+      alumni: updated
+    };
   }
 }
 

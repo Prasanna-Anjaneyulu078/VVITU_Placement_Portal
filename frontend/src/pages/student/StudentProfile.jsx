@@ -5,7 +5,8 @@ import {
   User, Mail, Phone, MapPin, Linkedin, Github, 
   Plus, Edit2, Trash2, FileText, Download, X, BadgeCheck, AlertCircle, Link as LinkIcon, CheckCircle, Save, BookOpen, Wrench, FolderGit2, Code, ExternalLink, RefreshCw, UploadCloud, Loader2
 } from 'lucide-react';
-import { Modal, Input, Button, DocumentViewerModal, LoadingSpinner, CategorizedSkillsSection, StudentProjectsSection, ResumeUploadModal, ProfileIconCard, ChangePasswordCard } from '../../components/common';
+import { getImageUrl, withCacheBust } from '../../utils/imageUrl';
+import { Modal, Input, Button, DocumentViewerModal, LoadingSpinner, CategorizedSkillsSection, StudentProjectsSection, ResumeUploadModal, ProfileIconCard, ChangePasswordCard, SecurityAccountCard } from '../../components/common';
 import { SectionLoader } from '../../components/common/loading';
 import { toast } from 'react-toastify';
 import api from '../../utils/axiosConfig';
@@ -297,13 +298,16 @@ export default function StudentProfile() {
       const res = await api.post('/student/profile/image', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      const freshUrl = (res.data.url || res.data.profileImageUrl || basicInfo.profileImageUrl) + '?t=' + Date.now();
+      const rawUrl = res.data.profileImageUrl || res.data.url || basicInfo.profileImageUrl;
+      const freshUrl = withCacheBust(rawUrl, res.data.updatedAt);
       
       setBasicInfo(prev => ({ ...prev, profileImageUrl: freshUrl }));
       updateProfileImage(freshUrl);
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
       setImagePreview(null);
       toast.success(res.data.message || "Profile photo updated successfully");
     } catch (err) {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
       setImagePreview(null);
       toast.error(err.response?.data?.message || "Profile photo could not be updated. Please try again.");
     } finally {
@@ -429,7 +433,7 @@ export default function StudentProfile() {
                     <div className="w-full h-full bg-slate-200 animate-pulse rounded-full" />
                   ) : imagePreview || basicInfo.profileImageUrl || profileImage ? (
                     <img 
-                      src={imagePreview || basicInfo.profileImageUrl || profileImage} 
+                      src={imagePreview || getImageUrl(basicInfo.profileImageUrl || profileImage)} 
                       alt={basicInfo.name || 'Profile'} 
                       className="w-full h-full object-cover rounded-full"
                       onError={(e) => {
@@ -758,9 +762,13 @@ export default function StudentProfile() {
             </div>
           )}
 
-          {/* Security & Password */}
+          {/* Security & Account Information */}
           <div className="mt-6">
-            <ChangePasswordCard apiEndpoint="/auth/change-password" cardTitle="Security & Change Password" />
+            <SecurityAccountCard
+              accountData={basicInfo}
+              role="STUDENT"
+              onRefresh={() => fetchProfile(true)}
+            />
           </div>
 
         </div>

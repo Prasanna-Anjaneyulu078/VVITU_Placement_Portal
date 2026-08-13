@@ -46,7 +46,6 @@ app.use('/api/uploads', express.static(env.uploadDir));
 app.use('/api/student/profile/image', express.static(path.join(env.uploadDir, 'images')));
 app.use('/api/public/alumni/profile-image', express.static(path.join(env.uploadDir, 'images')));
 app.use('/api/jobs/images/logo', express.static(path.join(env.uploadDir, 'job-logos')));
-app.use('/api/jobs/images/banner', express.static(path.join(env.uploadDir, 'job-banners')));
 
 // 4. Health Endpoint (top-level, no auth)
 app.get(['/health', '/api/health'], (req, res) => {

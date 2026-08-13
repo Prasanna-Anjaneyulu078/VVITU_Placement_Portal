@@ -3,7 +3,7 @@ const ResumeService = require('../services/resume.service');
 class ResumeController {
   static async uploadResume(req, res, next) {
     try {
-      const result = await ResumeService.uploadResume(req.user.id, req.file);
+      const result = await ResumeService.uploadResume(req.user.id, req.file, req.body?.strategy);
       res.status(201).json(result);
     } catch (err) {
       next(err);
@@ -21,10 +21,23 @@ class ResumeController {
 
   static async viewResume(req, res, next) {
     try {
+      const path = require('path');
       const resumeId = req.params.id || null;
       const { filePath, fileName, mimeType } = await ResumeService.getResumeFileById(req.user.id, resumeId, req.user.role);
-      res.setHeader('Content-Type', mimeType);
-      res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
+      
+      const ext = path.extname(fileName || filePath).toLowerCase();
+      let disposition = 'inline';
+      let contentType = mimeType || 'application/pdf';
+
+      if (ext === '.doc' || ext === '.docx' || (mimeType && mimeType.includes('word'))) {
+        disposition = 'attachment';
+      }
+      if (ext === '.pdf') contentType = 'application/pdf';
+      if (ext === '.doc') contentType = 'application/msword';
+      if (ext === '.docx') contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Disposition', `${disposition}; filename="${fileName}"`);
       res.sendFile(filePath);
     } catch (err) {
       next(err);

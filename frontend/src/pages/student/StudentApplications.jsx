@@ -4,6 +4,7 @@ import DashboardLayout from '../../components/layout/DashboardLayout';
 import { X, MapPin, DollarSign, Briefcase } from 'lucide-react';
 import { PageHeader, Table, Modal, Button, LoadingSpinner } from '../../components/common';
 import { TableLoader } from '../../components/common/loading';
+import { getImageUrl } from '../../utils/imageUrl';
 import api from '../../utils/axiosConfig';
 
 export default function StudentApplications() {
@@ -209,7 +210,7 @@ export default function StudentApplications() {
           <div className="space-y-6">
             <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
               {selectedApp.jobDetails?.logo ? (
-                <img src={selectedApp.jobDetails.logo} alt={`${selectedApp.company} logo`} className="w-16 h-16 rounded-xl object-contain border border-gray-100" />
+                <img src={getImageUrl(selectedApp.jobDetails.logo)} alt={`${selectedApp.company} logo`} className="w-16 h-16 rounded-xl object-contain border border-gray-100" />
               ) : (
                 <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold text-xl">
                   {selectedApp.company?.charAt(0)}

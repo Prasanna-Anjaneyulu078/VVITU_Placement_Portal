@@ -268,7 +268,6 @@ export default function AlumniPostJob({ role = 'alumni' }) {
               <ImageUploadInput
                 label="Company Logo"
                 sublabel="PNG, JPG, JPEG, WEBP • Max 5 MB"
-                type="logo"
                 file={logoFile}
                 onFileSelect={(f) => setLogoFile(f)}
                 onFileRemove={() => setLogoFile(null)}

@@ -119,10 +119,54 @@ class AdminController {
     }
   }
 
+  static async getAlumniDocument(req, res, next) {
+    try {
+      const { diskPath, mimeType, fileName } = await AdminService.getAlumniDocument(req.params.id);
+      
+      res.setHeader('Content-Type', mimeType);
+      // Ensure safe filename by removing quotes and newlines
+      const safeFileName = fileName.replace(/["\n\r]/g, '');
+      res.setHeader('Content-Disposition', `inline; filename="${safeFileName}"`);
+      
+      return res.sendFile(diskPath);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   static async verifyAlumni(req, res, next) {
     try {
       const { status } = req.body;
-      const result = await AdminService.verifyAlumni(req.params.id, status);
+      
+      if (!['APPROVE', 'REJECT'].includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid alumni verification action.'
+        });
+      }
+
+      const dbStatus = status === 'APPROVE' ? 'VERIFIED' : 'REJECTED';
+
+      const result = await AdminService.verifyAlumni(req.params.id, dbStatus);
+      res.status(200).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async deleteAlumni(req, res, next) {
+    try {
+      const alumniId = Number(req.params.id);
+      if (!Number.isInteger(alumniId) || alumniId <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid alumni ID.'
+        });
+      }
+      const operatorEmail = req.user?.email || null;
+      const ipAddress = req.ip || null;
+      
+      const result = await AdminService.deleteAlumni(alumniId, operatorEmail, ipAddress);
       res.status(200).json(result);
     } catch (err) {
       next(err);
@@ -255,6 +299,39 @@ class AdminController {
     try {
       const result = await AdminService.getStudentDetails(req.params.id);
       res.status(200).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async viewStudentResume(req, res, next) {
+    try {
+      const path = require('path');
+      const { filePath, fileName, mimeType } = await AdminService.getStudentResumeFile(req.params.id);
+
+      const ext = path.extname(fileName || filePath).toLowerCase();
+      let disposition = 'inline';
+      let contentType = mimeType || 'application/pdf';
+
+      if (ext === '.doc' || ext === '.docx' || (mimeType && mimeType.includes('word'))) {
+        disposition = 'attachment';
+      }
+      if (ext === '.pdf') contentType = 'application/pdf';
+      if (ext === '.doc') contentType = 'application/msword';
+      if (ext === '.docx') contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Disposition', `${disposition}; filename="${fileName}"`);
+      res.sendFile(filePath);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async downloadStudentResume(req, res, next) {
+    try {
+      const { filePath, fileName } = await AdminService.getStudentResumeFile(req.params.id);
+      res.download(filePath, fileName);
     } catch (err) {
       next(err);
     }

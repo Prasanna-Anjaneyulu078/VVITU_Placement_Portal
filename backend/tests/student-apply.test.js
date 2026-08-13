@@ -93,10 +93,10 @@ describe('Student Job Application — POST /api/student/jobs/:jobId/apply', () =
     expect(res.body.message).toBe('Job posting not found');
   });
 
-  it('Test 5 — Duplicate application: Same student + same job = 409 (or 400)', async () => {
+  it('Test 5 — Duplicate application: Same student + same job = 409 Conflict', async () => {
     jest.spyOn(ApplicationService, 'applyForJob').mockRejectedValue({
-      statusCode: 400,
-      message: 'You have already applied for this job'
+      statusCode: 409,
+      message: 'You have already applied for this job.'
     });
 
     const res = await request(app)
@@ -104,8 +104,8 @@ describe('Student Job Application — POST /api/student/jobs/:jobId/apply', () =
       .set('Authorization', `Bearer ${studentToken}`)
       .send({});
 
-    expect(res.statusCode).toBe(400);
-    expect(res.body.message).toBe('You have already applied for this job');
+    expect(res.statusCode).toBe(409);
+    expect(res.body.message).toBe('You have already applied for this job.');
   });
 
   it('Test 6 — Closed/expired job: Closed/expired job = rejection (400)', async () => {

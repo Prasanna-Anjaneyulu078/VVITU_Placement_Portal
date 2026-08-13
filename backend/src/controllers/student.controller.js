@@ -55,6 +55,15 @@ class StudentController {
     }
   }
 
+  static async getProjectById(req, res, next) {
+    try {
+      const project = await StudentService.getProjectById(req.user.id, req.params.id);
+      res.status(200).json(project);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   static async addProject(req, res, next) {
     try {
       const result = await StudentService.addProject(req.user.id, req.body);
@@ -102,9 +111,22 @@ class StudentController {
 
   static async viewResume(req, res, next) {
     try {
+      const path = require('path');
       const { filePath, fileName, mimeType } = await StudentService.getResumeFile(req.user.id);
-      res.setHeader('Content-Type', mimeType);
-      res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
+      
+      const ext = path.extname(fileName || filePath).toLowerCase();
+      let disposition = 'inline';
+      let contentType = mimeType || 'application/pdf';
+
+      if (ext === '.doc' || ext === '.docx' || (mimeType && mimeType.includes('word'))) {
+        disposition = 'attachment';
+      }
+      if (ext === '.pdf') contentType = 'application/pdf';
+      if (ext === '.doc') contentType = 'application/msword';
+      if (ext === '.docx') contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Disposition', `${disposition}; filename="${fileName}"`);
       res.sendFile(filePath);
     } catch (err) {
       next(err);
@@ -153,7 +175,7 @@ class StudentController {
   static async uploadResume(req, res, next) {
     try {
       const ResumeService = require('../services/resume.service');
-      const result = await ResumeService.uploadResume(req.user.id, req.file);
+      const result = await ResumeService.uploadResume(req.user.id, req.file, req.body?.strategy);
       res.status(201).json(result);
     } catch (err) {
       next(err);
@@ -162,13 +184,18 @@ class StudentController {
 
   static async getJobById(req, res, next) {
     try {
+      const jobId = req.params.jobId || req.params.id;
       const JobService = require('../services/job.service');
-      const job = await JobService.getJobById(req.params.id);
-      // Students may only view APPROVED jobs
-      if (job.status !== 'APPROVED') {
-        return res.status(404).json({ success: false, message: 'Job not found or not available' });
-      }
+      const job = await JobService.getStudentJobDetails(req.user.id, jobId);
       res.status(200).json(job);
+    } catch (err) {
+      next(err);
+    }
+  }
+  static async reExtractSkills(req, res, next) {
+    try {
+      const result = await StudentService.reExtractSkills(req.user.id);
+      res.status(200).json(result);
     } catch (err) {
       next(err);
     }

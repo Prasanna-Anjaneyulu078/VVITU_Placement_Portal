@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { generateAvatarSVG } from '../../utils/avatarUtils';
+import { getImageUrl } from '../../utils/imageUrl';
 import { 
   MoreVertical, Eye, Edit2, Trash2, 
   Monitor, User, Calendar, Star, 
@@ -12,7 +13,10 @@ export default function StudentProfileCard({ user }) {
   // Fallbacks for data mapping
   const name = user.name || 'N/A';
   const rollNo = user.rollNo || user.rollNumber || 'N/A';
-  const img = user.img || user.profileImageUrl || generateAvatarSVG(name, 'F47C20', 'fff');
+  const rawImg = user.img || user.profileImageUrl;
+  const img = rawImg && !rawImg.includes('ui-avatars.com') 
+    ? getImageUrl(rawImg) 
+    : generateAvatarSVG(name, 'F47C20', 'fff');
   const department = user.department || 'N/A';
   const section = user.section || user.semester ? `Semester ${user.semester}` : 'N/A';
   const batch = user.batch || user.academicYear || 'N/A';

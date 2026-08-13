@@ -2,22 +2,36 @@ import React from 'react';
 import { FolderGit2, ExternalLink, Github, Code2, Clock, Tag } from 'lucide-react';
 
 export default function ProjectsSection({ projects = [] }) {
+  const cleanUrl = (str) => {
+    if (!str || typeof str !== 'string') return null;
+    const trimmed = str.trim();
+    if (!trimmed) return null;
+
+    const httpMatches = trimmed.match(/https?:\/\/[^\s]+/gi);
+    if (httpMatches && httpMatches.length > 0) {
+      return httpMatches[0].trim();
+    }
+
+    if (trimmed.includes('.') || trimmed.includes('/')) {
+      return `https://${trimmed.replace(/^https?:\/\//i, '')}`;
+    }
+
+    return trimmed;
+  };
+
   const isUrl = (str) => {
-    if (!str || typeof str !== 'string') return false;
-    const clean = str.trim();
-    return clean.startsWith('http://') || clean.startsWith('https://');
+    const url = cleanUrl(str);
+    return Boolean(url && (url.startsWith('http://') || url.startsWith('https://')));
   };
 
   const formatUrl = (str) => {
-    if (!str) return '#';
-    const clean = str.trim();
-    return clean.startsWith('http') ? clean : `https://${clean}`;
+    return cleanUrl(str) || '#';
   };
 
   const getTechChips = (techStr) => {
     if (!techStr) return [];
-    if (Array.isArray(techStr)) return techStr;
-    return techStr.split(/[,•|]+/).map(t => t.trim()).filter(Boolean);
+    const rawList = Array.isArray(techStr) ? techStr : techStr.split(/[,•|]+/).map(t => t.trim()).filter(Boolean);
+    return rawList.filter(t => !t.startsWith('http://') && !t.startsWith('https://') && !t.includes('github.com'));
   };
 
   const getStatusBadgeClass = (status) => {

@@ -1,15 +1,15 @@
 # VVIT Placement Portal — Node.js + Express.js Server (`server/`)
 
-This directory contains the production-ready Node.js + Express.js backend for the VVIT Placement Management System, created as a high-performance Express alternative to the Spring Boot reference implementation.
+This directory contains the production-ready Node.js + Express.js backend for the VVIT Placement Management System.
 
 ## Architecture
 
-- **Runtime**: Node.js (v18+)
-- **Framework**: Express.js
-- **Database**: MySQL (via Prisma ORM & mysql2)
-- **Authentication**: JWT (JSON Web Tokens via HTTP-only Cookies and Bearer Header)
-- **Password Hashing**: BCrypt (`bcryptjs`)
-- **File Storage**: Multer (Local disk storage under `./uploads`)
+- **Frontend**: React.js
+- **Backend**: Node.js + Express.js
+- **ORM**: Prisma
+- **Database**: PostgreSQL
+- **Authentication**: JWT
+- **Document Processing**: Tesseract.js / PDF / Image OCR
 
 ---
 
@@ -18,7 +18,7 @@ This directory contains the production-ready Node.js + Express.js backend for th
 ```text
 server/
 ├── prisma/
-│   └── schema.prisma    # Database models & MySQL schema mapping
+│   └── schema.prisma    # Database models & PostgreSQL schema mapping
 ├── src/
 │   ├── config/          # Environment & Database configuration
 │   ├── controllers/     # Express route handlers

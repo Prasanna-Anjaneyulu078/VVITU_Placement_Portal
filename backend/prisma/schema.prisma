@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -83,7 +83,11 @@ model Student {
   codechefUrl        String?                @map("codechef_url") @db.VarChar(255)
   gfgUrl             String?                @map("gfg_url") @db.VarChar(255)
   hackerrankUrl      String?                @map("hackerrank_url") @db.VarChar(255)
-  profileImageUrl    String?                @map("profile_image_url") @db.VarChar(255)
+  profileImageUrl    String?                @map("profile_image_url") @db.Text
+  gender             String?                @db.VarChar(255)
+  dob                String?                @db.VarChar(255)
+  address            String?                @db.VarChar(255)
+  section            String?                @db.VarChar(255)
   cgpa               Float?
   semester           Int?
   backlogs           Int                    @default(0)
@@ -145,7 +149,7 @@ model AdminProfile {
   designation     String?   @db.VarChar(255)
   employeeId      String?   @map("employee_id") @db.VarChar(255)
   officeLocation  String?   @map("office_location") @db.VarChar(255)
-  profileImageUrl String?   @map("profile_image_url") @db.LongText
+  profileImageUrl String?   @map("profile_image_url") @db.Text
   deletedAt       DateTime? @map("deleted_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -154,32 +158,32 @@ model AdminProfile {
 }
 
 model Job {
-  id                  BigInt    @id @default(autoincrement())
-  title               String?   @db.VarChar(255)
-  companyName         String?   @map("company") @db.VarChar(255)
-  description         String?   @db.Text
-  location            String?   @db.VarChar(255)
-  jobType             String?   @map("job_type") @db.VarChar(255)
-  salaryPackage       String?   @map("package_details") @db.VarChar(255)
-  experienceRequired  String?   @map("experience_required") @db.VarChar(255)
-  requiredSkills      String?   @map("required_skills") @db.Text
-  applicationLink     String?   @map("application_link") @db.VarChar(255)
-  imageUrl            String?   @map("company_logo_url") @db.VarChar(255)
-  industry            String?   @map("industry") @db.VarChar(255)
-  companySize         String?   @map("company_size") @db.VarChar(255)
+  id                  BigInt     @id @default(autoincrement())
+  title               String?    @db.VarChar(255)
+  companyName         String?    @map("company") @db.VarChar(255)
+  description         String?    @db.Text
+  location            String?    @db.VarChar(255)
+  jobType             String?    @map("job_type") @db.VarChar(255)
+  salaryPackage       String?    @map("package_details") @db.VarChar(255)
+  experienceRequired  String?    @map("experience_required") @db.VarChar(255)
+  requiredSkills      String?    @map("required_skills") @db.Text
+  applicationLink     String?    @map("application_link") @db.VarChar(255)
+  imageUrl            String?    @map("company_logo_url") @db.VarChar(255)
+  industry            String?    @map("industry") @db.VarChar(255)
+  companySize         String?    @map("company_size") @db.VarChar(255)
   openings            Int?
-  requiredCgpa        Float?    @map("min_cgpa")
-  eligibleSemester    Int?      @map("eligible_semester")
-  maxBacklogs         Int?      @map("max_backlogs")
-  eligibleDepartments String?   @map("eligible_departments") @db.VarChar(500)
-  postedByAlumniId    BigInt?   @map("posted_by_id")
+  requiredCgpa        Float?     @map("min_cgpa")
+  eligibleSemester    Int?       @map("eligible_semester")
+  maxBacklogs         Int?       @map("max_backlogs")
+  eligibleDepartments String?    @map("eligible_departments") @db.VarChar(500)
+  postedByAlumniId    BigInt?    @map("posted_by_id")
   status              JobStatus? @default(PENDING)
-  applicationDeadline DateTime? @map("expiry_date")
-  rejectionReason     String?   @map("rejection_reason") @db.VarChar(255)
-  enableScreening     Boolean?  @default(false) @map("enable_screening")
-  useDefaultScreening Boolean?  @default(true) @map("use_default_screening")
-  createdAt           DateTime? @default(now()) @map("created_at")
-  deletedAt           DateTime? @map("deleted_at")
+  applicationDeadline DateTime?  @map("expiry_date")
+  rejectionReason     String?    @map("rejection_reason") @db.VarChar(255)
+  enableScreening     Boolean?   @default(false) @map("enable_screening")
+  useDefaultScreening Boolean?   @default(true) @map("use_default_screening")
+  createdAt           DateTime?  @default(now()) @map("created_at")
+  deletedAt           DateTime?  @map("deleted_at")
 
   postedByAlumni Alumni?       @relation(fields: [postedByAlumniId], references: [id], onDelete: SetNull)
   applications   Application[]
@@ -195,9 +199,9 @@ model Application {
   appliedAt DateTime?         @default(now()) @map("applied_at")
   deletedAt DateTime?         @map("deleted_at")
 
-  job       Job                          @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  student   Student                      @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  answers   ApplicationScreeningAnswer[]
+  job     Job                          @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  student Student                      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  answers ApplicationScreeningAnswer[]
 
   @@map("applications")
 }
@@ -216,7 +220,7 @@ model ApplicationScreeningAnswer {
 model Resume {
   id         BigInt    @id @default(autoincrement())
   studentId  BigInt?   @unique @map("student_id")
-  filePath   String?   @map("file_path") @db.VarChar(255)
+  filePath   String?   @map("file_path") @db.Text
   fileName   String?   @map("file_name") @db.VarChar(255)
   fileType   String?   @map("file_type") @db.VarChar(255)
   version    Int?      @default(1)
@@ -232,6 +236,7 @@ model StudentSkill {
   id        BigInt    @id @default(autoincrement())
   studentId BigInt?   @map("student_id")
   skillName String?   @map("name") @db.VarChar(255)
+  source    String?   @default("MANUAL") @db.VarChar(50)
   deletedAt DateTime? @map("deleted_at")
 
   student Student? @relation(fields: [studentId], references: [id], onDelete: Cascade)
@@ -278,12 +283,24 @@ model AuditLog {
 }
 
 model OcrAuditLog {
-  id            BigInt    @id @default(autoincrement())
-  performedBy   BigInt?   @map("performed_by")
-  fileName      String?   @map("file_name") @db.VarChar(255)
-  matchedStatus String?   @map("matched_status") @db.VarChar(50)
-  extractedText String?   @map("extracted_text") @db.Text
-  timestamp     DateTime? @default(now())
+  id                   BigInt    @id @default(autoincrement())
+  performedBy          BigInt?   @map("performed_by")
+  fileName             String?   @map("file_name") @db.VarChar(255)
+  formName             String?   @map("form_name") @db.VarChar(255)
+  formEmail            String?   @map("form_email") @db.VarChar(255)
+  formRollNumber       String?   @map("form_roll_number") @db.VarChar(255)
+  matchedStatus        String?   @map("matched_status") @db.VarChar(50)
+  extractedText        String?   @map("extracted_text") @db.Text
+  extractedName        String?   @map("extracted_name") @db.VarChar(255)
+  extractedIdentifier  String?   @map("extracted_identifier") @db.VarChar(255)
+  detectedCollege      String?   @map("detected_college") @db.VarChar(255)
+  confidenceScore      Float?    @map("confidence_score")
+  isVerified           Boolean?  @default(false) @map("is_verified")
+  manualReviewRequired Boolean?  @default(false) @map("manual_review_required")
+  rejectionReason      String?   @map("rejection_reason") @db.Text
+  ipAddress            String?   @map("ip_address") @db.VarChar(255)
+  documentHash         String?   @map("document_hash") @db.VarChar(64)
+  timestamp            DateTime? @default(now())
 
   @@map("ocr_audit_logs")
 }

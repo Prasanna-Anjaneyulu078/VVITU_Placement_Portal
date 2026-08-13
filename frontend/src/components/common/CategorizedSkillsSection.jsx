@@ -30,14 +30,25 @@ function CategorizedSkillsSectionComponent({
       const extractedSkillNames = [];
       const seen = new Set();
       if (Array.isArray(res.data)) {
-        res.data.forEach(cat => {
-          if (cat.skills && Array.isArray(cat.skills)) {
-            cat.skills.forEach(s => {
+        res.data.forEach(item => {
+          // Support old format just in case
+          if (item.categoryName && item.skills && Array.isArray(item.skills)) {
+            item.skills.forEach(s => {
               if (s.skillName && !seen.has(s.skillName.trim().toLowerCase())) {
                 seen.add(s.skillName.trim().toLowerCase());
                 extractedSkillNames.push(s.skillName.trim());
               }
             });
+          } 
+          // Support new flat array format
+          else if (item.name && !seen.has(item.name.trim().toLowerCase())) {
+            seen.add(item.name.trim().toLowerCase());
+            extractedSkillNames.push(item.name.trim());
+          }
+          // Support flat string array format
+          else if (typeof item === 'string' && !seen.has(item.trim().toLowerCase())) {
+            seen.add(item.trim().toLowerCase());
+            extractedSkillNames.push(item.trim());
           }
         });
       }
@@ -58,7 +69,8 @@ function CategorizedSkillsSectionComponent({
   // Instantly sync when parent passes new extracted skills array
   useEffect(() => {
     if (latestSkills && Array.isArray(latestSkills)) {
-      const sorted = [...latestSkills].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+      const stringSkills = latestSkills.map(s => typeof s === 'string' ? s : (s.name || s.skillName || '')).filter(Boolean);
+      const sorted = [...stringSkills].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
       setSkillList(sorted);
     }
   }, [latestSkills]);
@@ -83,7 +95,8 @@ function CategorizedSkillsSectionComponent({
         if (onResumeUploadSuccess) onResumeUploadSuccess(res.data);
         toast.success(res.data.message || 'Skills re-extracted successfully!');
       } else if (res.data?.success && Array.isArray(res.data?.skills)) {
-        const sorted = [...res.data.skills].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+        const stringSkills = res.data.skills.map(s => typeof s === 'string' ? s : (s.name || s.skillName || '')).filter(Boolean);
+        const sorted = [...stringSkills].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
         setSkillList(sorted);
         toast.success(`Skills re-extracted successfully! (${res.data.totalSkills || sorted.length} skills total)`);
       } else {

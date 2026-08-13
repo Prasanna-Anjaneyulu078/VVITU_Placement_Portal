@@ -325,7 +325,6 @@ export default function AlumniEditJob() {
               <ImageUploadInput
                 label="Company Logo"
                 sublabel="PNG, JPG, JPEG, WEBP • Max 5 MB"
-                type="logo"
                 file={logoFile}
                 onFileSelect={(f) => setLogoFile(f)}
                 onFileRemove={() => { setLogoFile(null); setCurrentLogo(null); }}

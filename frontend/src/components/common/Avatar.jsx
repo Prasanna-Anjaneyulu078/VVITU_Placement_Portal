@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { generateAvatarSVG } from '../../utils/avatarUtils';
+import { getImageUrl } from '../../utils/imageUrl';
 import './Avatar.css';
 
 const Avatar = ({ 
@@ -36,7 +37,7 @@ const Avatar = ({
     >
       {src && !imageError && !src.includes('ui-avatars.com') ? (
         <img 
-          src={src} 
+          src={getImageUrl(src)} 
           alt={displayName} 
           className="avatar-img" 
           onError={() => setImageError(true)}

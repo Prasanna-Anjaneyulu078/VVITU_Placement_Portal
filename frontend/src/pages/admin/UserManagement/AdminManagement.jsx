@@ -10,6 +10,7 @@ import {
 import { toast } from 'react-toastify';
 import useAuth from '../../../hooks/useAuth';
 import useDepartments from '../../../hooks/useDepartments';
+import { getImageUrl } from "../../../utils/imageUrl";
 import { toTitleCase } from '../../../utils/nameUtils';
 import { TableLoader, CardLoader } from '../../../components/common/loading';
 
@@ -388,7 +389,7 @@ export default function AdminManagement() {
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
                         {admin.profileImageUrl ? (
-                          <img src={admin.profileImageUrl} alt="" className="w-11 h-11 rounded-xl object-cover border border-gray-200 shadow-sm" />
+                          <img src={getImageUrl(admin.profileImageUrl)} alt="" className="w-11 h-11 rounded-xl object-cover border border-gray-200 shadow-sm" />
                         ) : (
                           <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#0A4D8C] to-[#1e3a8a] text-white flex items-center justify-center font-bold text-lg shadow-sm">
                             {admin.name ? admin.name.charAt(0) : 'A'}
@@ -487,7 +488,7 @@ export default function AdminManagement() {
               <div className="flex justify-between items-start mb-5">
                 <div className="flex gap-4 items-center">
                   {admin.profileImageUrl ? (
-                    <img src={admin.profileImageUrl} alt="" className="w-16 h-16 rounded-2xl object-cover border-2 border-gray-50 shadow-sm   transition-transform" />
+                    <img src={getImageUrl(admin.profileImageUrl)} alt="" className="w-16 h-16 rounded-2xl object-cover border-2 border-gray-50 shadow-sm   transition-transform" />
                   ) : (
                     <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#0A4D8C] to-[#1e3a8a] text-white flex items-center justify-center font-bold text-2xl shadow-sm   transition-transform">
                       {admin.name ? admin.name.charAt(0) : 'A'}
@@ -615,7 +616,7 @@ export default function AdminManagement() {
             <div className="p-6 flex-1 space-y-6 bg-gray-50/50">
               <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
                 {selectedAdmin.profileImageUrl ? (
-                  <img src={selectedAdmin.profileImageUrl} alt="" className="w-24 h-24 rounded-2xl object-cover shadow-sm border-4 border-gray-50" />
+                  <img src={getImageUrl(selectedAdmin.profileImageUrl)} alt="" className="w-24 h-24 rounded-2xl object-cover shadow-sm border-4 border-gray-50" />
                 ) : (
                   <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-[#0A4D8C] to-[#1e3a8a] text-white flex items-center justify-center font-bold text-4xl shadow-sm flex-shrink-0 border-4 border-gray-50">
                     {selectedAdmin.name ? selectedAdmin.name.charAt(0) : 'A'}

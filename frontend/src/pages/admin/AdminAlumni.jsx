@@ -6,6 +6,7 @@ import { DocumentViewerModal, Modal } from '../../components/common';
 import { TableLoader } from '../../components/common/loading';
 import { generateAvatarSVG } from '../../utils/avatarUtils';
 import { toTitleCase } from '../../utils/nameUtils';
+import { getImageUrl } from '../../utils/imageUrl';
 import {
   Search, ShieldCheck, CheckCircle, X,
   Users, AlertCircle, FileText,
@@ -49,19 +50,22 @@ export default function AdminAlumni() {
     setDocMetadata(null);
     setDocBlobUrl(prev => { if (prev) URL.revokeObjectURL(prev); return null; });
     try {
-      const metaRes = await api.get(`/admin/alumni/${alum.id}/document`);
-      const meta = metaRes.data;
-      setDocMetadata(meta);
-
-      if (meta?.documentName) {
-        const blobRes = await api.get(`/admin/alumni/documents/${meta.documentName}`, {
-          responseType: 'blob',
-        });
-        const blobUrl = URL.createObjectURL(blobRes.data);
-        setDocBlobUrl(blobUrl);
-      } else {
-        setDocError('404: Document Not Found');
+      const blobRes = await api.get(`/admin/alumni/${alum.id}/document`, {
+        responseType: 'blob',
+      });
+      const blobUrl = URL.createObjectURL(blobRes.data);
+      setDocBlobUrl(blobUrl);
+      
+      // Determine file name from header if possible, or fallback
+      let fileName = 'Document.pdf';
+      const disposition = blobRes.headers['content-disposition'];
+      if (disposition && disposition.indexOf('filename=') !== -1) {
+        const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
+        if (matches != null && matches[1]) { 
+          fileName = matches[1].replace(/['"]/g, '');
+        }
       }
+      setDocMetadata({ documentName: fileName });
     } catch (err) {
       console.error('Failed to load document:', err);
       const status = err.response?.status;
@@ -96,9 +100,10 @@ export default function AdminAlumni() {
 
   const verifyUser = async (id, status, reason = null) => {
     try {
+      const backendStatus = status === 'Verified' ? 'APPROVE' : 'REJECT';
       await api.post(`/admin/alumni/verify/${id}`, { 
-        approved: status === 'Verified',
-        rejectionReason: reason
+        status: backendStatus,
+        reason: reason
       });
       toast.success(status === 'Verified' ? 'Alumni Approved Successfully' : 'Alumni Rejected');
       if (rejectingAlum) setRejectingAlum(null);
@@ -258,7 +263,7 @@ export default function AdminAlumni() {
                     <td className="py-4 px-5">
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-full overflow-hidden shadow-sm border border-slate-200 flex-shrink-0 bg-slate-100 flex items-center justify-center">
-                           <img src={alum.profileImageUrl ? `http://localhost:8082/api/public/alumni/profile-image/${alum.profileImageUrl}` : generateAvatarSVG(alum.user?.name || 'Unknown', 'random')} onError={(e) => { e.target.onerror = null; e.target.src = generateAvatarSVG(alum.user?.name || 'Unknown', 'random'); }} alt="Profile" className="w-full h-full object-cover" />
+                           <img src={getImageUrl(alum.profileImageUrl) || generateAvatarSVG(alum.user?.name || 'Unknown', 'random')} onError={(e) => { e.target.onerror = null; e.target.src = generateAvatarSVG(alum.user?.name || 'Unknown', 'random'); }} alt="Profile" className="w-full h-full object-cover" />
                         </div>
                         <div className="min-w-0">
                           <p className="text-sm font-bold text-slate-800 truncate leading-tight   transition-colors">{toTitleCase(alum.user?.name)}</p>
@@ -343,8 +348,8 @@ export default function AdminAlumni() {
                 {/* LEFT COLUMN (Identity & Quick Actions) */}
                 <div className="lg:col-span-4 flex flex-col gap-6 lg:sticky lg:top-0">
                   <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col items-center text-center">
-                    <div className="w-24 h-24 rounded-full overflow-hidden shadow-md border-2 border-white flex-shrink-0 bg-slate-100 flex items-center justify-center mb-4">
-                       <img src={selectedAlumni.profileImageUrl ? `http://localhost:8082/api/public/alumni/profile-image/${selectedAlumni.profileImageUrl}` : generateAvatarSVG(selectedAlumni.user?.name || 'Unknown', 'random')} onError={(e) => { e.target.onerror = null; e.target.src = generateAvatarSVG(selectedAlumni.user?.name || 'Unknown', 'random'); }} alt="Profile" className="w-full h-full object-cover" />
+                    <div className="w-16 h-16 rounded-full overflow-hidden border border-slate-200 flex items-center justify-center bg-slate-100 shadow-sm shrink-0">
+                       <img src={getImageUrl(selectedAlumni.profileImageUrl) || generateAvatarSVG(selectedAlumni.user?.name || 'Unknown', 'random')} onError={(e) => { e.target.onerror = null; e.target.src = generateAvatarSVG(selectedAlumni.user?.name || 'Unknown', 'random'); }} alt="Profile" className="w-full h-full object-cover" />
                     </div>
                     <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">{toTitleCase(selectedAlumni.user?.name)}</h2>
                     <p className="text-[#F47C20] font-bold text-base mb-4">{selectedAlumni.rollNumber || "No Roll No"}</p>

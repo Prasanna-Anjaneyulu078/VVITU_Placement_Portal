@@ -1,31 +1,57 @@
 const prisma = require('../config/db');
+const EligibilityService = require('./eligibility.service');
 
 class ApplicationService {
   static async applyForJob(userId, jobId, screeningAnswers = []) {
+    if (!jobId || isNaN(Number(jobId))) {
+      throw { statusCode: 400, message: 'Invalid job ID' };
+    }
+
+    const numericJobId = BigInt(jobId);
+
+    console.log(`[APPLICATION] Student application request received`);
+    console.log(`[APPLICATION] userId: ${userId}`);
+    console.log(`[APPLICATION] jobId: ${jobId}`);
+
     const student = await prisma.student.findUnique({
       where: { userId: BigInt(userId) }
     });
 
-    if (!student) {
+    if (!student || student.deletedAt) {
+      console.warn(`[APPLICATION] Student profile not found for userId: ${userId}`);
       throw { statusCode: 404, message: 'Student profile not found' };
     }
 
+    console.log(`[APPLICATION] studentId: ${student.id}`);
+
     const job = await prisma.job.findUnique({
-      where: { id: BigInt(jobId) }
+      where: { id: numericJobId }
     });
 
     if (!job || job.deletedAt) {
+      console.warn(`[APPLICATION] Job posting not found for jobId: ${jobId}`);
       throw { statusCode: 404, message: 'Job posting not found' };
     }
 
     if (job.status !== 'APPROVED') {
+      console.warn(`[APPLICATION] Job status is not APPROVED: ${job.status}`);
       throw { statusCode: 400, message: 'Applications are not currently accepted for this job' };
     }
 
     if (job.applicationDeadline && new Date() > new Date(job.applicationDeadline)) {
+      console.warn(`[APPLICATION] Job application deadline passed: ${job.applicationDeadline}`);
       throw { statusCode: 400, message: 'Application deadline for this job has passed' };
     }
 
+    // Validate Student Eligibility using existing EligibilityService
+    const eligibility = await EligibilityService.validateEligibility(userId, Number(job.id));
+    console.log(`[APPLICATION] eligibility check passed: ${eligibility.isEligible}, status: ${eligibility.status}`);
+    if (!eligibility.isEligible) {
+      console.warn(`[APPLICATION] Eligibility check failed: ${eligibility.rejectionReason}`);
+      throw { statusCode: 400, message: eligibility.rejectionReason || 'You are not eligible to apply for this job' };
+    }
+
+    // Prevent duplicate application
     const existingApp = await prisma.application.findFirst({
       where: {
         jobId: job.id,
@@ -35,9 +61,26 @@ class ApplicationService {
     });
 
     if (existingApp) {
-      throw { statusCode: 400, message: 'You have already applied for this job' };
+      console.warn(`[APPLICATION] Duplicate application detected for studentId ${student.id} and jobId ${job.id}`);
+      throw { statusCode: 409, message: 'You have already applied for this job.' };
     }
 
+    // Map and sanitize screening answers sent by frontend (questionText/questionKey -> question)
+    const formattedAnswers = [];
+    if (Array.isArray(screeningAnswers) && screeningAnswers.length > 0) {
+      for (const sa of screeningAnswers) {
+        const questionText = sa.questionText || sa.question || sa.questionKey || '';
+        const answerText = sa.answer !== undefined && sa.answer !== null ? String(sa.answer) : '';
+        if (questionText) {
+          formattedAnswers.push({
+            question: questionText,
+            answer: answerText
+          });
+        }
+      }
+    }
+
+    // Execute application creation transaction
     const application = await prisma.$transaction(async (tx) => {
       const app = await tx.application.create({
         data: {
@@ -47,12 +90,12 @@ class ApplicationService {
         }
       });
 
-      if (Array.isArray(screeningAnswers) && screeningAnswers.length > 0) {
+      if (formattedAnswers.length > 0) {
         await tx.applicationScreeningAnswer.createMany({
-          data: screeningAnswers.map((sa) => ({
+          data: formattedAnswers.map((ans) => ({
             applicationId: app.id,
-            question: sa.question,
-            answer: sa.answer
+            question: ans.question,
+            answer: ans.answer
           }))
         });
       }
@@ -60,7 +103,20 @@ class ApplicationService {
       return app;
     });
 
-    return { success: true, message: 'Application submitted successfully', applicationId: Number(application.id) };
+    console.log(`[APPLICATION] application created successfully: applicationId ${application.id}`);
+
+    return {
+      success: true,
+      message: 'Application submitted successfully.',
+      applicationId: Number(application.id),
+      application: {
+        id: Number(application.id),
+        jobId: Number(application.jobId),
+        studentId: Number(application.studentId),
+        status: application.status,
+        appliedAt: application.appliedAt
+      }
+    };
   }
 
   static async getStudentApplications(userId) {
@@ -93,6 +149,61 @@ class ApplicationService {
       status: app.status,
       appliedAt: app.appliedAt
     }));
+  }
+
+  static async getAlumniPostedJobsApplications(userId) {
+    const alumni = await prisma.alumni.findUnique({
+      where: { userId: BigInt(userId) }
+    });
+
+    if (!alumni) {
+      throw { statusCode: 404, message: 'Alumni profile not found' };
+    }
+
+    const applications = await prisma.application.findMany({
+      where: {
+        job: { postedByAlumniId: alumni.id },
+        deletedAt: null
+      },
+      include: {
+        job: true,
+        student: {
+          include: {
+            user: true
+          }
+        }
+      },
+      orderBy: { appliedAt: 'desc' }
+    });
+
+    return applications.map((app) => {
+      const j = app.job || {};
+      const compName = j.companyName || j.company || '';
+      return {
+        id: Number(app.id),
+        jobId: Number(app.jobId),
+        jobTitle: j.title || '',
+        company: compName,
+        companyName: compName,
+        job: {
+          id: j.id ? Number(j.id) : null,
+          title: j.title || '',
+          company: compName,
+          companyName: compName
+        },
+        studentId: Number(app.studentId),
+        studentName: app.student?.user?.name || 'Student',
+        email: app.student?.user?.email || '',
+        rollNumber: app.student?.rollNumber || '',
+        department: app.student?.department || '',
+        section: app.student?.section || '',
+        profileImageUrl: app.student?.profileImageUrl ? `/api/public/student/${app.student.id}/profile-image` : null,
+        status: app.status,
+        appliedAt: app.appliedAt,
+        shortlistedDate: app.appliedAt,
+        updatedAt: app.updatedAt
+      };
+    });
   }
 
   static async getJobApplicationsForAlumni(userId, jobId) {
@@ -184,7 +295,158 @@ class ApplicationService {
 
     return { success: true, message: `Application status updated to ${status}`, application: updated };
   }
-}
 
+  static async getApplicationDetails(applicationId, caller) {
+    if (!applicationId || isNaN(Number(applicationId))) {
+      throw { statusCode: 400, message: 'Invalid application ID' };
+    }
+
+    const numericAppId = BigInt(applicationId);
+
+    const application = await prisma.application.findUnique({
+      where: { id: numericAppId },
+      include: {
+        job: {
+          select: {
+            title: true,
+            companyName: true,
+            postedByAlumniId: true
+          }
+        },
+        student: {
+          include: {
+            user: { select: { name: true, email: true } },
+            resumes: { where: { deletedAt: null }, orderBy: { uploadedAt: 'desc' }, take: 1 },
+            skills: { where: { deletedAt: null } },
+            projects: { where: { deletedAt: null } }
+          }
+        }
+      }
+    });
+
+    if (!application || application.deletedAt) {
+      throw { statusCode: 404, message: 'Application not found' };
+    }
+
+    // Authorization checks
+    if (caller.role === 'STUDENT') {
+      const student = await prisma.student.findUnique({ where: { userId: BigInt(caller.userId) } });
+      if (!student || application.studentId !== student.id) {
+        throw { statusCode: 403, message: 'Forbidden' };
+      }
+    } else if (caller.role === 'ALUMNI') {
+      const alumni = await prisma.alumni.findUnique({ where: { userId: BigInt(caller.userId) } });
+      if (!alumni || application.job?.postedByAlumniId !== alumni.id) {
+        throw { statusCode: 403, message: 'Forbidden' };
+      }
+    } else if (caller.role !== 'ADMIN' && caller.role !== 'SUPER_ADMIN') {
+      throw { statusCode: 403, message: 'Forbidden' };
+    }
+
+    const student = application.student;
+    const resume = student.resumes[0];
+
+    return {
+      id: Number(application.id),
+      jobId: Number(application.jobId),
+      jobTitle: application.job?.title,
+      company: application.job?.companyName,
+      status: application.status,
+      appliedAt: application.appliedAt,
+      studentId: Number(student.id),
+      studentName: student.user.name,
+      rollNumber: student.rollNumber,
+      department: student.department,
+      cgpa: student.cgpa,
+      email: student.user.email,
+      mobileNumber: student.mobileNumber,
+      location: student.location,
+      profileImageUrl: student.profileImageUrl ? `/api/public/student/${student.id}/profile-image` : null,
+      resumeUrl: resume?.fileUrl || null,
+      resumeDownloadUrl: resume?.fileUrl ? `${resume.fileUrl}/download` : null,
+      resumeFileName: resume?.fileName || null,
+      academicYear: student.academicYear,
+      semester: student.semester,
+      section: student.section,
+      verificationStatus: student.verificationStatus,
+      githubUrl: student.githubUrl,
+      linkedinUrl: student.linkedinUrl,
+      leetcodeUrl: student.leetcodeUrl,
+      codechefUrl: student.codechefUrl,
+      gfgUrl: student.gfgUrl,
+      hackerrankUrl: student.hackerrankUrl,
+      gender: student.gender,
+      dob: student.dob,
+      address: student.address,
+      backlogs: student.backlogs,
+      skills: student.skills || [],
+      projects: student.projects || []
+    };
+  }
+
+  static async getApplicationResumeFile(applicationId, caller) {
+    if (!applicationId || isNaN(Number(applicationId))) {
+      throw { statusCode: 400, message: 'Invalid application ID' };
+    }
+
+    const numericAppId = BigInt(applicationId);
+
+    const application = await prisma.application.findUnique({
+      where: { id: numericAppId },
+      include: {
+        job: {
+          select: { postedByAlumniId: true }
+        },
+        student: true
+      }
+    });
+
+    if (!application || application.deletedAt) {
+      throw { statusCode: 404, message: 'Application not found' };
+    }
+
+    // Authorization checks
+    if (caller.role === 'STUDENT') {
+      const student = await prisma.student.findUnique({ where: { userId: BigInt(caller.userId) } });
+      if (!student || application.studentId !== student.id) {
+        throw { statusCode: 403, message: 'Forbidden' };
+      }
+    } else if (caller.role === 'ALUMNI') {
+      const alumni = await prisma.alumni.findUnique({ where: { userId: BigInt(caller.userId) } });
+      if (!alumni || application.job?.postedByAlumniId !== alumni.id) {
+        throw { statusCode: 403, message: 'Forbidden' };
+      }
+    } else if (caller.role !== 'ADMIN' && caller.role !== 'SUPER_ADMIN') {
+      throw { statusCode: 403, message: 'Forbidden' };
+    }
+
+    const student = application.student;
+
+    const resumeRecord = await prisma.resume.findFirst({
+      where: { studentId: student.id, deletedAt: null },
+      orderBy: { uploadedAt: 'desc' }
+    });
+
+    if (!resumeRecord) {
+      throw { statusCode: 404, message: 'Student has not uploaded a resume.' };
+    }
+
+    const { resolveResumeFilePath } = require('../utils/file.utils');
+    const physicalPath = resolveResumeFilePath(resumeRecord.filePath);
+
+    if (!physicalPath) {
+      throw { statusCode: 404, message: 'Resume file is missing from storage. Please ask the student to re-upload the resume.' };
+    }
+
+    const mimeType = resumeRecord.fileType || 'application/pdf';
+    const fileName = resumeRecord.fileName || `${student.rollNumber || 'Student'}_Resume.pdf`;
+
+    return {
+      filePath: physicalPath,
+      fileName,
+      mimeType
+    };
+  }
+}
 
 module.exports = ApplicationService;

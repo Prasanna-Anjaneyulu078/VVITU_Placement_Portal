@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import useAuth from '../../hooks/useAuth';
 import { useData } from '../../context/DataContext';
 import { toTitleCase } from '../../utils/nameUtils';
+import { getImageUrl } from '../../utils/imageUrl';
 import { 
   LayoutDashboard, 
   Briefcase, 
@@ -24,6 +25,7 @@ export default function DashboardLayout({ children, role = 'student' }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userDesignation, setUserDesignation] = useState('');
   const [fetchedName, setFetchedName] = useState('');
+  const [fetchedAlumniId, setFetchedAlumniId] = useState('');
 
   const normalizedRole = (role || 'student').toLowerCase();
 
@@ -56,6 +58,9 @@ export default function DashboardLayout({ children, role = 'student' }) {
     } else if (normalizedRole === 'alumni') {
       api.get('/alumni/profile')
         .then(res => {
+          if (res.data?.id) {
+            setFetchedAlumniId(res.data.id);
+          }
           if (res.data?.profileImageUrl) {
             updateProfileImage(res.data.profileImageUrl);
           }
@@ -66,12 +71,6 @@ export default function DashboardLayout({ children, role = 'student' }) {
         .catch(err => console.error(err));
     }
     
-    const handleProfileUpdate = (e) => {
-      updateProfileImage(e.detail);
-    };
-    
-    window.addEventListener('profileImageUpdated', handleProfileUpdate);
-    return () => window.removeEventListener('profileImageUpdated', handleProfileUpdate);
   }, [normalizedRole, updateProfileImage]);
 
   const handleLogout = () => {
@@ -123,10 +122,8 @@ export default function DashboardLayout({ children, role = 'student' }) {
       : (userDesignation || 'Administrator');
       
     let formattedImg = profileImage;
-    if (formattedImg && !formattedImg.startsWith('http') && !formattedImg.startsWith('https')) {
-      if (normalizedRole === 'alumni') {
-        formattedImg = `http://localhost:8082/api/public/alumni/profile-image/${formattedImg}`;
-      }
+    if (formattedImg) {
+      formattedImg = getImageUrl(formattedImg);
     }
 
     return { name: displayName, role: roleLabel, img: formattedImg, designation: userDesignation };

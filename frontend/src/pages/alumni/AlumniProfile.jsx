@@ -4,7 +4,8 @@ import {
   User, Mail, Phone, MapPin, Linkedin, Edit2, 
   Briefcase, GraduationCap, ShieldCheck, CheckCircle, Save, X, BookOpen, Star, Camera, ExternalLink, Lock, Shield, FileText, Download, Eye, EyeOff
 } from 'lucide-react';
-import { Modal, LoadingSpinner, DocumentViewerModal, ChangePasswordCard } from '../../components/common';
+import { getImageUrl, withCacheBust } from '../../utils/imageUrl';
+import { Modal, LoadingSpinner, DocumentViewerModal, ChangePasswordCard, SecurityAccountCard } from '../../components/common';
 import { SectionLoader } from '../../components/common/loading';
 import StatusBadge from '../../components/common/StatusBadge';
 import { generateAvatarSVG } from '../../utils/avatarUtils';
@@ -240,8 +241,10 @@ export default function AlumniProfile() {
       const res = await api.post('/alumni/profile-image', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      setProfile(prev => ({ ...prev, profileImageUrl: res.data.profileImageUrl }));
-      updateProfileImage(res.data.profileImageUrl);
+      const rawUrl = res.data.profileImageUrl || res.data.url;
+      const freshUrl = withCacheBust(rawUrl, res.data.updatedAt);
+      setProfile(prev => ({ ...prev, profileImageUrl: freshUrl }));
+      updateProfileImage(freshUrl);
       toast.success('Profile picture updated successfully');
     } catch (err) {
       console.error('Failed to upload image', err);
@@ -278,9 +281,9 @@ export default function AlumniProfile() {
                       ) : (
                         <img 
                           src={
-                            (profileImage && !profileImage.includes('http') ? `http://localhost:8082/api/public/alumni/profile-image/${profileImage}` : profileImage) || 
-                            (profile?.profileImageUrl ? `http://localhost:8082/api/public/alumni/profile-image/${profile.profileImageUrl}` : null) || 
-                            generateAvatarSVG(profile?.name || profile?.user?.name || 'Alumni', 'F47C20', 'fff')
+                            profile?.profileImageUrl 
+                              ? getImageUrl(profile.profileImageUrl) 
+                              : generateAvatarSVG(profile?.name || profile?.user?.name || 'Alumni', 'F47C20', 'fff')
                           }
                           onError={(e) => { e.target.onerror = null; e.target.src = generateAvatarSVG(profile?.name || profile?.user?.name || 'Alumni', 'F47C20', 'fff'); }}
                           alt="Profile" 
@@ -460,8 +463,12 @@ export default function AlumniProfile() {
 
 
 
-            {/* Change Password (From Settings) */}
-            <ChangePasswordCard apiEndpoint="/auth/change-password" cardTitle="Security & Password" />
+            {/* Security & Account Information */}
+            <SecurityAccountCard
+              accountData={profile}
+              role="ALUMNI"
+              onRefresh={() => fetchProfile()}
+            />
 
 
           </div>

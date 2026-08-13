@@ -17,6 +17,7 @@ import { TableLoader } from "../../../components/common/loading";
 import { toTitleCase } from "../../../utils/nameUtils";
 import validateVVITRollNumber from "../../../utils/vvitRollNumberUtils";
 import { getInitials } from "../../../utils/avatarUtils";
+import { getImageUrl } from '../../../utils/imageUrl';
 
 const Avatar = ({ name, src, size = "md" }) => {
   const sz = size === "lg" ? "w-20 h-20 text-3xl rounded-2xl" : "w-10 h-10 text-sm rounded-full";
@@ -30,9 +31,11 @@ const Avatar = ({ name, src, size = "md" }) => {
   const colors = ["from-blue-400 to-blue-600","from-violet-400 to-violet-600","from-emerald-400 to-emerald-600","from-orange-400 to-orange-500","from-pink-400 to-pink-600"];
   const color  = colors[(name?.charCodeAt(0) || 0) % colors.length];
 
-  return (src && !imageError) ? (
+  const safeSrc = getImageUrl(src);
+
+  return (safeSrc && !imageError) ? (
     <img 
-      src={src} 
+      src={safeSrc} 
       alt={name || 'Student'} 
       className={`${sz} object-cover border-2 border-white shadow flex-shrink-0`}
       onError={() => setImageError(true)}

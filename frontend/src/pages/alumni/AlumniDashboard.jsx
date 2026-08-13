@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Briefcase, Users, CheckCircle, GraduationCap, Clock, FileText } from 'lucide-react';
+import { getImageUrl } from '../../utils/imageUrl';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { Button, Avatar } from '../../components/common';
 import { CardLoader, SectionLoader } from '../../components/common/loading';
@@ -149,7 +150,7 @@ export default function AlumniDashboard() {
                   {recentApps.map(app => {
                     const studentName = app.studentName || app.student?.name || 'Student';
                     const rollNo = app.rollNumber || app.student?.rollNumber || '';
-                    const avatarSrc = app.profileImageUrl || app.student?.profileImageUrl || 
+                    const avatarSrc = getImageUrl(app.profileImageUrl || app.student?.profileImageUrl) || 
                       `https://ui-avatars.com/api/?name=${encodeURIComponent(studentName)}&background=F47C20&color=fff`;
 
                     return (
@@ -204,7 +205,7 @@ export default function AlumniDashboard() {
                   {recentSelected.map(app => {
                     const studentName = app.studentName || app.student?.name || 'Student';
                     const rollNo = app.rollNumber || app.student?.rollNumber || '';
-                    const avatarSrc = app.profileImageUrl || app.student?.profileImageUrl || 
+                    const avatarSrc = getImageUrl(app.profileImageUrl || app.student?.profileImageUrl) || 
                       `https://ui-avatars.com/api/?name=${encodeURIComponent(studentName)}&background=10b981&color=fff`;
 
                     return (

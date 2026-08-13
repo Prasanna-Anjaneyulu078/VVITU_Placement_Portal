@@ -19,8 +19,14 @@ router.get('/departments', (req, res) => {
   res.status(200).json(DEPARTMENTS);
 });
 
+const PublicController = require('../controllers/public.controller');
+
 router.get('/health', (req, res) => {
   res.status(200).json({ success: true, message: 'Node.js Express Server is healthy', timestamp: new Date() });
 });
+
+router.get('/alumni/:id/profile-image', PublicController.getAlumniProfileImage);
+router.get('/student/:id/profile-image', PublicController.getStudentProfileImage);
+router.get('/admin/:id/profile-image', PublicController.getAdminProfileImage);
 
 module.exports = router;

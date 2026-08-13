@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const AdminController = require('../controllers/admin.controller');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth.middleware');
-const upload = require('../middleware/upload.middleware');
+const { uploadAnyFile } = require('../middleware/upload.middleware');
 
 router.use(authenticateToken);
 router.use(authorizeRoles('ADMIN', 'SUPER_ADMIN'));
@@ -14,7 +14,7 @@ router.get('/dashboard', AdminController.getDashboardMetrics);
 // Profile Management
 router.get('/profile', AdminController.getAdminProfile);
 router.put('/profile', AdminController.updateAdminProfile);
-router.post('/profile/image', upload.single('image'), AdminController.uploadProfileImage);
+router.post('/profile/image', uploadAnyFile, AdminController.uploadProfileImage);
 router.delete('/profile/image', AdminController.deleteProfileImage);
 
 // Password & Email Change
@@ -30,6 +30,10 @@ router.get('/users/students', AdminController.getAllStudents);
 router.get('/students', AdminController.getAllStudents);
 router.get('/users/students/:id/details', AdminController.getStudentDetails);
 router.get('/students/:id/details', AdminController.getStudentDetails);
+router.get('/users/students/:id/resume/view', AdminController.viewStudentResume);
+router.get('/students/:id/resume/view', AdminController.viewStudentResume);
+router.get('/users/students/:id/resume/download', AdminController.downloadStudentResume);
+router.get('/students/:id/resume/download', AdminController.downloadStudentResume);
 router.post('/users/students', AdminController.addStudent);
 router.post('/students', AdminController.addStudent);
 router.patch('/users/students/:id/approve', AdminController.approveStudent);
@@ -42,14 +46,16 @@ router.delete('/users/students/:id', AdminController.deleteStudent);
 router.delete('/students/:id', AdminController.deleteStudent);
 router.post('/users/students/:id/reset-password', AdminController.resetStudentPassword);
 router.post('/students/:id/reset-password', AdminController.resetStudentPassword);
-router.post('/users/students/import', upload.single('file'), AdminController.importStudents);
-router.post('/students/import', upload.single('file'), AdminController.importStudents);
+router.post('/users/students/import', uploadAnyFile, AdminController.importStudents);
+router.post('/students/import', uploadAnyFile, AdminController.importStudents);
 router.post('/users/students/export', AdminController.exportStudents);
 router.post('/students/export', AdminController.exportStudents);
 
 // Alumni Management
 router.get('/alumni', AdminController.getAllAlumni);
-router.put('/alumni/:id/verify', AdminController.verifyAlumni);
+router.get('/alumni/:id/document', AdminController.getAlumniDocument);
+router.post('/alumni/verify/:id', AdminController.verifyAlumni);
+router.delete('/alumni/:id', AdminController.deleteAlumni);
 
 // Job Management
 router.get('/jobs', AdminController.getAllJobs);

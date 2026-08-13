@@ -26,10 +26,19 @@ const errorHandler = (err, req, res, next) => {
     console.warn(`[EXPRESS-CLIENT-ERROR] HTTP ${statusCode}: ${err.message || 'Client Error'}`);
   }
 
-  res.status(statusCode).json({
+  const responsePayload = {
     success: false,
     message: err.message || 'Internal Server Error'
-  });
+  };
+
+  if (err.code) {
+    responsePayload.code = err.code;
+  }
+  if (err.details) {
+    responsePayload.details = err.details;
+  }
+
+  res.status(statusCode).json(responsePayload);
 };
 
 const notFoundHandler = (req, res, next) => {

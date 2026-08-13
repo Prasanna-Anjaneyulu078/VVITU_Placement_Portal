@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Upload, X, RefreshCw, Image as ImageIcon, AlertCircle } from 'lucide-react';
+import { Upload, X, RefreshCw, AlertCircle } from 'lucide-react';
 
 const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
 const ALLOWED_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp'];
@@ -8,7 +8,6 @@ const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 export default function ImageUploadInput({
   label,
   sublabel = 'PNG, JPG, JPEG, WEBP • Max 5 MB',
-  type = 'logo', // 'logo' | 'banner'
   file,
   onFileSelect,
   onFileRemove,
@@ -19,7 +18,6 @@ export default function ImageUploadInput({
   const [error, setError] = useState('');
   const inputRef = useRef(null);
 
-  // Generate and manage local object URL for preview
   useEffect(() => {
     if (file) {
       const objectUrl = URL.createObjectURL(file);
@@ -61,8 +59,8 @@ export default function ImageUploadInput({
     if (selected) {
       if (validateFile(selected)) {
         onFileSelect(selected);
-      } else {
-        if (inputRef.current) inputRef.current.value = '';
+      } else if (inputRef.current) {
+        inputRef.current.value = '';
       }
     }
   };
@@ -85,10 +83,8 @@ export default function ImageUploadInput({
     setDragActive(false);
 
     const droppedFile = e.dataTransfer?.files?.[0];
-    if (droppedFile) {
-      if (validateFile(droppedFile)) {
-        onFileSelect(droppedFile);
-      }
+    if (droppedFile && validateFile(droppedFile)) {
+      onFileSelect(droppedFile);
     }
   };
 
@@ -99,18 +95,11 @@ export default function ImageUploadInput({
     onFileRemove();
   };
 
-  const isBanner = type === 'banner';
-
   return (
     <div className="space-y-2">
-      <div className="flex justify-between items-center">
-        <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-          {label}
-        </label>
-        {isBanner && (
-          <span className="text-[10px] text-slate-400 font-medium">Recommended: 1200 × 400 px</span>
-        )}
-      </div>
+      <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+        {label}
+      </label>
 
       <input
         ref={inputRef}
@@ -121,19 +110,13 @@ export default function ImageUploadInput({
       />
 
       {previewUrl ? (
-        /* Preview State */
         <div className="space-y-3">
-          <div
-            className={`relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 flex items-center justify-center ${
-              isBanner ? 'h-36 sm:h-44 w-full' : 'h-36 w-36 mx-auto sm:mx-0'
-            }`}
-          >
+          <div className="relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 flex items-center justify-center h-36 w-36 mx-auto sm:mx-0">
             <img
               src={previewUrl}
               alt={label}
-              className={`w-full h-full ${isBanner ? 'object-cover' : 'object-contain p-2'}`}
-              onError={(e) => {
-                e.target.onerror = null;
+              className="w-full h-full object-contain p-2"
+              onError={() => {
                 setPreviewUrl(null);
                 setError('Failed to load image preview');
               }}
@@ -165,17 +148,16 @@ export default function ImageUploadInput({
           </div>
         </div>
       ) : (
-        /* Upload Area State */
         <div
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={() => inputRef.current?.click()}
-          className={`relative border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all ${
+          className={`relative border-2 border-dashed rounded-2xl p-6 py-6 text-center cursor-pointer transition-all ${
             dragActive
               ? 'border-[#F47C20] bg-[#F47C20]/5'
               : 'border-slate-200 hover:border-[#F47C20]/60 bg-slate-50/50 hover:bg-slate-50'
-          } ${isBanner ? 'py-8' : 'py-6'}`}
+          }`}
         >
           <div className="flex flex-col items-center justify-center space-y-2">
             <div className="w-12 h-12 rounded-xl bg-orange-50 border border-orange-100 text-[#F47C20] flex items-center justify-center mb-1">

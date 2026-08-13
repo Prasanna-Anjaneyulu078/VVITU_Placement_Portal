@@ -4,12 +4,7 @@ require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 module.exports = {
   port: process.env.PORT || 8082,
   env: process.env.NODE_ENV || 'development',
-  databaseUrl: process.env.DATABASE_URL || 'mysql://root:password@localhost:3306/vvit_placement_db',
-  dbHost: process.env.DB_HOST || 'localhost',
-  dbPort: process.env.DB_PORT || 3306,
-  dbName: process.env.DB_NAME || 'vvit_placement_db',
-  dbUser: process.env.DB_USER || 'root',
-  dbPassword: process.env.DB_PASSWORD || 'password',
+  databaseUrl: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/vvitu_placement_portal',
   jwtSecret: process.env.JWT_SECRET || 'dnZpdF9wbGFjZW1lbnRfcG9ydGFsX3N1cGVyX3NlY3JldF9qd3Rfa2V5XzIwMjRfZG9fbm90X2V4cG9zZQ==',
   jwtExpiration: parseInt(process.env.JWT_EXPIRATION || '86400000', 10),
   jwtRefreshExpiration: parseInt(process.env.JWT_REFRESH_EXPIRATION || '604800000', 10),

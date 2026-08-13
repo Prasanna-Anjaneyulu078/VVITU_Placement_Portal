@@ -1,19 +1,18 @@
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: vvit_mysql
+  postgres:
+    image: postgres:16
+    container_name: vvitu_postgres
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-vvit_placement_db}
-      MYSQL_USER: ${MYSQL_USER:-user}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-vvitu_placement_portal}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     ports:
-      - "${MYSQL_PORT:-3306}:3306"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-vvitu_placement_portal}"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -28,27 +27,25 @@ services:
     container_name: vvit_backend
     restart: unless-stopped
     environment:
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
       PORT: 8082
-      DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-vvit_placement_db}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-      DB_USERNAME: ${MYSQL_USER:-user}
-      DB_PASSWORD: ${MYSQL_PASSWORD:-password}
+      NODE_ENV: ${NODE_ENV:-production}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-vvitu_placement_portal}
       JWT_SECRET: ${JWT_SECRET:-dnZpdF9wbGFjZW1lbnRfcG9ydGFsX3N1cGVyX3NlY3JldF9qd3Rfa2V5XzIwMjRfZG9fbm90X2V4cG9zZQ==}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-604800000}
+      CLIENT_URL: ${CLIENT_URL:-http://localhost:5173}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost,http://localhost:80,http://localhost:5173,http://localhost:3000}
       UPLOAD_DIR: /app/uploads/
-      SMTP_HOST: ${SMTP_HOST:-localhost}
-      SMTP_PORT: ${SMTP_PORT:-587}
-      SMTP_USERNAME: ${SMTP_USERNAME:-user}
-      SMTP_PASSWORD: ${SMTP_PASSWORD:-password}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     ports:
       - "${BACKEND_PORT:-8082}:8082"
     volumes:
       - uploads_data:/app/uploads
     depends_on:
-      mysql:
+      postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8082/actuator/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8082/api/health"]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -79,10 +76,10 @@ services:
       - placement_net
 
 volumes:
-  mysql_data:
-    name: vvit_placement_mysql_data
+  postgres_data:
+    name: vvitu_placement_postgres_data
   uploads_data:
-    name: vvit_placement_uploads_data
+    name: vvitu_placement_uploads_data
 
 networks:
   placement_net:

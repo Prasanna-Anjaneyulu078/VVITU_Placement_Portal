@@ -2,6 +2,7 @@ import React from 'react';
 import { Award, Phone, MapPin, Mail, User, BookOpen, GraduationCap, Building2 } from 'lucide-react';
 import { toTitleCase } from '../../utils/nameUtils';
 import { generateAvatarSVG } from '../../utils/avatarUtils';
+import { getImageUrl } from '../../utils/imageUrl';
 
 export default function StudentProfileCard({ details }) {
   if (!details) return null;
@@ -21,7 +22,7 @@ export default function StudentProfileCard({ details }) {
 
   const rawImg = details.profileImageUrl || details.user?.studentProfile?.profileImageUrl;
   const fallbackAvatar = generateAvatarSVG(studentName, 'F47C20', 'ffffff', 140);
-  const avatarUrl = (rawImg && !rawImg.includes('ui-avatars.com')) ? rawImg : fallbackAvatar;
+  const avatarUrl = (rawImg && !rawImg.includes('ui-avatars.com')) ? getImageUrl(rawImg) : fallbackAvatar;
 
   const getStatusColor = (status) => {
     switch (status?.toUpperCase()) {

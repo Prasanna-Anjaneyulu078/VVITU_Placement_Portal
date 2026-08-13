@@ -3,6 +3,7 @@ import DashboardLayout from '../../components/layout/DashboardLayout';
 import { Check, X, Eye, FileText, AlertTriangle, ShieldCheck, ShieldAlert, ClipboardList } from 'lucide-react';
 import { PageHeader, Table, Button, LoadingSpinner, Modal, DocumentViewerModal } from '../../components/common';
 import { generateAvatarSVG } from '../../utils/avatarUtils';
+import { getImageUrl } from '../../utils/imageUrl';
 import api from '../../utils/axiosConfig';
 import { toast } from 'react-toastify';
 import { toTitleCase } from '../../utils/nameUtils';
@@ -105,9 +106,7 @@ export default function AdminVerifications() {
     setDocBlobUrl(prev => { if (prev) URL.revokeObjectURL(prev); return null; });
 
     try {
-      const docPath = alum.verificationDocumentUrl?.startsWith('/api/')
-        ? alum.verificationDocumentUrl.substring(4)
-        : `/admin/alumni/documents/${alum.verificationDocumentUrl}`;
+      const docPath = `/admin/alumni/${alum.id}/document`;
 
       const res = await api.get(docPath, { responseType: 'blob' });
       const blob = new Blob([res.data], { type: res.headers['content-type'] || 'application/pdf' });
@@ -188,7 +187,7 @@ export default function AdminVerifications() {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-200 flex-shrink-0">
             <img
-              src={alum.profileImageUrl ? `/api/admin/alumni/documents/${alum.profileImageUrl}` : generateAvatarSVG(alum.user?.name || 'A', 'F47C20', 'fff')}
+              src={alum.profileImageUrl ? getImageUrl(alum.profileImageUrl) : generateAvatarSVG(alum.user?.name || 'A', 'F47C20', 'fff')}
               onError={e => { e.target.src = generateAvatarSVG(alum.user?.name || 'A', 'F47C20', 'fff'); }}
               alt={alum.user?.name}
               className="w-full h-full object-cover"

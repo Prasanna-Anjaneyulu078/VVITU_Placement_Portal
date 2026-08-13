@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
-import { PageHeader, LoadingSpinner } from '../../components/common';
-import { Search, Filter, Eye, RefreshCw, Briefcase, FileText, User } from 'lucide-react';
+import { PageHeader, ApplicationStudentTable } from '../../components/common';
+import { Search, RefreshCw } from 'lucide-react';
 import api from '../../utils/axiosConfig';
 import { toast } from 'react-toastify';
 import ApplicationDetailsDrawer from '../../components/alumni/ApplicationDetailsDrawer';
@@ -175,155 +175,12 @@ export default function AlumniStudentApplications() {
         </div>
 
         {/* Content Container */}
-        {isLoading ? (
-          <div className="bg-white rounded-2xl border border-slate-200 p-16 flex justify-center items-center">
-            <LoadingSpinner size="large" />
-          </div>
-        ) : filteredApps.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-slate-200 p-16 flex flex-col items-center justify-center text-center">
-            <div className="w-16 h-16 bg-[#FFF4EB] rounded-full flex items-center justify-center mb-4 border border-orange-100">
-              <FileText size={28} className="text-[#F47C20]" />
-            </div>
-            <h3 className="text-lg font-extrabold text-slate-900 mb-1">No Student Applications Found</h3>
-            <p className="text-xs text-slate-500 max-w-sm">
-              {search || filterDepartment || filterStatus
-                ? 'No applicants match your filter criteria. Try clearing search filters.'
-                : 'Students who apply to your posted job opportunities will appear here.'}
-            </p>
-          </div>
-        ) : (
-          <>
-            {/* DESKTOP & TABLET TABLE VIEW (Hidden on Mobile) */}
-            <div className="hidden sm:block bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse min-w-[800px]">
-                  <thead>
-                    <tr className="border-b border-slate-100 bg-slate-50/70">
-                      <th className="py-4 px-5 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Profile</th>
-                      <th className="py-4 px-5 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Student Name</th>
-                      <th className="py-4 px-5 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider text-center">Roll Number</th>
-                      <th className="py-4 px-5 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Applied Date</th>
-                      <th className="py-4 px-5 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Application Status</th>
-                      <th className="py-4 px-5 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {filteredApps.map(app => {
-                      const studentName = app.studentName || app.student?.name || 'Student';
-                      const profileImg = app.profileImageUrl || app.student?.profileImageUrl || 
-                        `https://ui-avatars.com/api/?name=${encodeURIComponent(studentName)}&background=F47C20&color=fff&size=96`;
-                      const dept = getDeptLabel(app.department || app.student?.department) || 'Department';
-                      const semVal = app.semester || app.student?.semester;
-                      const sem = semVal ? `Semester ${semVal}` : '';
-                      const rollNo = app.rollNumber || app.student?.rollNumber || 'N/A';
-                      const { date, time } = formatDateTime(app.appliedAt);
-
-                      return (
-                        <tr key={app.id} className="hover:bg-slate-50/60 transition-colors">
-                          
-                          {/* Column 1: Profile */}
-                          <td className="py-4 px-5">
-                            <img 
-                              src={profileImg} 
-                              alt={studentName}
-                              loading="lazy"
-                              className="w-12 h-12 rounded-full object-cover border-2 border-slate-100 shadow-2xs shrink-0"
-                            />
-                          </td>
-
-                          {/* Column 2: Student Name */}
-                          <td className="py-4 px-5">
-                            <p className="font-extrabold text-slate-900 text-sm leading-snug">{studentName}</p>
-                            <p className="text-xs text-slate-500 font-semibold mt-0.5">{dept} {sem && `• ${sem}`}</p>
-                          </td>
-
-                          {/* Column 3: Roll Number */}
-                          <td className="py-4 px-5 text-center">
-                            <span className="inline-block px-2.5 py-1 bg-slate-100 border border-slate-200 rounded-lg text-xs font-mono font-bold text-slate-700">
-                              {rollNo}
-                            </span>
-                          </td>
-
-                          {/* Column 4: Applied Date */}
-                          <td className="py-4 px-5">
-                            <p className="text-xs font-bold text-slate-800">{date}</p>
-                            {time && <p className="text-[11px] font-medium text-slate-400 mt-0.5">{time}</p>}
-                          </td>
-
-                          {/* Column 5: Application Status */}
-                          <td className="py-4 px-5">
-                            <span className={`inline-flex px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider border ${getStatusColor(app.status)}`}>
-                              {app.status?.replace('_', ' ')}
-                            </span>
-                          </td>
-
-                          {/* Column 6: View Details */}
-                          <td className="py-4 px-5 text-right">
-                            <button
-                              onClick={() => openViewDetails(app.id)}
-                              className="px-4 py-2 bg-white border border-[#F47C20] text-[#F47C20] hover:bg-[#FFF4EB] font-bold text-xs rounded-xl transition-all shadow-2xs inline-flex items-center gap-1.5"
-                            >
-                              <Eye size={14} /> View
-                            </button>
-                          </td>
-
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* MOBILE STACKED CARDS VIEW (Visible only on Mobile) */}
-            <div className="block sm:hidden space-y-4">
-              {filteredApps.map(app => {
-                const studentName = app.studentName || app.student?.name || 'Student';
-                const profileImg = app.profileImageUrl || app.student?.profileImageUrl || 
-                  `https://ui-avatars.com/api/?name=${encodeURIComponent(studentName)}&background=F47C20&color=fff&size=96`;
-                const dept = getDeptLabel(app.department || app.student?.department) || 'Department';
-                const semVal = app.semester || app.student?.semester;
-                const sem = semVal ? `Semester ${semVal}` : '';
-                const rollNo = app.rollNumber || app.student?.rollNumber || 'N/A';
-                const { date, time } = formatDateTime(app.appliedAt);
-
-                return (
-                  <div key={app.id} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
-                    <div className="flex items-center gap-3">
-                      <img 
-                        src={profileImg} 
-                        alt={studentName}
-                        loading="lazy"
-                        className="w-14 h-14 rounded-full object-cover border border-slate-200 shadow-2xs shrink-0"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex justify-between items-start gap-2">
-                          <h4 className="font-extrabold text-slate-900 text-base truncate">{studentName}</h4>
-                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border shrink-0 ${getStatusColor(app.status)}`}>
-                            {app.status?.replace('_', ' ')}
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-500 font-semibold mt-0.5">{dept} {sem && `• ${sem}`}</p>
-                        <p className="text-xs font-mono font-bold text-[#F47C20] mt-1">{rollNo}</p>
-                      </div>
-                    </div>
-
-                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
-                      <span>Applied: <strong>{date}</strong> {time}</span>
-                    </div>
-
-                    <button
-                      onClick={() => openViewDetails(app.id)}
-                      className="w-full py-2.5 bg-white border border-[#F47C20] text-[#F47C20] hover:bg-[#FFF4EB] font-bold text-xs rounded-xl transition-all shadow-2xs flex items-center justify-center gap-1.5"
-                    >
-                      <Eye size={14} /> View
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </>
-        )}
+        <ApplicationStudentTable
+          data={filteredApps}
+          isLoading={isLoading}
+          emptyMessage="No applications found."
+          onSelectStudent={(item) => openViewDetails(item.id)}
+        />
 
       </div>
 

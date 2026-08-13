@@ -21,6 +21,15 @@ class ApplicationController {
     }
   }
 
+  static async getAlumniPostedJobsApplications(req, res, next) {
+    try {
+      const applications = await ApplicationService.getAlumniPostedJobsApplications(req.user.id);
+      res.status(200).json(applications);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   static async getJobApplicationsForAlumni(req, res, next) {
     try {
       const applications = await ApplicationService.getJobApplicationsForAlumni(req.user.id, req.params.jobId);
@@ -90,6 +99,51 @@ class ApplicationController {
 
         return res.status(200).json(formatted);
       }
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async getApplicationDetails(req, res, next) {
+    try {
+      const caller = { userId: req.user.id, role: req.user.role };
+      const details = await ApplicationService.getApplicationDetails(req.params.id, caller);
+      res.status(200).json(details);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async viewResume(req, res, next) {
+    try {
+      const path = require('path');
+      const caller = { userId: req.user.id, role: req.user.role };
+      const { filePath, fileName, mimeType } = await ApplicationService.getApplicationResumeFile(req.params.id, caller);
+
+      const ext = path.extname(fileName || filePath).toLowerCase();
+      let disposition = 'inline';
+      let contentType = mimeType || 'application/pdf';
+
+      if (ext === '.doc' || ext === '.docx' || (mimeType && mimeType.includes('word'))) {
+        disposition = 'attachment';
+      }
+      if (ext === '.pdf') contentType = 'application/pdf';
+      if (ext === '.doc') contentType = 'application/msword';
+      if (ext === '.docx') contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Disposition', `${disposition}; filename="${fileName}"`);
+      res.sendFile(filePath);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async downloadResume(req, res, next) {
+    try {
+      const caller = { userId: req.user.id, role: req.user.role };
+      const { filePath, fileName } = await ApplicationService.getApplicationResumeFile(req.params.id, caller);
+      res.download(filePath, fileName);
     } catch (err) {
       next(err);
     }

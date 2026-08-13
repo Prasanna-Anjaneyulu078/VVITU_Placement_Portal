@@ -39,7 +39,15 @@ class AuthController {
 
   static async registerAlumni(req, res, next) {
     try {
-      const result = await AuthService.registerAlumni(req.body, req.file);
+      console.log("[ALUMNI-REGISTER-UPLOAD]", {
+        hasFile: !!req.file,
+        originalName: req.file?.originalname,
+        mimeType: req.file?.mimetype,
+        size: req.file?.size,
+        storedPath: req.file?.path
+      });
+      
+      const result = await AuthService.registerAlumni(req.body, req.file, req.ip);
       res.status(201).json(result);
     } catch (err) {
       next(err);
@@ -53,6 +61,19 @@ class AuthController {
       const pwdToVerify = currentPassword || oldPassword;
       
       const result = await AuthService.changePassword(userId, pwdToVerify, newPassword, confirmPassword);
+      res.status(200).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  static async changeEmail(req, res, next) {
+    try {
+      const userId = req.user.id;
+      const { newEmail, currentPassword, password } = req.body;
+      const pwdToVerify = currentPassword || password;
+
+      const result = await AuthService.changeEmail(userId, newEmail, pwdToVerify);
       res.status(200).json(result);
     } catch (err) {
       next(err);

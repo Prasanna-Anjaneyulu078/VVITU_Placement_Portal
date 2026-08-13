@@ -8,6 +8,7 @@ import {
   HelpCircle, UserCheck, Layers, FileCheck, Layers3
 } from 'lucide-react';
 import api from '../../utils/axiosConfig';
+import { getImageUrl } from '../../utils/imageUrl';
 import { toast } from 'react-toastify';
 import { CardLoader } from '../../components/common/loading';
 import DocumentViewerModal from '../../components/common/DocumentViewerModal';
@@ -232,7 +233,7 @@ export default function StudentApplicationDetails() {
           <div className="sad-hero-content">
             <div className="sad-logo-box">
               {details.companyLogoUrl ? (
-                <img src={details.companyLogoUrl} alt={details.company || details.companyName} className="sad-logo-img" onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }} />
+                <img src={getImageUrl(details.companyLogoUrl)} alt={details.company || details.companyName} className="sad-logo-img" onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }} />
               ) : (
                 <span className="sad-logo-text">{(details.company || details.companyName || 'CO').substring(0, 2).toUpperCase()}</span>
               )}
