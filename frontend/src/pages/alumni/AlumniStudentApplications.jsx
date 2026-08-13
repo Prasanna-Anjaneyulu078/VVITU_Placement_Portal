@@ -1,15 +1,24 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useSearchParams, useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { PageHeader, ApplicationStudentTable } from '../../components/common';
-import { Search, RefreshCw } from 'lucide-react';
+import { Search, RefreshCw, ArrowLeft } from 'lucide-react';
 import api from '../../utils/axiosConfig';
 import { toast } from 'react-toastify';
 import ApplicationDetailsDrawer from '../../components/alumni/ApplicationDetailsDrawer';
 
 export default function AlumniStudentApplications() {
+  const navigate = useNavigate();
+  const params = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const routeJobId = searchParams.get('jobId') || params.jobId || params.id || '';
+
   const [applications, setApplications] = useState([]);
+  const [jobs, setJobs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
   const [search, setSearch] = useState('');
+  const [filterJobId, setFilterJobId] = useState(routeJobId);
   const [filterDepartment, setFilterDepartment] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
 
@@ -18,19 +27,39 @@ export default function AlumniStudentApplications() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   useEffect(() => {
-    fetchApplications();
-  }, []);
+    const currentQueryId = searchParams.get('jobId') || params.jobId || params.id || '';
+    setFilterJobId(currentQueryId);
+  }, [searchParams, params]);
 
-  const fetchApplications = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await api.get('/applications/alumni/my-posted-jobs');
-      setApplications(res.data || []);
+      const [appsRes, jobsRes] = await Promise.all([
+        api.get('/applications/alumni/my-posted-jobs').catch(() => ({ data: [] })),
+        api.get('/alumni/my-jobs').catch(() => ({ data: [] }))
+      ]);
+
+      setApplications(Array.isArray(appsRes.data) ? appsRes.data : []);
+      setJobs(Array.isArray(jobsRes.data) ? jobsRes.data : []);
     } catch (err) {
       toast.error('Failed to load student applications');
       console.error(err);
     } finally {
       setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const handleJobChange = (e) => {
+    const selectedId = e.target.value;
+    setFilterJobId(selectedId);
+    if (selectedId) {
+      setSearchParams({ jobId: selectedId });
+    } else {
+      setSearchParams({});
     }
   };
 
@@ -79,43 +108,32 @@ export default function AlumniStudentApplications() {
   const filteredApps = useMemo(() => {
     return applications.filter(app => {
       const q = search.toLowerCase();
-      const sName = (app.studentName || app.student?.name || '').toLowerCase();
+      const sName = (app.studentName || app.student?.name || app.user?.name || '').toLowerCase();
       const rNum = (app.rollNumber || app.student?.rollNumber || '').toLowerCase();
       const jTitle = (app.jobTitle || app.job?.title || '').toLowerCase();
 
+      const appIdJobId = app.jobId || app.job?.id;
+      const matchesJob = !filterJobId || String(appIdJobId) === String(filterJobId);
       const matchesSearch = !search || sName.includes(q) || rNum.includes(q) || jTitle.includes(q);
       const matchesDept = !filterDepartment || getDeptValue(app.department || app.student?.department) === filterDepartment;
       const matchesStatus = !filterStatus || app.status === filterStatus;
-      
-      return matchesSearch && matchesDept && matchesStatus;
+
+      return matchesJob && matchesSearch && matchesDept && matchesStatus;
     });
-  }, [applications, search, filterDepartment, filterStatus]);
-
-  const getStatusColor = (status) => {
-    switch (status?.toUpperCase()) {
-      case 'SELECTED': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-      case 'SHORTLISTED': return 'bg-blue-50 text-blue-700 border-blue-200';
-      case 'INTERVIEW_SCHEDULED': return 'bg-purple-50 text-purple-700 border-purple-200';
-      case 'UNDER_REVIEW': return 'bg-amber-50 text-amber-700 border-amber-200';
-      case 'REJECTED': return 'bg-red-50 text-red-700 border-red-200';
-      case 'APPLIED': default: return 'bg-slate-100 text-slate-700 border-slate-200';
-    }
-  };
-
-  const formatDateTime = (dateStr) => {
-    if (!dateStr) return { date: 'N/A', time: '' };
-    try {
-      const d = new Date(dateStr);
-      const date = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-      const time = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-      return { date, time };
-    } catch {
-      return { date: dateStr, time: '' };
-    }
-  };
+  }, [applications, search, filterJobId, filterDepartment, filterStatus]);
 
   return (
     <DashboardLayout role="alumni">
+      {/* Navigation Button */}
+      <div className="mb-2">
+        <button
+          onClick={() => navigate('/alumni/my-jobs')}
+          className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-[#F47C20] transition-colors cursor-pointer"
+        >
+          <ArrowLeft size={16} /> Back to My Jobs
+        </button>
+      </div>
+
       <PageHeader 
         title="Student Applications" 
         subtitle="Review, screen, and evaluate students who applied to your posted jobs."
@@ -132,15 +150,30 @@ export default function AlumniStudentApplications() {
               placeholder="Search by student name, roll no..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full h-10 pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:bg-[#F47C20] focus:border-[#F47C20] transition-all"
+              className="w-full h-10 pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:border-[#F47C20] transition-all"
             />
           </div>
 
           <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            {/* Job Filter Dropdown */}
+            <select
+              value={filterJobId}
+              onChange={handleJobChange}
+              className="h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] max-w-[240px] truncate cursor-pointer"
+            >
+              <option value="">All Jobs</option>
+              {jobs.map(j => (
+                <option key={j.id} value={String(j.id)}>
+                  {j.title || 'Job'} — {j.company || j.companyName || 'Company'}
+                </option>
+              ))}
+            </select>
+
+            {/* Department Filter Dropdown */}
             <select
               value={filterDepartment}
               onChange={(e) => setFilterDepartment(e.target.value)}
-              className="h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20]"
+              className="h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] cursor-pointer"
             >
               <option value="">All Departments</option>
               {departments.map(d => (
@@ -150,10 +183,11 @@ export default function AlumniStudentApplications() {
               ))}
             </select>
 
+            {/* Status Filter Dropdown */}
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20]"
+              className="h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] cursor-pointer"
             >
               <option value="">All Statuses</option>
               <option value="APPLIED">Applied</option>
@@ -165,8 +199,8 @@ export default function AlumniStudentApplications() {
             </select>
 
             <button
-              onClick={fetchApplications}
-              className="h-10 px-3.5 bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-colors"
+              onClick={fetchData}
+              className="h-10 px-3.5 bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
               title="Refresh"
             >
               <RefreshCw size={14} /> Refresh

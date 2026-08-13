@@ -112,7 +112,7 @@ export default function AlumniMyJobs() {
   }, [navigate]);
 
   const handleViewApplications = useCallback((job) => {
-    navigate(`/alumni/jobs/${job.id}/applications`);
+    navigate(`/alumni/applications?jobId=${job.id}`);
   }, [navigate]);
 
   /* ── Derived ── */

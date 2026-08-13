@@ -17,7 +17,6 @@ import StudentApplicationDetails from './pages/student/StudentApplicationDetails
 
 import AlumniDashboard from './pages/alumni/AlumniDashboard';
 import AlumniStudentApplications from './pages/alumni/AlumniStudentApplications';
-import AlumniManageJob from './pages/alumni/AlumniManageJob';
 import AlumniPostJob from './pages/alumni/AlumniPostJob';
 import AlumniEditJob from './pages/alumni/AlumniEditJob';
 import AlumniMyJobs from './pages/alumni/AlumniMyJobs';
@@ -68,12 +67,12 @@ export default function App() {
             {/* Alumni Routes — requires ALUMNI role */}
             <Route path="/alumni/dashboard" element={<PrivateRoute role="ALUMNI"><AlumniDashboard /></PrivateRoute>} />
             <Route path="/alumni/applications" element={<PrivateRoute role="ALUMNI"><AlumniStudentApplications /></PrivateRoute>} />
-            <Route path="/alumni/jobs/:jobId/applications" element={<PrivateRoute role="ALUMNI"><AlumniManageJob /></PrivateRoute>} />
-            <Route path="/alumni/jobs/:id/manage" element={<PrivateRoute role="ALUMNI"><AlumniManageJob /></PrivateRoute>} />
+            <Route path="/alumni/jobs/:jobId/applications" element={<PrivateRoute role="ALUMNI"><AlumniStudentApplications /></PrivateRoute>} />
+            <Route path="/alumni/jobs/:id/manage" element={<PrivateRoute role="ALUMNI"><AlumniStudentApplications /></PrivateRoute>} />
             <Route path="/alumni/post-job"  element={<PrivateRoute role="ALUMNI"><AlumniPostJob role="alumni" /></PrivateRoute>} />
             <Route path="/alumni/edit-job/:id" element={<PrivateRoute role="ALUMNI"><AlumniEditJob /></PrivateRoute>} />
             <Route path="/alumni/my-jobs"   element={<PrivateRoute role="ALUMNI"><AlumniMyJobs /></PrivateRoute>} />
-            <Route path="/alumni/jobs/:id"  element={<PrivateRoute role="ALUMNI"><JobDetails /></PrivateRoute>} />
+            <Route path="/alumni/jobs/:id"  element={<PrivateRoute role="ALUMNI"><AlumniStudentApplications /></PrivateRoute>} />
             <Route path="/alumni/profile"   element={<PrivateRoute role="ALUMNI"><AlumniProfile /></PrivateRoute>} />
 
             {/* Admin Routes — requires ADMIN role */}

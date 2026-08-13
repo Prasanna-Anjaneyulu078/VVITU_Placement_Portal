@@ -71,17 +71,17 @@ const DocumentViewerModal = ({
 
   return (
     <div 
-      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6" 
-      style={{ backgroundColor: 'rgba(15, 23, 42, 0.75)' }}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-6" 
+      style={{ backgroundColor: 'rgba(15, 23, 42, 0.85)' }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="doc-modal-title"
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 cursor-pointer" onClick={onClose} />
+      <div className="absolute inset-0 cursor-pointer hidden sm:block" onClick={onClose} />
       
       {/* Modal Container */}
-      <div className="relative flex flex-col bg-white rounded-2xl w-full max-w-5xl h-[92vh] sm:h-[90vh] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative flex flex-col bg-white rounded-none sm:rounded-2xl w-full max-w-5xl h-full sm:h-[90vh] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-5 bg-slate-50 border-b border-slate-200 shrink-0">

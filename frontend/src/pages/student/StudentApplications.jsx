@@ -32,15 +32,25 @@ export default function StudentApplications() {
       try {
         const res = await api.get('/applications/my');
         // Map backend response to match table requirements
-        const mappedApps = res.data.map(app => ({
-          id: app.id,
-          company: app.job?.company || 'Unknown',
-          role: app.job?.title || 'Unknown',
-          date: new Date(app.appliedAt).toLocaleDateString(),
-          status: app.status,
-          interviewStatus: app.interviewStatus || 'N/A',
-          jobDetails: app.job
-        }));
+        const mappedApps = res.data.map(app => {
+          const comp = app.company || app.companyName || app.job?.company || app.job?.companyName || 'Company';
+          const role = app.role || app.jobTitle || app.title || app.job?.title || app.job?.jobTitle || 'Job Role';
+          return {
+            id: app.id,
+            company: comp,
+            role: role,
+            date: app.appliedAt ? new Date(app.appliedAt).toLocaleDateString() : 'N/A',
+            status: app.status,
+            interviewStatus: app.interviewStatus || 'N/A',
+            jobDetails: app.job || {
+              title: role,
+              company: comp,
+              companyName: comp,
+              location: app.location,
+              salary: app.salaryPackage
+            }
+          };
+        });
         setApplications(mappedApps);
       } catch (err) {
         console.error('Failed to load applications', err);
@@ -153,45 +163,13 @@ export default function StudentApplications() {
             <p className="text-gray-500">You don't have any applications matching the selected filter.</p>
           </div>
         ) : (
-          <>
-            <div className="hidden md:block overflow-x-auto">
-              <Table 
-                columns={columns}
-                data={filteredApps}
-                onRowClick={handleViewDetails}
-              />
-            </div>
-            <div className="md:hidden flex flex-col p-4 bg-gray-50 gap-4">
-              {filteredApps.map(app => (
-                <div 
-                  key={app.id} 
-                  onClick={() => handleViewDetails(app)} 
-                  className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm cursor-pointer   transition-colors"
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <h3 className="font-bold text-gray-900 text-lg">{app.role}</h3>
-                      <p className="text-sm text-gray-600 font-medium">{app.company}</p>
-                    </div>
-                    <span className={getStatusBadge(app.status)}>{app.status}</span>
-                  </div>
-                  <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-100">
-                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Applied: {app.date}</span>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={(e) => { 
-                        e.stopPropagation(); 
-                        handleViewDetails(app); 
-                      }}
-                    >
-                      View Details
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
+          <div className="overflow-x-auto">
+            <Table 
+              columns={columns}
+              data={filteredApps}
+              onRowClick={handleViewDetails}
+            />
+          </div>
         )}
       </div>
       </div>

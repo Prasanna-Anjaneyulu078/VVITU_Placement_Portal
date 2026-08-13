@@ -219,7 +219,15 @@ export default function JobDetails() {
     );
   }
 
-  if (!job) return null;
+  if (!job) {
+    return (
+      <DashboardLayout role={role}>
+        <div className="flex justify-center items-center h-[60vh]">
+          <LoadingSpinner size="large" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   // Backend now guarantees job is eligible (filtered at source). Just use job data.
   const skillMatchPercentage = job?.skillMatchPercentage ?? 100;

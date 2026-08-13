@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import api from '../utils/axiosConfig';
 
 import { resolveImageUrl, withCacheBust } from '../utils/imageUrl';
@@ -20,6 +20,12 @@ export const DataProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    const syncFromStorage = () => {
+      const stored = localStorage.getItem('profileImage') || '';
+      const resolved = resolveImageUrl(stored) || '';
+      setProfileImage(resolved);
+    };
+
     const fetchData = async () => {
       setIsLoading(true);
       try {
@@ -42,24 +48,34 @@ export const DataProvider = ({ children }) => {
     };
     
     fetchData();
+    window.addEventListener('storage', syncFromStorage);
+    return () => window.removeEventListener('storage', syncFromStorage);
   }, []);
 
-  const updateProfileImage = (url) => {
-    const resolved = resolveImageUrl(url);
-    if (!resolved) {
-      if (profileImage !== '') {
-        setProfileImage('');
-        localStorage.removeItem('profileImage');
-      }
+  const clearProfileImage = useCallback(() => {
+    localStorage.removeItem('profileImage');
+    setProfileImage('');
+  }, []);
+
+  const updateProfileImage = useCallback((url, options = {}) => {
+    if (!url) {
+      clearProfileImage();
       return;
     }
 
-    const freshUrl = withCacheBust(resolved);
-    if (profileImage === freshUrl) return;
+    const resolved = resolveImageUrl(url, { 
+      cacheBust: options.forceRefresh || options.cacheBust, 
+      version: options.version 
+    });
+    
+    if (!resolved) {
+      clearProfileImage();
+      return;
+    }
 
-    setProfileImage(freshUrl);
-    localStorage.setItem('profileImage', freshUrl);
-  };
+    localStorage.setItem('profileImage', resolved);
+    setProfileImage(resolved);
+  }, [clearProfileImage]);
 
   const addJob = (job) => {
     const newJob = {
@@ -123,7 +139,8 @@ export const DataProvider = ({ children }) => {
       updateApplicationStatus,
       applyToJob,
       verifyUser,
-      updateProfileImage
+      updateProfileImage,
+      clearProfileImage
     }}>
       {children}
     </DataContext.Provider>

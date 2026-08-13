@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
-import { Search, CheckCircle, Calendar, CheckSquare, Users } from 'lucide-react';
+import { Search, CheckCircle, Calendar, CheckSquare, Users, X, RotateCcw } from 'lucide-react';
 import api from '../../utils/axiosConfig';
 import StudentDetailsDrawer from '../../components/common/StudentDetailsDrawer';
 import ApplicationStudentTable from '../../components/common/ApplicationStudentTable';
@@ -22,7 +22,7 @@ export default function AdminShortlisted({ isTab = false, onCountsUpdate }) {
       try {
         const res = await api.get('/admin/applications/shortlisted');
         data = Array.isArray(res.data) ? res.data : (res.data?.content || []);
-      } catch (e) {
+      } catch {
         const altRes = await api.get('/admin/students/shortlisted');
         data = Array.isArray(altRes.data) ? altRes.data : (altRes.data?.content || []);
       }
@@ -41,13 +41,14 @@ export default function AdminShortlisted({ isTab = false, onCountsUpdate }) {
   }, []);
 
   const filteredShortlisted = shortlisted.filter(item => {
-    const sName  = (item.studentName || item.user?.name || '').toLowerCase();
-    const rNum   = (item.rollNumber || item.user?.studentProfile?.rollNumber || '').toLowerCase();
-    const jComp  = (item.company || item.job?.company || '').toLowerCase();
+    const sName  = (item.studentName || item.name || item.user?.name || item.student?.name || '').toLowerCase();
+    const rNum   = (item.rollNumber || item.user?.studentProfile?.rollNumber || item.student?.rollNumber || '').toLowerCase();
+    const sEmail = (item.email || item.studentEmail || item.user?.email || item.student?.email || '').toLowerCase();
+    const jComp  = (item.company || item.companyName || item.job?.company || item.job?.companyName || '').toLowerCase();
     const jTitle = (item.jobTitle || item.job?.title || '').toLowerCase();
-    const q      = searchTerm.toLowerCase();
+    const q      = searchTerm.trim().toLowerCase();
 
-    const matchesSearch  = !searchTerm || sName.includes(q) || rNum.includes(q) || jComp.includes(q) || jTitle.includes(q);
+    const matchesSearch  = !q || sName.includes(q) || rNum.includes(q) || sEmail.includes(q) || jComp.includes(q) || jTitle.includes(q);
     const matchesJob     = filters.job ? (item.jobTitle || item.job?.title) === filters.job : true;
     const matchesStatus  = filters.status ? item.status === filters.status : true;
     const matchesCompany = filters.company ? (item.company || item.job?.company) === filters.company : true;
@@ -82,7 +83,7 @@ export default function AdminShortlisted({ isTab = false, onCountsUpdate }) {
     <div className="admin-shortlisted-content w-full">
 
       {/* STAT CARDS */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard title="Total" count={stats.total} icon={Users}
           palette={{ bg:"bg-blue-50", icon:"bg-blue-100 text-blue-600", text:"text-blue-700" }}
           active={!filters.status} onClick={() => setFilters(p => ({...p, status: ""}))} />
@@ -97,11 +98,55 @@ export default function AdminShortlisted({ isTab = false, onCountsUpdate }) {
           active={filters.status === "OFFERED" || filters.status === "SELECTED" || filters.status === "OFFER_RELEASED"} onClick={() => setFilters(p => ({...p, status: "SELECTED"}))} />
       </div>
 
+      {/* SEARCH & TOOLBAR */}
+      <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs mb-6 flex flex-col md:flex-row gap-3 items-center justify-between">
+        <div className="relative w-full md:w-96">
+          <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search by name, roll number, email, company, or job..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full h-11 pl-10 pr-10 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:border-[#F47C20] focus:bg-white transition-all shadow-2xs"
+            aria-label="Search shortlisted students"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-700 bg-slate-200/60 hover:bg-slate-200 rounded-full transition-colors cursor-pointer"
+              title="Clear search"
+              aria-label="Clear search"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+          <span className="text-xs font-bold text-slate-500">
+            {filteredShortlisted.length} {filteredShortlisted.length === 1 ? 'student' : 'students'} {searchTerm ? 'found' : 'shortlisted'}
+          </span>
+          
+          <button
+            onClick={fetchShortlisted}
+            className="h-11 px-4 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2"
+            title="Refresh shortlisted list"
+          >
+            <RotateCcw size={15} className={isLoading ? "animate-spin" : ""} />
+            <span className="hidden sm:inline">Refresh</span>
+          </button>
+        </div>
+      </div>
+
       {/* TABLE */}
       <ApplicationStudentTable
         data={filteredShortlisted}
         isLoading={isLoading}
-        emptyMessage="No shortlisted students available."
+        emptyMessage={
+          searchTerm || filters.status
+            ? "No shortlisted students match your search criteria."
+            : "No shortlisted students available."
+        }
         onSelectStudent={(item) => {
           setSelectedAppId(item.id);
           setIsDrawerOpen(true);

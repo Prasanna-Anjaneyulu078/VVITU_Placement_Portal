@@ -12,6 +12,7 @@ import { toast } from 'react-toastify';
 import { CardLoader, JobCardLoader, SectionLoader } from '../../components/common/loading';
 import { toTitleCase } from '../../utils/nameUtils';
 import { generateAvatarSVG } from '../../utils/avatarUtils';
+import { getImageUrl } from '../../utils/imageUrl';
 import './StudentDashboard.css';
 
 const DEPT_MAP = {
@@ -30,7 +31,17 @@ const DEPT_MAP = {
 const getDeptName = (code) => DEPT_MAP[code] || code || 'Department Not Set';
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 const fmtShortDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'Soon';
-const logoLetters = (name) => name ? name.substring(0, 2).toUpperCase() : 'CO';
+
+export function getCompanyInitials(name) {
+  if (!name || typeof name !== 'string') return 'CO';
+  const clean = name.trim();
+  if (!clean || clean.toLowerCase() === 'company') return 'CO';
+  const words = clean.split(/\s+/).filter(Boolean);
+  if (words.length >= 2) {
+    return (words[0][0] + words[1][0]).toUpperCase();
+  }
+  return clean.substring(0, 2).toUpperCase();
+}
 
 function StatusBadge({ status }) {
   const s = (status || 'APPLIED').toUpperCase();
@@ -269,27 +280,45 @@ export default function StudentDashboard() {
                 </div>
               ) : recentApps.length > 0 ? (
                 <div className="sd-app-list">
-                  {recentApps.slice(0, 6).map(app => (
-                    <div 
-                      key={app.id} 
-                      className="sd-app-item" 
-                      onClick={() => navigate('/student/applications/' + app.id)} 
-                      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/student/applications/' + app.id); } }}
-                      tabIndex={0} 
-                      role="button"
-                      aria-label={`View application status for ${app.job?.title || 'Position'} at ${app.job?.company || 'Company'}`}
-                    >
-                      <div className="sd-app-logo">{logoLetters(app.job && app.job.company)}</div>
-                      <div className="sd-app-meta">
-                        <div className="sd-app-company">{(app.job && app.job.company) ? app.job.company : 'Company'}</div>
-                        <div className="sd-app-role">{(app.job && app.job.title) ? app.job.title : 'Position'}</div>
+                  {recentApps.slice(0, 6).map(app => {
+                    const compName = app.companyName || app.company || app.job?.companyName || app.job?.company || 'Company';
+                    const roleTitle = app.jobTitle || app.role || app.title || app.job?.title || app.job?.jobTitle || 'Position';
+                    const logoUrl = app.companyLogoUrl || app.imageUrl || app.job?.companyLogoUrl || app.job?.imageUrl;
+                    const initials = getCompanyInitials(compName);
+
+                    return (
+                      <div 
+                        key={app.id} 
+                        className="sd-app-item" 
+                        onClick={() => navigate('/student/applications/' + app.id)} 
+                        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/student/applications/' + app.id); } }}
+                        tabIndex={0} 
+                        role="button"
+                        aria-label={`View application status for ${roleTitle} at ${compName}`}
+                      >
+                        <div className="sd-app-logo">
+                          {logoUrl ? (
+                            <img 
+                              src={getImageUrl(logoUrl)} 
+                              alt={compName} 
+                              className="sd-avatar-img" 
+                              onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }} 
+                            />
+                          ) : (
+                            <span>{initials}</span>
+                          )}
+                        </div>
+                        <div className="sd-app-meta">
+                          <div className="sd-app-company">{compName}</div>
+                          <div className="sd-app-role">{roleTitle}</div>
+                        </div>
+                        <div className="sd-app-right">
+                          <StatusBadge status={app.status} />
+                          <span className="sd-app-date">{fmtShortDate(app.appliedAt || app.createdAt)}</span>
+                        </div>
                       </div>
-                      <div className="sd-app-right">
-                        <StatusBadge status={app.status} />
-                        <span className="sd-app-date">{fmtShortDate(app.appliedAt || app.createdAt)}</span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="sd-empty">

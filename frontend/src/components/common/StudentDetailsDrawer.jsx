@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, ArrowLeft } from 'lucide-react';
 import api from '../../utils/axiosConfig';
 import { toast } from 'react-toastify';
 import LoadingSpinner from './LoadingSpinner';
@@ -19,15 +19,15 @@ export default function StudentDetailsDrawer({
   studentId,
   isOpen,
   onClose,
+  showStatusActions = true,
   onStatusUpdate,
-  role = 'alumni', // 'alumni' or 'admin'
-  showStatusActions = true // set false to hide Shortlist/Mark Selected/Reject (e.g. Admin All Students view)
+  role
 }) {
   const [details, setDetails] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // Document Viewer state
+  // Resume Viewer Modal state
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerUrl, setViewerUrl] = useState(null);
   const [viewerMetadata, setViewerMetadata] = useState(null);
@@ -35,7 +35,7 @@ export default function StudentDetailsDrawer({
   const [viewerError, setViewerError] = useState(null);
 
   useEffect(() => {
-    if (isOpen && (applicationId || studentId)) {
+    if (isOpen) {
       fetchDetails();
     } else {
       setDetails(null);
@@ -78,113 +78,135 @@ export default function StudentDetailsDrawer({
   };
 
   const cleanUrl = (url, fallback) => {
-    if (!url) return fallback;
-    return url.startsWith('/api/') ? url.substring(4) : url;
+    if (!url || typeof url !== 'string') return fallback || null;
+    const trimmed = url.trim();
+    if (!trimmed) return fallback || null;
+    if (trimmed.startsWith('blob:') || trimmed.startsWith('data:')) return trimmed;
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
+    if (trimmed.startsWith('/')) return trimmed;
+    return `/${trimmed}`;
   };
 
   const handleViewResume = async () => {
-    if (!details?.resumeFileName && !details?.resumeUrl) {
-      toast.error('Resume Not Uploaded');
-      return;
-    }
+    const targetAppId = applicationId || details?.id;
+    const fallbackUrl = cleanUrl(details?.resumeUrl || details?.resumeFileUrl);
+
     setViewerOpen(true);
+    setViewerLoading(true);
     setViewerError(null);
     setViewerMetadata({
-      fileName: details.resumeFileName || `${details.rollNumber || 'Student'}_Resume.pdf`,
-      studentName: details.studentName || 'Student',
-      rollNumber: details.rollNumber
+      fileName: details?.resumeFileName || 'Student_Resume.pdf',
+      studentName: details?.studentName || details?.name,
+      rollNumber: details?.rollNumber
     });
 
-    if (viewerUrl) {
+    if (targetAppId) {
+      try {
+        const response = await api.get(`/applications/${targetAppId}/resume/view`, {
+          responseType: 'blob'
+        });
+        const blob = new Blob([response.data], { type: 'application/pdf' });
+        const blobUrl = URL.createObjectURL(blob);
+        setViewerUrl(blobUrl);
+      } catch (err) {
+        console.error('API resume view failed, attempting fallback', err);
+        if (fallbackUrl) {
+          setViewerUrl(fallbackUrl);
+        } else {
+          setViewerError(err);
+        }
+      } finally {
+        setViewerLoading(false);
+      }
+    } else if (fallbackUrl) {
+      setViewerUrl(fallbackUrl);
       setViewerLoading(false);
-      return;
+    } else {
+      setViewerError(new Error('No resume file URL available.'));
+      setViewerLoading(false);
+    }
+  };
+
+  const handleDownloadResume = async () => {
+    const targetAppId = applicationId || details?.id;
+    const fallbackUrl = cleanUrl(details?.resumeUrl || details?.resumeFileUrl);
+    const fileName = details?.resumeFileName || `${details?.rollNumber || 'Student'}_Resume.pdf`;
+
+    if (targetAppId) {
+      try {
+        const response = await api.get(`/applications/${targetAppId}/resume/download`, {
+          responseType: 'blob'
+        });
+        const blob = new Blob([response.data], { type: 'application/pdf' });
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(blobUrl);
+        toast.success('Resume download started');
+        return;
+      } catch (err) {
+        console.error('API resume download failed, attempting fallback link', err);
+      }
     }
 
-    setViewerLoading(true);
-    const viewUrl = cleanUrl(
-      details.resumeUrl, 
-      applicationId 
-        ? `/applications/${applicationId}/resume/view` 
-        : `/admin/students/${studentId || details.studentId}/resume/view`
-    );
-
-    try {
-      const response = await api.get(viewUrl, { responseType: 'blob' });
-      const blob = new Blob([response.data], { type: response.headers['content-type'] || 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      setViewerUrl(url);
-    } catch (err) {
-      console.error('Error viewing resume:', err);
-      const status = err.response?.status;
-      const errMsg = status === 404 ? '404: Resume Not Found' : status === 403 ? '403: Forbidden' : (err.message || 'Failed to view resume');
-      setViewerError(errMsg);
-    } finally {
-      setViewerLoading(false);
+    if (fallbackUrl) {
+      const link = document.createElement('a');
+      link.href = fallbackUrl;
+      link.download = fileName;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success('Resume download started');
+    } else {
+      toast.error('Resume document not available for download');
     }
   };
 
   const closeViewer = () => {
     setViewerOpen(false);
-    setViewerLoading(false);
+    if (viewerUrl && viewerUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(viewerUrl);
+    }
+    setViewerUrl(null);
     setViewerError(null);
-    if (viewerUrl) {
-      window.URL.revokeObjectURL(viewerUrl);
-      setViewerUrl(null);
-    }
-    setViewerMetadata(null);
-  };
-
-  const handleDownloadResume = async () => {
-    if (!details?.resumeFileName && !details?.resumeUrl) {
-      toast.error('Resume Not Uploaded');
-      return;
-    }
-    const downloadUrl = cleanUrl(
-      details.resumeDownloadUrl, 
-      applicationId 
-        ? `/applications/${applicationId}/resume/download` 
-        : `/admin/students/${studentId || details.studentId}/resume/download`
-    );
-
-    try {
-      const response = await api.get(downloadUrl, { responseType: 'blob' });
-      const blob = new Blob([response.data]);
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      const fallbackName = `${details.rollNumber || 'Student'}_Resume.pdf`;
-      link.download = details.resumeFileName || fallbackName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Error downloading resume:', err);
-      toast.error('Resume file is unavailable. Please contact the student or administrator.');
-    }
   };
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden bg-slate-900/60 backdrop-blur-xs transition-opacity animate-in fade-in">
-      <div className="absolute inset-y-0 right-0 max-w-full flex pl-10">
-        <div className="w-screen max-w-2xl bg-slate-50 shadow-2xl flex flex-col border-l border-slate-200">
+      <div className="absolute inset-0 sm:inset-y-0 sm:right-0 sm:left-auto max-w-full flex">
+        <div className="w-full h-full sm:h-auto sm:w-screen sm:max-w-2xl bg-slate-50 shadow-2xl flex flex-col border-0 sm:border-l border-slate-200">
           
           {/* Header */}
-          <div className="p-6 border-b border-slate-200 flex items-center justify-between bg-white sticky top-0 z-10 shadow-2xs">
-            <div>
-              <p className="text-xs font-extrabold text-[#F47C20] uppercase tracking-wider">
-                {role === 'admin' ? 'Admin Student Details' : 'Student Application Review'}
-              </p>
-              <h2 className="text-xl font-black text-slate-900 mt-0.5">
-                {details?.jobTitle ? `${details.jobTitle} - Details` : (details?.studentName || 'Student Profile')}
-              </h2>
-              {details?.company && <p className="text-xs text-slate-500 font-semibold">{details.company}</p>}
+          <div className="p-4 sm:p-6 border-b border-slate-200 flex items-center justify-between bg-white sticky top-0 z-10 shadow-2xs">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <button 
+                onClick={onClose} 
+                className="sm:hidden p-2 text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all shrink-0 cursor-pointer"
+                title="Back to list"
+              >
+                <ArrowLeft size={18} className="text-[#F47C20]" />
+              </button>
+              <div className="min-w-0">
+                <p className="text-[11px] sm:text-xs font-extrabold text-[#F47C20] uppercase tracking-wider truncate">
+                  {role === 'admin' ? 'Admin Student Details' : 'Student Application Review'}
+                </p>
+                <h2 className="text-base sm:text-xl font-black text-slate-900 mt-0.5 truncate">
+                  {details?.jobTitle ? `${details.jobTitle} - Details` : (details?.studentName || 'Student Profile')}
+                </h2>
+                {details?.company && <p className="text-xs text-slate-500 font-semibold truncate">{details.company}</p>}
+              </div>
             </div>
             <button 
               onClick={onClose} 
-              className="p-2 text-slate-400 hover:text-slate-700 bg-white hover:bg-slate-100 rounded-xl border border-slate-200 transition-all focus:outline-none focus:ring-2 focus:ring-[#F47C20]"
+              className="p-2 text-slate-400 hover:text-slate-700 bg-white hover:bg-slate-100 rounded-xl border border-slate-200 transition-all focus:outline-none focus:ring-2 focus:ring-[#F47C20] shrink-0 ml-2 cursor-pointer"
+              title="Close"
             >
               <X size={20} />
             </button>
@@ -200,7 +222,7 @@ export default function StudentDetailsDrawer({
               Could not load student details.
             </div>
           ) : (
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6 break-words min-w-0">
 
               {/* 1. Personal Information */}
               <StudentProfileCard details={details} />
@@ -231,54 +253,54 @@ export default function StudentDetailsDrawer({
           )}
 
           {/* Footer Actions */}
-          <div className="p-4 bg-white border-t border-slate-200 flex flex-wrap items-center justify-end gap-2.5 sticky bottom-0 z-10">
+          <div className="p-3 sm:p-4 bg-white border-t border-slate-200 flex flex-wrap items-center justify-between sm:justify-end gap-2 sticky bottom-0 z-10 shadow-lg">
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all"
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
             >
               Close
             </button>
 
             {/* Application Status Actions — hidden when showStatusActions is false (e.g. Admin > All Students) */}
             {showStatusActions && (applicationId || details?.id) && (
-              <>
+              <div className="flex flex-wrap items-center gap-2">
                 {details?.status !== 'SHORTLISTED' && (
                   <button
                     disabled={isUpdating}
                     onClick={() => handleStatusChange('SHORTLISTED')}
-                    className="px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-bold rounded-xl border border-blue-200 transition-all disabled:opacity-50"
+                    className="px-3.5 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-bold rounded-xl border border-blue-200 transition-all disabled:opacity-50 cursor-pointer"
                   >
-                    Shortlist
+                    {isUpdating ? 'Updating...' : 'Shortlist'}
                   </button>
                 )}
-                {details?.status !== 'INTERVIEW_SCHEDULED' && role === 'alumni' && (
+                {details?.status !== 'INTERVIEW_SCHEDULED' && (
                   <button
                     disabled={isUpdating}
                     onClick={() => handleStatusChange('INTERVIEW_SCHEDULED')}
-                    className="px-4 py-2 bg-purple-50 text-purple-700 hover:bg-purple-100 text-xs font-bold rounded-xl border border-purple-200 transition-all disabled:opacity-50"
+                    className="px-3.5 py-2 bg-purple-50 text-purple-700 hover:bg-purple-100 text-xs font-bold rounded-xl border border-purple-200 transition-all disabled:opacity-50 cursor-pointer"
                   >
-                    Schedule Interview
+                    {isUpdating ? 'Updating...' : 'Schedule Interview'}
                   </button>
                 )}
-                {details?.status !== 'SELECTED' && role === 'admin' && (
+                {details?.status !== 'SELECTED' && (
                   <button
                     disabled={isUpdating}
                     onClick={() => handleStatusChange('SELECTED')}
-                    className="px-4 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-bold rounded-xl border border-emerald-200 transition-all disabled:opacity-50"
+                    className="px-3.5 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-bold rounded-xl border border-emerald-200 transition-all disabled:opacity-50 cursor-pointer"
                   >
-                    Mark Selected
+                    {isUpdating ? 'Updating...' : 'Select Candidate'}
                   </button>
                 )}
                 {details?.status !== 'REJECTED' && (
                   <button
                     disabled={isUpdating}
                     onClick={() => handleStatusChange('REJECTED')}
-                    className="px-4 py-2 bg-red-50 text-red-700 hover:bg-red-100 text-xs font-bold rounded-xl border border-red-200 transition-all disabled:opacity-50"
+                    className="px-3.5 py-2 bg-red-50 text-red-700 hover:bg-red-100 text-xs font-bold rounded-xl border border-red-200 transition-all disabled:opacity-50 cursor-pointer"
                   >
-                    Reject
+                    {isUpdating ? 'Updating...' : 'Reject'}
                   </button>
                 )}
-              </>
+              </div>
             )}
           </div>
 

@@ -17,6 +17,7 @@ class AuthController {
         email: result.user.email,
         role: result.user.role,
         verificationStatus: result.user.verificationStatus,
+        profileImageUrl: result.user.profileImageUrl || null,
         token: result.accessToken,
         refreshToken: result.refreshToken,
         success: true,

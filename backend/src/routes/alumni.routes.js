@@ -27,4 +27,6 @@ router.get('/documents/my-document/file', authorizeRoles('ALUMNI'), AlumniContro
 // Ownership check is performed inside AlumniController.getJobStatistics for ALUMNI callers.
 router.get('/jobs/:jobId/statistics', authorizeRoles('ALUMNI', 'ADMIN', 'SUPER_ADMIN'), AlumniController.getJobStatistics);
 router.get('/jobs/:jobId/applications', authorizeRoles('ALUMNI', 'ADMIN', 'SUPER_ADMIN'), ApplicationController.getJobApplicationsForAlumni);
+router.put('/applications/:id/status', authorizeRoles('ALUMNI', 'ADMIN', 'SUPER_ADMIN'), ApplicationController.updateStatus);
+router.patch('/applications/:id/status', authorizeRoles('ALUMNI', 'ADMIN', 'SUPER_ADMIN'), ApplicationController.updateStatus);
 module.exports = router;

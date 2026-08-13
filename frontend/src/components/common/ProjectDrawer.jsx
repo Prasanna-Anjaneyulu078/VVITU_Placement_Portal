@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, FolderGit2, Loader2, Plus, Edit2, AlertCircle } from 'lucide-react';
+import { X, FolderGit2, Loader2, Plus, Edit2, AlertCircle, ArrowLeft } from 'lucide-react';
 import { toast } from 'react-toastify';
 import api from '../../utils/axiosConfig';
 
@@ -11,62 +11,75 @@ export default function ProjectDrawer({
 }) {
   const [formData, setFormData] = useState({
     title: '',
-    description: '',
-    technologies: '',
     role: '',
     projectType: 'Academic',
+    status: 'Completed',
+    duration: '',
+    technologies: '',
     githubUrl: '',
     liveDemoUrl: '',
-    duration: '',
-    status: 'Completed'
+    description: ''
   });
 
-  const [initialData, setInitialData] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFormDirty, setIsFormDirty] = useState(false);
   const firstInputRef = useRef(null);
 
+  // Populate form on edit or reset on add
   useEffect(() => {
-    if (isOpen) {
-      const data = project ? {
+    if (project) {
+      setFormData({
         title: project.title || '',
-        description: project.description || '',
-        technologies: project.technologies || '',
         role: project.role || '',
         projectType: project.projectType || 'Academic',
-        githubUrl: project.githubUrl || '',
-        liveDemoUrl: project.liveDemoUrl || '',
+        status: project.status || 'Completed',
         duration: project.duration || '',
-        status: project.status || 'Completed'
-      } : {
+        technologies: Array.isArray(project.technologies) 
+          ? project.technologies.join(', ') 
+          : (project.technologies || project.tech || ''),
+        githubUrl: project.githubUrl || project.sourceUrl || '',
+        liveDemoUrl: project.liveDemoUrl || project.demoUrl || '',
+        description: project.description || ''
+      });
+    } else {
+      setFormData({
         title: '',
-        description: '',
-        technologies: '',
         role: '',
         projectType: 'Academic',
+        status: 'Completed',
+        duration: '',
+        technologies: '',
         githubUrl: '',
         liveDemoUrl: '',
-        duration: '',
-        status: 'Completed'
-      };
-
-      setFormData(data);
-      setInitialData(data);
-
-      // Focus first input on drawer open
-      setTimeout(() => {
-        if (firstInputRef.current) {
-          firstInputRef.current.focus();
-        }
-      }, 100);
+        description: ''
+      });
     }
+    setIsFormDirty(false);
   }, [project, isOpen]);
 
-  // Check if form is modified
-  const isDirty = initialData && JSON.stringify(formData) !== JSON.stringify(initialData);
+  // Focus first input on open
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => {
+        if (firstInputRef.current) firstInputRef.current.focus();
+      }, 100);
+    }
+  }, [isOpen]);
+
+  // Handle ESC key close
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isOpen) {
+        handleSafeClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, isFormDirty]);
 
   const handleSafeClose = () => {
-    if (isDirty && !isSubmitting) {
-      if (window.confirm("You have unsaved changes. Are you sure you want to close?")) {
+    if (isFormDirty) {
+      if (window.confirm('You have unsaved changes. Are you sure you want to close?')) {
         onClose();
       }
     } else {
@@ -74,48 +87,30 @@ export default function ProjectDrawer({
     }
   };
 
-  // Keyboard ESC listener
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && isOpen && !isSubmitting) {
-        handleSafeClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, isDirty, isSubmitting]);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!formData.title.trim()) {
-      toast.error('Project Title is required.');
-      return;
-    }
-    if (!formData.description.trim()) {
-      toast.error('Project Description is required.');
-      return;
-    }
-    if (!formData.technologies.trim()) {
-      toast.error('At least one technology is required.');
+      toast.error('Project title is required');
       return;
     }
 
     setIsSubmitting(true);
     try {
       if (project && project.id) {
+        // Update existing project
         await api.put(`/student/projects/${project.id}`, formData);
-        toast.success(`Project "${formData.title}" updated successfully.`);
+        toast.success('Project updated successfully');
       } else {
+        // Create new project
         await api.post('/student/projects', formData);
-        toast.success(`Project "${formData.title}" added successfully.`);
+        toast.success('Project added successfully');
       }
-
-      onClose();
+      setIsFormDirty(false);
       if (onSuccess) onSuccess();
+      onClose();
     } catch (err) {
-      const errMsg = err.response?.data?.message || err.response?.data || err.message || 'Failed to save project.';
-      toast.error(errMsg);
+      console.error('Failed to save project:', err);
+      toast.error(err.response?.data?.message || 'Failed to save project');
     } finally {
       setIsSubmitting(false);
     }
@@ -128,20 +123,27 @@ export default function ProjectDrawer({
       {/* Click Backdrop */}
       <div className="absolute inset-0" onClick={handleSafeClose} aria-hidden="true" />
 
-      <div className="absolute inset-y-0 right-0 max-w-full flex pl-10">
-        <div className="w-screen max-w-xl md:max-w-2xl bg-white shadow-2xl flex flex-col border-l border-slate-200 animate-in slide-in-from-right duration-300">
+      <div className="absolute inset-0 sm:inset-y-0 sm:right-0 sm:left-auto max-w-full flex">
+        <div className="w-full h-full sm:h-auto sm:w-screen sm:max-w-xl md:max-w-2xl bg-white shadow-2xl flex flex-col border-0 sm:border-l border-slate-200 animate-in slide-in-from-right duration-300">
           
           {/* Drawer Header */}
-          <div className="px-6 py-5 border-b border-slate-200 flex items-center justify-between bg-white sticky top-0 z-10 shadow-2xs">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#FFF4EB] border border-orange-200 text-[#F47C20] flex items-center justify-center shrink-0">
-                <FolderGit2 size={20} />
+          <div className="px-4 py-4 sm:px-6 sm:py-5 border-b border-slate-200 flex items-center justify-between bg-white sticky top-0 z-10 shadow-2xs">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <button
+                onClick={handleSafeClose}
+                className="sm:hidden p-2 text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all shrink-0 cursor-pointer"
+                title="Back"
+              >
+                <ArrowLeft size={18} className="text-[#F47C20]" />
+              </button>
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-[#FFF4EB] border border-orange-200 text-[#F47C20] flex items-center justify-center shrink-0">
+                <FolderGit2 size={18} />
               </div>
-              <div>
-                <p className="text-[11px] font-extrabold text-[#F47C20] uppercase tracking-wider">
+              <div className="min-w-0">
+                <p className="text-[11px] font-extrabold text-[#F47C20] uppercase tracking-wider truncate">
                   {project ? 'Edit Project' : 'Add New Project'}
                 </p>
-                <h3 className="text-lg font-black text-slate-900 leading-tight">
+                <h3 className="text-base sm:text-lg font-black text-slate-900 leading-tight truncate">
                   {project ? project.title : 'Project Details'}
                 </h3>
               </div>
@@ -149,7 +151,7 @@ export default function ProjectDrawer({
 
             <button
               onClick={handleSafeClose}
-              className="p-2 text-[#F47C20] hover:text-[#d96916] bg-[#FFF4EB] hover:bg-orange-100 rounded-xl border border-[#F47C20]/40 transition-all focus:outline-none focus:ring-2 focus:ring-[#F47C20]"
+              className="p-2 text-[#F47C20] hover:text-[#d96916] bg-[#FFF4EB] hover:bg-orange-100 rounded-xl border border-[#F47C20]/40 transition-all focus:outline-none focus:ring-2 focus:ring-[#F47C20] shrink-0 ml-2 cursor-pointer"
               title="Close drawer (Esc)"
             >
               <X size={20} className="text-[#F47C20]" />
@@ -157,7 +159,7 @@ export default function ProjectDrawer({
           </div>
 
           {/* Drawer Form Body */}
-          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
+          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-5" onChange={() => setIsFormDirty(true)}>
             
             {/* Project Title */}
             <div>

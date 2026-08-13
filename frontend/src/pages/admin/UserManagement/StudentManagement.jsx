@@ -7,7 +7,8 @@ import {
   Users, Download, Upload, AlertCircle, FileText,
   Check, Copy, Ban, KeyRound, Target, UploadCloud,
   ChevronLeft, ChevronRight, RefreshCw, Mail, Phone, Filter,
-  Loader2, CheckCircle2, XCircle, SkipForward, FileSpreadsheet
+  Loader2, CheckCircle2, XCircle, SkipForward, FileSpreadsheet,
+  MoreVertical, Trash2, Key
 } from "lucide-react";
 import { toast } from "react-toastify";
 import ExportDataModal from "./ExportDataModal";
@@ -82,6 +83,24 @@ const StudentManagement = forwardRef(({ isTab = false, onCountsUpdate }, ref) =>
   const [credentials, setCredentials]         = useState(null);
   const [currentPage, setCurrentPage]         = useState(1);
   const itemsPerPage = 10;
+  const [openMenuId, setOpenMenuId]           = useState(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (openMenuId !== null && !e.target.closest('.action-menu-container')) {
+        setOpenMenuId(null);
+      }
+    };
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setOpenMenuId(null);
+    };
+    document.addEventListener('click', handleOutsideClick);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('click', handleOutsideClick);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [openMenuId]);
 
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showResetModal, setShowResetModal]     = useState(false);
@@ -242,8 +261,13 @@ const StudentManagement = forwardRef(({ isTab = false, onCountsUpdate }, ref) =>
   };
 
   const filteredStudents = useMemo(() => students.filter(s => {
-    const q = searchTerm.toLowerCase();
-    if (q && !s.user.name.toLowerCase().includes(q) && !s.rollNumber.toLowerCase().includes(q)) return false;
+    const q = searchTerm.toLowerCase().trim();
+    const sName = (s.user?.name || s.name || '').toLowerCase();
+    const sRoll = (s.rollNumber || '').toLowerCase();
+    const sEmail = (s.user?.email || s.email || '').toLowerCase();
+    const sDept = (typeof s.department === 'object' ? (s.department.code || s.department.name || '') : s.department || '').toLowerCase();
+
+    if (q && !sName.includes(q) && !sRoll.includes(q) && !sEmail.includes(q) && !sDept.includes(q)) return false;
     if (filters.department && s.department !== filters.department) return false;
     if (filters.semester && s.semester?.toString() !== filters.semester) return false;
     if (filters.verificationStatus && s.verificationStatus !== filters.verificationStatus) return false;
@@ -504,66 +528,212 @@ const StudentManagement = forwardRef(({ isTab = false, onCountsUpdate }, ref) =>
           active={filters.placementReady==="READY"} onClick={() => setFilters(p => ({...p, placementReady: "READY"}))} />
       </div>
 
-      {/* TABLE */}
+      {/* SEARCH & FILTER BAR */}
+      <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs mb-6 flex flex-col md:flex-row gap-3 items-center justify-between">
+        <div className="relative w-full md:w-96">
+          <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search by name, roll number, email, or department..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full h-11 pl-10 pr-10 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:border-[#F47C20] focus:bg-white transition-all shadow-2xs"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-700 bg-slate-200/60 hover:bg-slate-200 rounded-full transition-colors cursor-pointer"
+              title="Clear search"
+              aria-label="Clear search"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+          <select
+            value={filters.department}
+            onChange={(e) => setFilters(p => ({ ...p, department: e.target.value }))}
+            className="h-11 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] cursor-pointer"
+          >
+            <option value="">All Departments</option>
+            {departments.map(d => <option key={d.code} value={d.code}>{d.name || d.code}</option>)}
+          </select>
+
+          <select
+            value={filters.verificationStatus}
+            onChange={(e) => setFilters(p => ({ ...p, verificationStatus: e.target.value }))}
+            className="h-11 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] cursor-pointer"
+          >
+            <option value="">All Verification Status</option>
+            <option value="VERIFIED">Verified</option>
+            <option value="PENDING">Pending</option>
+          </select>
+
+          {hasFilters && (
+            <button
+              onClick={resetFilters}
+              className="h-11 px-3.5 bg-slate-100 text-slate-700 hover:bg-slate-200 font-extrabold text-xs rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Reset filters"
+            >
+              <RefreshCw size={14} /> Reset
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* STAT CARDS */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <StatCard title="Total" count={stats.total} icon={Users}
+          palette={{ bg:"bg-blue-50", icon:"bg-blue-100 text-blue-600", text:"text-blue-700" }}
+          active={!hasFilters} onClick={resetFilters} />
+        <StatCard title="Verified" count={stats.verified} icon={ShieldCheck}
+          palette={{ bg:"bg-emerald-50", icon:"bg-emerald-100 text-emerald-600", text:"text-emerald-700" }}
+          active={filters.verificationStatus==="VERIFIED"} onClick={() => setFilters(p => ({...p, verificationStatus: "VERIFIED"}))} />
+        <StatCard title="Resumes" count={stats.resumeUploaded} icon={FileText}
+          palette={{ bg:"bg-purple-50", icon:"bg-purple-100 text-purple-600", text:"text-purple-700" }}
+          active={filters.hasResume==="true"} onClick={() => setFilters(p => ({...p, hasResume: "true"}))} />
+        <StatCard title="Ready" count={stats.placementReady} icon={Target}
+          palette={{ bg:"bg-orange-50", icon:"bg-orange-100 text-orange-500", text:"text-orange-600" }}
+          active={filters.placementReady==="READY"} onClick={() => setFilters(p => ({...p, placementReady: "READY"}))} />
+      </div>
+
+      {/* TABLE & MOBILE CARDS */}
       {isLoading ? (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
           <TableLoader columns={5} rows={10} />
         </div>
       ) : filteredStudents.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-200 p-20 text-center shadow-sm">
-          <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4"><Search size={32} className="text-slate-300"/></div>
+        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center shadow-sm">
+          <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Search size={32} className="text-slate-300"/>
+          </div>
           <h3 className="text-lg font-bold text-slate-700 mb-1">No students found</h3>
-          <button onClick={resetFilters} className="px-5 py-2.5 bg-white border border-[#F47C20] text-[#F47C20] font-bold rounded-xl   text-sm shadow-sm transition-colors">Clear Filters</button>
+          <p className="text-slate-500 text-xs sm:text-sm max-w-sm mx-auto mb-4">
+            Try searching for a different student name, roll number, email, or department.
+          </p>
+          <button onClick={resetFilters} className="px-5 py-2.5 bg-white border border-[#F47C20] text-[#F47C20] font-bold rounded-xl text-sm shadow-sm transition-colors cursor-pointer">
+            Clear Search & Filters
+          </button>
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Profile</th>
-                <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Student Details</th>
-                <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">Academic</th>
-                <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden lg:table-cell">Status</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">View</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {paginatedStudents.map(s => (
-                <tr key={s.id} className="hover:bg-slate-50/80 transition-colors cursor-pointer" onClick={() => setDetailsStudent(s)}>
-                  <td className="px-6 py-4"><Avatar name={s.user.name} src={s.profileImageUrl} size="md" /></td>
-                  <td className="px-4 py-4">
-                    <p className="font-bold text-slate-800 text-sm hover:text-[#F47C20]" onClick={(e) => { e.stopPropagation(); setDetailsStudent(s); }}>{toTitleCase(s.user.name)}</p>
-                    <p className="font-mono text-xs text-[#F47C20] font-bold">{s.rollNumber}</p>
-                  </td>
-                  <td className="px-4 py-4 hidden md:table-cell">
-                    <p className="text-xs font-semibold text-slate-600">{s.department}</p>
-                    <p className="text-xs text-slate-400">Sem {s.semester}</p>
-                  </td>
-                  <td className="px-4 py-4 hidden lg:table-cell">
-                    <Badge variant={s.verificationStatus === "VERIFIED" ? "verified" : "pending"}>
-                      {s.verificationStatus === "VERIFIED" ? "Verified" : "Pending"}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-4 text-right flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setSelectedStudent(s); setShowRemoveModal(true); }}
-                      className="px-4 py-2 bg-white border border-[#F47C20] text-[#F47C20] text-xs font-extrabold rounded-xl shadow-sm transition-all whitespace-nowrap min-h-[38px] focus:outline-none focus:ring-2 focus:ring-[#F47C20] focus:ring-offset-1"
-                      style={buttonStyle}
-                    >
-                      Delete Student
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setSelectedStudent(s); setShowResetModal(true); }}
-                      className="px-4 py-2 bg-white border border-[#F47C20] text-[#F47C20] text-xs font-extrabold rounded-xl shadow-sm transition-all whitespace-nowrap min-h-[38px] focus:outline-none focus:ring-2 focus:ring-[#F47C20] focus:ring-offset-1"
-                      style={buttonStyle}
-                    >
-                      Reset Password
-                    </button>
-                </td>
+          
+          {/* DESKTOP TABLE */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead className="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Profile</th>
+                  <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Student Details</th>
+                  <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Academic</th>
+                  <th className="px-4 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
+                  <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {paginatedStudents.map(s => (
+                  <tr key={s.id} className="hover:bg-slate-50/80 transition-colors cursor-pointer" onClick={() => setDetailsStudent(s)}>
+                    <td className="px-6 py-4"><Avatar name={s.user.name} src={s.profileImageUrl} size="md" /></td>
+                    <td className="px-4 py-4">
+                      <p className="font-bold text-slate-800 text-sm hover:text-[#F47C20]" onClick={(e) => { e.stopPropagation(); setDetailsStudent(s); }}>{toTitleCase(s.user.name)}</p>
+                      <p className="font-mono text-xs text-[#F47C20] font-bold">{s.rollNumber}</p>
+                      <p className="text-xs text-slate-400">{s.user?.email || s.email}</p>
+                    </td>
+                    <td className="px-4 py-4">
+                      <p className="text-xs font-semibold text-slate-600">{s.department}</p>
+                      <p className="text-xs text-slate-400">Sem {s.semester}</p>
+                    </td>
+                    <td className="px-4 py-4">
+                      <Badge variant={s.verificationStatus === "VERIFIED" ? "verified" : "pending"}>
+                        {s.verificationStatus === "VERIFIED" ? "Verified" : "Pending"}
+                      </Badge>
+                    </td>
+                    <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => { setSelectedStudent(s); setShowResetModal(true); }}
+                          className="px-3 py-1.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl shadow-2xs transition-all whitespace-nowrap focus:outline-none"
+                        >
+                          Reset Password
+                        </button>
+                        <button
+                          onClick={() => { setSelectedStudent(s); setShowRemoveModal(true); }}
+                          className="px-3 py-1.5 bg-red-50 border border-red-200 hover:bg-red-100 text-red-600 text-xs font-bold rounded-xl shadow-2xs transition-all whitespace-nowrap focus:outline-none"
+                        >
+                          Delete Student
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* MOBILE RESPONSIVE CARDS */}
+          <div className="block md:hidden divide-y divide-slate-100">
+            {paginatedStudents.map(s => (
+              <div 
+                key={s.id} 
+                className="p-4 hover:bg-slate-50/80 transition-colors relative cursor-pointer"
+                onClick={() => setDetailsStudent(s)}
+              >
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Avatar name={s.user.name} src={s.profileImageUrl} size="md" />
+                    <div className="min-w-0">
+                      <h4 className="font-bold text-slate-800 text-sm truncate">{toTitleCase(s.user.name)}</h4>
+                      <p className="font-mono text-xs text-[#F47C20] font-bold">{s.rollNumber}</p>
+                    </div>
+                  </div>
+
+                  {/* Compact Mobile Action Menu */}
+                  <div className="relative action-menu-container" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      onClick={() => setOpenMenuId(openMenuId === s.id ? null : s.id)}
+                      className="p-2 text-slate-500 hover:text-slate-800 rounded-xl hover:bg-slate-100 transition-colors focus:outline-none"
+                      aria-label="Student actions"
+                    >
+                      <MoreVertical size={18} />
+                    </button>
+
+                    {openMenuId === s.id && (
+                      <div className="absolute right-0 top-10 z-30 w-48 bg-white rounded-2xl shadow-xl border border-slate-200 py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                        <button
+                          onClick={() => { setOpenMenuId(null); setSelectedStudent(s); setShowResetModal(true); }}
+                          className="w-full px-4 py-2.5 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition-colors"
+                        >
+                          <Key size={14} className="text-slate-400" /> Reset Password
+                        </button>
+                        <button
+                          onClick={() => { setOpenMenuId(null); setSelectedStudent(s); setShowRemoveModal(true); }}
+                          className="w-full px-4 py-2.5 text-left text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors border-t border-slate-100"
+                        >
+                          <Trash2 size={14} className="text-red-500" /> Delete Student
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between text-xs text-slate-500 gap-2 border-t border-slate-100 pt-2.5">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-slate-700">{s.department}</span>
+                    <span>•</span>
+                    <span>Sem {s.semester}</span>
+                  </div>
+
+                  <Badge variant={s.verificationStatus === "VERIFIED" ? "verified" : "pending"}>
+                    {s.verificationStatus === "VERIFIED" ? "Verified" : "Pending"}
+                  </Badge>
+                </div>
+
+                <p className="text-xs text-slate-400 mt-1.5 truncate">{s.user?.email || s.email}</p>
+              </div>
+            ))}
+          </div>
           {totalPages > 1 && (
             <div className="flex items-center justify-between gap-4 px-5 py-3.5 border-t border-slate-100 bg-slate-50/50">
               <p className="text-xs text-slate-400 font-medium hidden sm:block">Page {currentPage} of {totalPages}</p>
@@ -659,8 +829,8 @@ const StudentManagement = forwardRef(({ isTab = false, onCountsUpdate }, ref) =>
               <button 
                 onClick={handleDeleteStudent} 
                 disabled={removeConfirmText !== selectedStudent?.rollNumber}
-                className="flex-1 py-2.5 bg-white border border-[#F47C20] text-[#F47C20] font-bold rounded-xl text-sm shadow-sm disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#F47C20] focus:ring-offset-2">
-                Delete Permanently
+                className="flex-1 py-2.5 bg-red-600 border border-red-600 text-white font-bold rounded-xl text-sm shadow-sm hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                Delete Student
               </button>
             </div>
           </div>

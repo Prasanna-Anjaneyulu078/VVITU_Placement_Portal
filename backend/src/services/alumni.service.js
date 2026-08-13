@@ -213,6 +213,7 @@ class AlumniService {
     }
 
     const imageUrl = `/uploads/images/${file.filename}`;
+    const publicUrl = `/api/public/alumni/${alumni.id}/profile-image`;
     const now = new Date();
 
     const [updated] = await prisma.$transaction([
@@ -229,8 +230,9 @@ class AlumniService {
     return {
       success: true,
       message: 'Profile picture updated successfully',
-      profileImageUrl: imageUrl,
-      url: imageUrl,
+      // Return the stable public endpoint (same URL that login + profile APIs use)
+      profileImageUrl: publicUrl,
+      url: publicUrl,
       updatedAt: now.toISOString(),
       alumni: updated
     };

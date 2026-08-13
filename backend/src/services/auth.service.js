@@ -28,12 +28,31 @@ class AuthService {
     }
 
     let verificationStatus = 'APPROVED';
-    if (user.role === 'ALUMNI') {
+    let profileImageUrl = null;
+
+    if (user.role === 'STUDENT') {
+      const student = await prisma.student.findUnique({
+        where: { userId: user.id }
+      });
+      if (student && student.profileImageUrl) {
+        profileImageUrl = `/api/public/student/${student.id}/profile-image`;
+      }
+    } else if (user.role === 'ALUMNI') {
       const alumni = await prisma.alumni.findUnique({
         where: { userId: user.id }
       });
       const { VERIFICATION_STATUS } = require('../utils/constants');
       verificationStatus = alumni ? alumni.verificationStatus : VERIFICATION_STATUS.PENDING;
+      if (alumni && alumni.profileImageUrl) {
+        profileImageUrl = `/api/public/alumni/${alumni.id}/profile-image`;
+      }
+    } else if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
+      const adminProfile = await prisma.adminProfile.findUnique({
+        where: { userId: user.id }
+      });
+      if (adminProfile && adminProfile.profileImageUrl) {
+        profileImageUrl = `/api/public/admin/${user.id}/profile-image`;
+      }
     }
 
     const jwtUtils = require('../utils/jwt.utils');
@@ -57,7 +76,8 @@ class AuthService {
         name: user.name,
         email: user.email,
         role: user.role,
-        verificationStatus
+        verificationStatus,
+        profileImageUrl
       }
     };
   }

@@ -155,11 +155,13 @@ class AdminService {
       })
     ]);
 
+    const publicUrl = `/api/public/admin/${user.id}/profile-image`;
+
     return { 
       success: true, 
-      imageUrl, 
-      profileImageUrl: imageUrl,
-      url: imageUrl,
+      imageUrl: publicUrl, 
+      profileImageUrl: publicUrl,
+      url: publicUrl,
       updatedAt: now.toISOString() 
     };
   }

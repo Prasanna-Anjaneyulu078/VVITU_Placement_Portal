@@ -78,6 +78,9 @@ export default function AdminProfile() {
     }
   };
 
+  const [imagePreview, setImagePreview] = useState(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -93,6 +96,10 @@ export default function AdminProfile() {
       return;
     }
 
+    const previewUrl = URL.createObjectURL(file);
+    setImagePreview(previewUrl);
+    setIsUploadingImage(true);
+
     const formData = new FormData();
     formData.append('image', file);
 
@@ -103,11 +110,17 @@ export default function AdminProfile() {
       const rawUrl = res.data.imageUrl || res.data.profileImageUrl || res.data.url;
       const freshUrl = withCacheBust(rawUrl, res.data.updatedAt);
       setProfile(prev => ({ ...prev, profileImageUrl: freshUrl }));
-      updateProfileImage(freshUrl);
+      updateProfileImage(rawUrl, { forceRefresh: true });
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      setImagePreview(null);
       toast.success('Profile image uploaded successfully');
     } catch (err) {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      setImagePreview(null);
       toast.error('Failed to upload image');
       console.error(err);
+    } finally {
+      setIsUploadingImage(false);
     }
   };
 
@@ -220,10 +233,15 @@ export default function AdminProfile() {
                   <div className="relative group">
                     <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-md bg-white">
                       <img 
-                        src={getImageUrl(profile?.profileImageUrl) || generateAvatarSVG(profile?.name || 'Admin', 'F47C20', 'fff')} 
+                        src={
+                          imagePreview || 
+                          (profile?.profileImageUrl 
+                            ? getImageUrl(profile.profileImageUrl) 
+                            : generateAvatarSVG(profile?.name || 'Admin', 'F47C20', 'fff'))
+                        }
                         onError={(e) => { e.target.onerror = null; e.target.src = generateAvatarSVG(profile?.name || 'Admin', 'F47C20', 'fff'); }}
                         alt="Profile" 
-                        className="w-full h-full object-cover"
+                        className={`w-full h-full object-cover ${isUploadingImage ? 'opacity-50' : ''}`}
                       />
                     </div>
                     <label className="absolute bottom-1 right-1 w-9 h-9 bg-[#F47C20] rounded-full flex items-center justify-center text-white shadow-lg cursor-pointer     transition-all border-2 border-white" title="Change Profile Picture (Max 5MB)">

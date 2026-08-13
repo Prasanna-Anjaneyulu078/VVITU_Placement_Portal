@@ -56,9 +56,18 @@ export function withCacheBust(url, version) {
 
   const vParam = version ? encodeURIComponent(String(version)) : Date.now();
 
-  // Avoid duplicate ?v= if already contains exact version
-  if (trimmed.includes(`v=${vParam}`)) {
-    return trimmed;
+  // If the url already has a v= parameter, replace it
+  const urlObj = new URL(trimmed, 'http://localhost'); // dummy base for parsing relative
+  if (urlObj.searchParams.has('v')) {
+    if (urlObj.searchParams.get('v') === String(vParam)) {
+      return trimmed; // already has exact version
+    }
+    // Remove old v= param via regex to preserve relative nature
+    const cleanUrl = trimmed.replace(/([?&])v=[^&]+(&|$)/, (match, p1, p2) => {
+      return p2 ? p1 : ''; // If there are subsequent params, keep the separator
+    }).replace(/[?&]$/, ''); // Clean up trailing ? or &
+    const separator = cleanUrl.includes('?') ? '&' : '?';
+    return `${cleanUrl}${separator}v=${vParam}`;
   }
 
   const separator = trimmed.includes('?') ? '&' : '?';

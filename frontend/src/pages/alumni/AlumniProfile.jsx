@@ -96,7 +96,8 @@ export default function AlumniProfile() {
         });
         
         try {
-          const blobRes = await api.get(res.data.url, { responseType: 'blob' });
+          const endpoint = res.data.url.startsWith('/api/') ? res.data.url.substring(4) : res.data.url;
+          const blobRes = await api.get(endpoint, { responseType: 'blob' });
           const blobUrl = URL.createObjectURL(blobRes.data);
           setDocBlobUrl(blobUrl);
         } catch (blobErr) {
@@ -174,7 +175,8 @@ export default function AlumniProfile() {
 
     setDocLoading(true);
     try {
-      const blobRes = await api.get(documentUrl, { responseType: 'blob' });
+      const endpoint = documentUrl.startsWith('/api/') ? documentUrl.substring(4) : documentUrl;
+      const blobRes = await api.get(endpoint, { responseType: 'blob' });
       const fileType = blobRes.headers['content-type'] || 'application/pdf';
       const blob = new Blob([blobRes.data], { type: fileType });
       const bUrl = URL.createObjectURL(blob);
@@ -205,7 +207,8 @@ export default function AlumniProfile() {
       : (documentMeta?.documentName || 'Verification_Document.pdf');
 
     try {
-      const blobRes = await api.get(documentUrl, { responseType: 'blob' });
+      const endpoint = documentUrl.startsWith('/api/') ? documentUrl.substring(4) : documentUrl;
+      const blobRes = await api.get(endpoint, { responseType: 'blob' });
       const blob = new Blob([blobRes.data], { type: 'application/pdf' });
       const bUrl = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -224,6 +227,8 @@ export default function AlumniProfile() {
     }
   };
 
+  const [imagePreview, setImagePreview] = useState(null);
+
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -233,10 +238,13 @@ export default function AlumniProfile() {
       return;
     }
 
+    const previewUrl = URL.createObjectURL(file);
+    setImagePreview(previewUrl);
+    setIsUploadingImage(true);
+
     const formData = new FormData();
     formData.append('image', file);
     
-    setIsUploadingImage(true);
     try {
       const res = await api.post('/alumni/profile-image', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
@@ -244,9 +252,13 @@ export default function AlumniProfile() {
       const rawUrl = res.data.profileImageUrl || res.data.url;
       const freshUrl = withCacheBust(rawUrl, res.data.updatedAt);
       setProfile(prev => ({ ...prev, profileImageUrl: freshUrl }));
-      updateProfileImage(freshUrl);
+      updateProfileImage(rawUrl, { forceRefresh: true });
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      setImagePreview(null);
       toast.success('Profile picture updated successfully');
     } catch (err) {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      setImagePreview(null);
       console.error('Failed to upload image', err);
       toast.error('Failed to upload image');
     } finally {
@@ -281,9 +293,10 @@ export default function AlumniProfile() {
                       ) : (
                         <img 
                           src={
-                            profile?.profileImageUrl 
+                            imagePreview || 
+                            (profile?.profileImageUrl 
                               ? getImageUrl(profile.profileImageUrl) 
-                              : generateAvatarSVG(profile?.name || profile?.user?.name || 'Alumni', 'F47C20', 'fff')
+                              : generateAvatarSVG(profile?.name || profile?.user?.name || 'Alumni', 'F47C20', 'fff'))
                           }
                           onError={(e) => { e.target.onerror = null; e.target.src = generateAvatarSVG(profile?.name || profile?.user?.name || 'Alumni', 'F47C20', 'fff'); }}
                           alt="Profile" 

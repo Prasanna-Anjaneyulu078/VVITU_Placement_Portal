@@ -302,7 +302,7 @@ export default function StudentProfile() {
       const freshUrl = withCacheBust(rawUrl, res.data.updatedAt);
       
       setBasicInfo(prev => ({ ...prev, profileImageUrl: freshUrl }));
-      updateProfileImage(freshUrl);
+      updateProfileImage(rawUrl, { forceRefresh: true });
       if (previewUrl) URL.revokeObjectURL(previewUrl);
       setImagePreview(null);
       toast.success(res.data.message || "Profile photo updated successfully");

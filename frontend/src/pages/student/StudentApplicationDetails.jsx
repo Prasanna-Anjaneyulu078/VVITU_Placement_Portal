@@ -1,48 +1,45 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { 
-  ChevronLeft, MapPin, DollarSign, Briefcase, Calendar, Award, 
-  Building2, Globe, FileText, CheckCircle2, Clock, XCircle, Circle,
-  Sparkles, Star, Download, Eye, ArrowLeft, AlertCircle, ShieldAlert,
-  HelpCircle, UserCheck, Layers, FileCheck, Layers3
+  ArrowLeft, Check, Circle, X, Download, Eye, RotateCcw, AlertCircle
 } from 'lucide-react';
 import api from '../../utils/axiosConfig';
 import { getImageUrl } from '../../utils/imageUrl';
-import { toast } from 'react-toastify';
-import { CardLoader } from '../../components/common/loading';
 import DocumentViewerModal from '../../components/common/DocumentViewerModal';
 import './StudentApplicationDetails.css';
 
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
-const fmtDateTime = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 
-function ApplicationStatusBadge({ status }) {
-  const s = (status || 'APPLIED').toUpperCase();
-  if (['SELECTED', 'ACCEPTED', 'OFFERED', 'OFFER_RELEASED'].includes(s))
-    return <span className="sad-badge sad-badge-success"><CheckCircle2 size={13} /> Selected</span>;
-  if (['INTERVIEW', 'INTERVIEW_SCHEDULED'].includes(s))
-    return <span className="sad-badge sad-badge-purple"><Clock size={13} /> Interview Scheduled</span>;
-  if (s === 'SHORTLISTED')
-    return <span className="sad-badge sad-badge-green"><Sparkles size={13} /> Shortlisted</span>;
-  if (s === 'ASSESSMENT')
-    return <span className="sad-badge sad-badge-warning"><Star size={13} /> Assessment</span>;
-  if (s === 'REJECTED')
-    return <span className="sad-badge sad-badge-danger"><XCircle size={13} /> Rejected</span>;
-  if (s === 'UNDER_REVIEW')
-    return <span className="sad-badge sad-badge-info"><Clock size={13} /> Under Review</span>;
-  return <span className="sad-badge sad-badge-neutral"><FileText size={13} /> Applied</span>;
+function getCompanyInitials(name) {
+  if (!name || typeof name !== 'string') return 'MI';
+  const clean = name.trim();
+  if (!clean) return 'MI';
+  const words = clean.split(/\s+/);
+  if (words.length >= 2) {
+    return (words[0][0] + words[1][0]).toUpperCase();
+  }
+  return clean.substring(0, 2).toUpperCase();
 }
 
-function JobStatusBadge({ status }) {
-  const s = (status || '').toUpperCase();
-  if (s === 'CLOSED') {
-    return <span className="sad-badge sad-badge-neutral">Closed</span>;
+function StatusBadge({ status }) {
+  const s = (status || 'APPLIED').toUpperCase();
+  if (['SELECTED', 'ACCEPTED', 'OFFERED', 'OFFER_RELEASED'].includes(s)) {
+    return <span className="sad-status-badge sad-status-green">● Selected</span>;
   }
-  if (s === 'EXPIRED') {
-    return <span className="sad-badge sad-badge-danger">Expired</span>;
+  if (['INTERVIEW', 'INTERVIEW_SCHEDULED'].includes(s)) {
+    return <span className="sad-status-badge sad-status-blue">● Interview Scheduled</span>;
   }
-  return <span className="sad-badge sad-badge-info">Active Opportunity</span>;
+  if (s === 'SHORTLISTED') {
+    return <span className="sad-status-badge sad-status-blue">● Shortlisted</span>;
+  }
+  if (s === 'UNDER_REVIEW') {
+    return <span className="sad-status-badge sad-status-blue">● Under Review</span>;
+  }
+  if (s === 'REJECTED') {
+    return <span className="sad-status-badge sad-status-red">● Rejected</span>;
+  }
+  return <span className="sad-status-badge sad-status-gray">● Applied</span>;
 }
 
 export default function StudentApplicationDetails() {
@@ -51,7 +48,7 @@ export default function StudentApplicationDetails() {
 
   const [details, setDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [errorType, setErrorType] = useState(null); // 'NOT_FOUND', 'UNAUTHORIZED', 'SERVER_ERROR'
+  const [errorType, setErrorType] = useState(null); // 'NOT_FOUND', 'SERVER_ERROR'
   const [errorMsg, setErrorMsg] = useState('');
 
   // Document Viewer states
@@ -68,8 +65,8 @@ export default function StudentApplicationDetails() {
   const fetchApplicationDetails = async () => {
     setIsLoading(true);
     setErrorType(null);
+    setErrorMsg('');
     try {
-      // First attempt dedicated student endpoint, fallback to general endpoint
       let res;
       try {
         res = await api.get(`/applications/${id}/details`);
@@ -82,15 +79,12 @@ export default function StudentApplicationDetails() {
       const status = err.response?.status;
       const msg = err.response?.data?.message || (typeof err.response?.data === 'string' ? err.response.data : '');
 
-      if (status === 404 || msg.toLowerCase().includes('not found')) {
+      if (status === 404 || (msg && msg.toLowerCase().includes('not found'))) {
         setErrorType('NOT_FOUND');
-        setErrorMsg('Application details not found or job listing removed.');
-      } else if (status === 403 || msg.toLowerCase().includes('denied') || msg.toLowerCase().includes('unauthorized')) {
-        setErrorType('UNAUTHORIZED');
-        setErrorMsg('You are not authorized to view this application.');
+        setErrorMsg("The application you're looking for doesn't exist or is no longer available.");
       } else {
         setErrorType('SERVER_ERROR');
-        setErrorMsg(msg || 'Failed to load application details.');
+        setErrorMsg(msg || "We couldn't retrieve this application right now.");
       }
     } finally {
       setIsLoading(false);
@@ -127,7 +121,7 @@ export default function StudentApplicationDetails() {
       setViewerUrl(fileURL);
       setViewerMetadata(prev => ({ ...prev, fileName: filename }));
     } catch (err) {
-      console.error("Error viewing application resume:", err);
+      console.error('Error viewing application resume:', err);
       const status = err.response?.status;
       const errMsg = status === 404 ? '404: Resume Not Found' : status === 403 ? '403: Forbidden' : (err.message || 'Failed to view resume');
       setViewerError(errMsg);
@@ -154,34 +148,41 @@ export default function StudentApplicationDetails() {
     }
   };
 
+  // Skeleton Loading State
   if (isLoading) {
     return (
       <DashboardLayout role="student">
-        <div className="sad-page">
-          <div className="sad-header">
-            <button className="sad-btn-back" onClick={() => navigate('/student/applications')} type="button" aria-label="Back to Applications">
-              <ChevronLeft size={18} /> Back to Applications
-            </button>
+        <div className="sad-container">
+          <div className="sad-back-skel"></div>
+          <div className="sad-card sad-skel-card">
+            <div className="sad-skel-line sad-skel-title"></div>
+            <div className="sad-skel-line sad-skel-sub"></div>
           </div>
-          <CardLoader lines={6} />
+          <div className="sad-card sad-skel-card">
+            <div className="sad-skel-line sad-skel-head"></div>
+            <div className="sad-skel-boxes">
+              <div className="sad-skel-box"></div>
+              <div className="sad-skel-box"></div>
+              <div className="sad-skel-box"></div>
+            </div>
+          </div>
         </div>
       </DashboardLayout>
     );
   }
 
-  if (errorType) {
+  // Not Found State
+  if (errorType === 'NOT_FOUND') {
     return (
       <DashboardLayout role="student">
-        <div className="sad-page">
-          <div className="sad-error-card">
-            <div className="sad-error-icon-box">
-              {errorType === 'UNAUTHORIZED' ? <ShieldAlert size={36} color="#DC2626" /> : <AlertCircle size={36} color="#F47C20" />}
+        <div className="sad-container">
+          <div className="sad-state-card">
+            <div className="sad-state-icon">
+              <AlertCircle size={32} color="#64748B" />
             </div>
-            <h2 className="sad-error-title">
-              {errorType === 'NOT_FOUND' ? 'Application Details Unavailable' : errorType === 'UNAUTHORIZED' ? 'Access Denied' : 'Unable to Load Details'}
-            </h2>
-            <p className="sad-error-desc">{errorMsg || 'We could not fetch the details for this job application.'}</p>
-            <button className="sad-btn-orange" onClick={() => navigate('/student/applications')} type="button">
+            <h2 className="sad-state-title">Application Not Found</h2>
+            <p className="sad-state-desc">The application you're looking for doesn't exist or is no longer available.</p>
+            <button className="sad-btn-back-nav" onClick={() => navigate('/student/applications')} type="button">
               <ArrowLeft size={16} /> Back to Applications
             </button>
           </div>
@@ -190,91 +191,184 @@ export default function StudentApplicationDetails() {
     );
   }
 
-  if (!details) return null;
+  // Server Error State
+  if (errorType) {
+    return (
+      <DashboardLayout role="student">
+        <div className="sad-container">
+          <div className="sad-state-card">
+            <div className="sad-state-icon">
+              <AlertCircle size={32} color="#DC2626" />
+            </div>
+            <h2 className="sad-state-title">Unable to load application details.</h2>
+            <p className="sad-state-desc">{errorMsg || "We couldn't retrieve this application right now."}</p>
+            <div className="sad-state-actions">
+              <button className="sad-btn-primary" onClick={fetchApplicationDetails} type="button">
+                <RotateCcw size={15} /> Try Again
+              </button>
+              <button className="sad-btn-secondary" onClick={() => navigate('/student/applications')} type="button">
+                <ArrowLeft size={15} /> Back to Applications
+              </button>
+            </div>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!details) {
+    return (
+      <DashboardLayout role="student">
+        <div className="sad-container">
+          <div className="sad-back-skel"></div>
+          <div className="sad-card sad-skel-card">
+            <div className="sad-skel-line sad-skel-title"></div>
+            <div className="sad-skel-line sad-skel-sub"></div>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   const currentStatus = (details.status || 'APPLIED').toUpperCase();
+  const companyName = details.companyName || details.company || 'Company';
+  const companyInitials = getCompanyInitials(companyName);
+  const jobRoleTitle = details.jobTitle || details.role || details.job?.title || 'Job Role';
+  const appIdFormatted = `Application #${details.id ? details.id.toString().padStart(6, '0') : '000001'}`;
 
-  // Map timeline stages
+  // Timeline stages setup
   const timelineStages = [
     { key: 'APPLIED', label: 'Applied', desc: 'Application submitted' },
     { key: 'UNDER_REVIEW', label: 'Under Review', desc: 'Recruiter reviewing profile' },
     { key: 'SHORTLISTED', label: 'Shortlisted', desc: 'Shortlisted for candidate round' },
     { key: 'INTERVIEW', label: 'Interview Scheduled', desc: 'Interview round in progress' },
-    { key: 'FINAL', label: ['SELECTED','ACCEPTED','OFFERED','OFFER_RELEASED'].includes(currentStatus) ? 'Selected' : currentStatus === 'REJECTED' ? 'Rejected' : 'Final Status', desc: ['SELECTED','ACCEPTED','OFFERED','OFFER_RELEASED'].includes(currentStatus) ? 'Offer released!' : currentStatus === 'REJECTED' ? 'Application closed' : 'Awaiting final decision' }
+    { 
+      key: 'FINAL', 
+      label: 'Final Status', 
+      desc: ['SELECTED','ACCEPTED','OFFERED','OFFER_RELEASED'].includes(currentStatus) 
+        ? 'Offer released!' 
+        : currentStatus === 'REJECTED' 
+        ? 'Application closed' 
+        : 'Awaiting final decision' 
+    }
   ];
 
   const getStageState = (stageKey) => {
-    if (currentStatus === 'REJECTED' && stageKey === 'FINAL') return 'rejected';
+    if (currentStatus === 'REJECTED') {
+      if (stageKey === 'FINAL') return 'rejected';
+      return 'completed';
+    }
     if (['SELECTED','ACCEPTED','OFFERED','OFFER_RELEASED'].includes(currentStatus)) {
       return 'completed';
     }
-    if (stageKey === 'APPLIED') return 'completed';
-    if (stageKey === 'UNDER_REVIEW' && ['UNDER_REVIEW','SHORTLISTED','INTERVIEW','INTERVIEW_SCHEDULED'].includes(currentStatus)) return 'completed';
-    if (stageKey === 'SHORTLISTED' && ['SHORTLISTED','INTERVIEW','INTERVIEW_SCHEDULED'].includes(currentStatus)) return 'completed';
-    if (stageKey === 'INTERVIEW' && ['INTERVIEW','INTERVIEW_SCHEDULED'].includes(currentStatus)) return 'current';
-    if (stageKey === currentStatus || (stageKey === 'INTERVIEW' && currentStatus === 'INTERVIEW_SCHEDULED')) return 'current';
-    return 'pending';
+    if (stageKey === 'APPLIED') {
+      return currentStatus === 'APPLIED' ? 'current' : 'completed';
+    }
+    if (stageKey === 'UNDER_REVIEW') {
+      if (currentStatus === 'UNDER_REVIEW') return 'current';
+      if (['SHORTLISTED','INTERVIEW','INTERVIEW_SCHEDULED'].includes(currentStatus)) return 'completed';
+      return 'upcoming';
+    }
+    if (stageKey === 'SHORTLISTED') {
+      if (currentStatus === 'SHORTLISTED') return 'current';
+      if (['INTERVIEW','INTERVIEW_SCHEDULED'].includes(currentStatus)) return 'completed';
+      return 'upcoming';
+    }
+    if (stageKey === 'INTERVIEW') {
+      if (['INTERVIEW','INTERVIEW_SCHEDULED'].includes(currentStatus)) return 'current';
+      return 'upcoming';
+    }
+    return 'upcoming';
   };
 
-  const skillsList = details.requiredSkills ? details.requiredSkills.split(',').map(s => s.trim()).filter(Boolean) : (details.skills || []);
+  // Extract skills array cleanly
+  const rawSkills = typeof details.requiredSkills === 'string'
+    ? details.requiredSkills.split(',')
+    : Array.isArray(details.requiredSkills)
+    ? details.requiredSkills
+    : Array.isArray(details.skills)
+    ? details.skills
+    : typeof details.skills === 'string'
+    ? details.skills.split(',')
+    : [];
+
+  const skillsList = rawSkills
+    .map(s => {
+      if (typeof s === 'string') return s.trim();
+      if (s && typeof s === 'object') {
+        return s.skillName || s.name || s.skill || s.title || '';
+      }
+      return '';
+    })
+    .filter(Boolean);
 
   return (
     <DashboardLayout role="student">
-      <div className="sad-page">
-        {/* TOP NAVIGATION HEADER */}
-        <div className="sad-nav-bar">
-          <button className="sad-btn-back" onClick={() => navigate('/student/applications')} type="button" aria-label="Back to Applications">
-            <ChevronLeft size={18} /> Back to Applications
+      <div className="sad-container">
+        
+        {/* 1. BACK TO APPLICATIONS */}
+        <div className="sad-back-wrapper">
+          <button 
+            className="sad-back-button" 
+            onClick={() => navigate('/student/applications')} 
+            type="button" 
+            aria-label="Back to Applications"
+          >
+            <ArrowLeft size={16} /> Back to Applications
           </button>
         </div>
 
-        {/* HERO HEADER CARD */}
-        <div className="sad-card sad-hero-card">
-          <div className="sad-hero-content">
-            <div className="sad-logo-box">
+        {/* 2. JOB HEADER */}
+        <div className="sad-card sad-header-card">
+          <div className="sad-header-top">
+            <div className="sad-avatar-box">
               {details.companyLogoUrl ? (
-                <img src={getImageUrl(details.companyLogoUrl)} alt={details.company || details.companyName} className="sad-logo-img" onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }} />
+                <img 
+                  src={getImageUrl(details.companyLogoUrl)} 
+                  alt={companyName} 
+                  className="sad-avatar-img" 
+                  onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }} 
+                />
               ) : (
-                <span className="sad-logo-text">{(details.company || details.companyName || 'CO').substring(0, 2).toUpperCase()}</span>
+                <span className="sad-avatar-fallback">{companyInitials}</span>
               )}
             </div>
 
-            <div className="sad-hero-info">
-              <div className="sad-hero-badges">
-                <JobStatusBadge status={details.jobStatus} />
-                <ApplicationStatusBadge status={details.status} />
+            <div className="sad-header-meta">
+              <h1 className="sad-job-title">{jobRoleTitle}</h1>
+              <p className="sad-company-name">{companyName}</p>
+              <div className="sad-header-subrow">
+                <span className="sad-app-id">{appIdFormatted}</span>
+                <StatusBadge status={details.status} />
               </div>
-              <h1 className="sad-hero-title">{details.jobTitle || 'Job Role'}</h1>
-              <p className="sad-hero-company">
-                <Building2 size={15} /> {details.company || details.companyName || 'Company'}
-                {details.jobLocation && <span className="sad-hero-loc"><MapPin size={14} /> {details.jobLocation}</span>}
-              </p>
             </div>
           </div>
 
-          <div className="sad-hero-actions">
-            <button className="sad-btn-orange" onClick={() => navigate('/student/applications')} type="button">
-              <ArrowLeft size={16} /> Back to Applications
+          {/* Action buttons for viewing/downloading resume */}
+          <div className="sad-header-actions">
+            <button className="sad-btn-action text-[#F47C20]" onClick={handleViewResume} type="button" style={{ color: '#F47C20' }}>
+              <Eye size={15} /> View Submitted Resume
+            </button>
+            <button className="sad-btn-action-outline" onClick={handleDownloadResume} type="button">
+              <Download size={15} /> Download
             </button>
           </div>
         </div>
 
-        {/* SELECTION TIMELINE */}
-        <div className="sad-card sad-timeline-card">
-          <div className="sad-card-header">
-            <h3 className="sad-card-title"><Layers size={18} style={{ color: '#F47C20' }} /> Application Selection Timeline</h3>
-            <span className="sad-app-id-tag">App ID: #{details.id ? details.id.toString().padStart(6, '0') : '000000'}</span>
-          </div>
+        {/* 3. APPLICATION SELECTION TIMELINE */}
+        <div className="sad-card">
+          <h2 className="sad-section-heading">Application Selection Timeline</h2>
+          
           <div className="sad-timeline">
             {timelineStages.map((stage, idx) => {
               const state = getStageState(stage.key);
               return (
                 <div key={idx} className={`sad-timeline-step sad-step-${state}`}>
-                  <div className="sad-step-marker">
-                    {state === 'completed' && <CheckCircle2 size={16} />}
-                    {state === 'rejected' && <XCircle size={16} />}
-                    {state === 'current' && <Clock size={16} />}
-                    {state === 'pending' && <Circle size={12} />}
+                  <div className="sad-step-indicator">
+                    {state === 'completed' && <Check size={14} className="sad-icon-check" />}
+                    {state === 'current' && <span className="sad-dot-current" />}
+                    {state === 'upcoming' && <Circle size={10} className="sad-icon-upcoming" />}
+                    {state === 'rejected' && <X size={14} className="sad-icon-rejected" />}
                   </div>
                   <div className="sad-step-content">
                     <span className="sad-step-label">{stage.label}</span>
@@ -286,252 +380,122 @@ export default function StudentApplicationDetails() {
           </div>
         </div>
 
-        {/* 2-COLUMN MAIN CONTENT (Desktop 2-col, Tablet/Mobile 1-col) */}
-        <div className="sad-grid-layout">
-          
-          {/* LEFT COLUMN: JOB & COMPANY INFORMATION */}
-          <div className="sad-col-main">
-            
-            {/* JOB OVERVIEW METRICS */}
-            <div className="sad-card">
-              <div className="sad-card-header">
-                <h3 className="sad-card-title"><Briefcase size={18} style={{ color: '#F47C20' }} /> Job Overview &amp; Key Details</h3>
-              </div>
-              <div className="sad-metrics-grid">
-                <div className="sad-metric-item">
-                  <div className="sad-metric-icon"><DollarSign size={18} /></div>
-                  <div>
-                    <div className="sad-metric-label">Salary / Package</div>
-                    <div className="sad-metric-val">{details.packageDetails || 'Competitive CTC'}</div>
-                  </div>
-                </div>
-
-                <div className="sad-metric-item">
-                  <div className="sad-metric-icon"><MapPin size={18} /></div>
-                  <div>
-                    <div className="sad-metric-label">Work Location</div>
-                    <div className="sad-metric-val">{details.jobLocation || 'On-Site / Hybrid'}</div>
-                  </div>
-                </div>
-
-                <div className="sad-metric-item">
-                  <div className="sad-metric-icon"><Briefcase size={18} /></div>
-                  <div>
-                    <div className="sad-metric-label">Job Type</div>
-                    <div className="sad-metric-val">{details.jobType || 'Full-Time'}</div>
-                  </div>
-                </div>
-
-                <div className="sad-metric-item">
-                  <div className="sad-metric-icon"><Award size={18} /></div>
-                  <div>
-                    <div className="sad-metric-label">Experience Required</div>
-                    <div className="sad-metric-val">{details.experienceRequired || 'Entry Level / Fresher'}</div>
-                  </div>
-                </div>
-
-                <div className="sad-metric-item">
-                  <div className="sad-metric-icon"><Layers3 size={18} /></div>
-                  <div>
-                    <div className="sad-metric-label">Number of Openings</div>
-                    <div className="sad-metric-val">{details.openings ? `${details.openings} Openings` : 'Multiple Openings'}</div>
-                  </div>
-                </div>
-
-                <div className="sad-metric-item">
-                  <div className="sad-metric-icon"><Calendar size={18} /></div>
-                  <div>
-                    <div className="sad-metric-label">Application Deadline</div>
-                    <div className="sad-metric-val">{fmtDate(details.expiryDate)}</div>
-                  </div>
-                </div>
-              </div>
+        {/* 4. JOB OVERVIEW & KEY DETAILS */}
+        <div className="sad-card">
+          <h2 className="sad-section-heading">Job Overview &amp; Key Details</h2>
+          <div className="sad-grid-overview">
+            <div className="sad-grid-item">
+              <span className="sad-grid-label">Salary / Package</span>
+              <span className="sad-grid-val">{details.packageDetails || details.salaryPackage || details.job?.salaryPackage || '—'}</span>
             </div>
 
-            {/* ELIGIBILITY CRITERIA */}
-            <div className="sad-card">
-              <div className="sad-card-header">
-                <h3 className="sad-card-title"><UserCheck size={18} style={{ color: '#F47C20' }} /> Branch &amp; Eligibility Criteria</h3>
-              </div>
-              <div className="sad-eligibility-list">
-                <div className="sad-eligibility-row">
-                  <span className="sad-eligibility-key">Eligible Departments / Branches:</span>
-                  <span className="sad-eligibility-val">{details.eligibleDepartments || 'All Engineering & Technology Branches'}</span>
-                </div>
-                <div className="sad-eligibility-row">
-                  <span className="sad-eligibility-key">Minimum CGPA Required:</span>
-                  <span className="sad-eligibility-val">{details.minCgpa != null ? `${details.minCgpa} CGPA & above` : 'No Minimum Threshold'}</span>
-                </div>
-                <div className="sad-eligibility-row">
-                  <span className="sad-eligibility-key">Eligible Semester / Batch:</span>
-                  <span className="sad-eligibility-val">{details.eligibleSemester ? `Semester ${details.eligibleSemester} and above` : 'Final Year Students'}</span>
-                </div>
-                <div className="sad-eligibility-row">
-                  <span className="sad-eligibility-key">Active Backlogs Allowed:</span>
-                  <span className="sad-eligibility-val">{details.maxBacklogs != null ? `Max ${details.maxBacklogs} Backlogs Allowed` : 'Zero Active Backlogs Preferred'}</span>
-                </div>
-              </div>
+            <div className="sad-grid-item">
+              <span className="sad-grid-label">Work Location</span>
+              <span className="sad-grid-val">{details.jobLocation || details.location || details.job?.location || '—'}</span>
             </div>
 
-            {/* JOB DESCRIPTION & RESPONSIBILITIES */}
-            <div className="sad-card">
-              <div className="sad-card-header">
-                <h3 className="sad-card-title"><FileText size={18} style={{ color: '#F47C20' }} /> Complete Job Description &amp; Responsibilities</h3>
-              </div>
-              <div className="sad-description-box">
-                {details.jobDescription ? (
-                  <div className="sad-prose">{details.jobDescription}</div>
-                ) : (
-                  <p className="sad-empty-desc">No detailed description provided for this position.</p>
-                )}
-              </div>
+            <div className="sad-grid-item">
+              <span className="sad-grid-label">Job Type</span>
+              <span className="sad-grid-val">{details.jobType || details.job?.jobType || '—'}</span>
             </div>
 
-            {/* REQUIRED SKILLS & TECHNOLOGIES */}
-            {skillsList.length > 0 && (
-              <div className="sad-card">
-                <div className="sad-card-header">
-                  <h3 className="sad-card-title"><Award size={18} style={{ color: '#F47C20' }} /> Required Skills &amp; Technologies</h3>
-                </div>
-                <div className="sad-skills-flex">
-                  {skillsList.map((skill, i) => (
-                    <span key={i} className="sad-skill-chip">{skill}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* SCREENING QUESTIONS & ANSWERS */}
-            {details.screeningAnswers && details.screeningAnswers.length > 0 && (
-              <div className="sad-card">
-                <div className="sad-card-header">
-                  <h3 className="sad-card-title"><HelpCircle size={18} style={{ color: '#F47C20' }} /> Submitted Pre-Application Screening Answers</h3>
-                </div>
-                <div className="sad-screening-list">
-                  {details.screeningAnswers.map((qa, index) => (
-                    <div key={qa.id || index} className="sad-screening-item">
-                      <div className="sad-screening-q"><span className="sad-q-num">Q{index + 1}.</span> {qa.questionText || qa.questionKey}</div>
-                      <div className="sad-screening-a"><span className="sad-a-tag">Submitted Answer:</span> {qa.answer}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* COMPANY INFORMATION */}
-            <div className="sad-card">
-              <div className="sad-card-header">
-                <h3 className="sad-card-title"><Building2 size={18} style={{ color: '#F47C20' }} /> About {details.companyName || details.company || 'the Recruiter'}</h3>
-              </div>
-              <div className="sad-company-info">
-                <div className="sad-company-meta-row">
-                  <div><strong>Industry:</strong> {details.companyIndustry || details.industry || 'Technology & Services'}</div>
-                  <div><strong>Company Size:</strong> {details.companySizeInfo || details.companySize || 'Corporate'}</div>
-                  {details.companyWebsite && (
-                    <div>
-                      <strong>Website / Portal:</strong>{' '}
-                      <a href={details.companyWebsite.startsWith('http') ? details.companyWebsite : `https://${details.companyWebsite}`} target="_blank" rel="noreferrer" className="sad-link">
-                        {details.companyWebsite} <Globe size={13} />
-                      </a>
-                    </div>
-                  )}
-                </div>
-                <p className="sad-company-desc">
-                  {details.companyDescription || `${details.company || details.companyName || 'The company'} is an esteemed recruiter partner conducting campus placement drives.`}
-                </p>
-              </div>
+            <div className="sad-grid-item">
+              <span className="sad-grid-label">Experience Required</span>
+              <span className="sad-grid-val">{details.experienceRequired || details.job?.experienceRequired || '—'}</span>
             </div>
 
+            <div className="sad-grid-item">
+              <span className="sad-grid-label">Number of Openings</span>
+              <span className="sad-grid-val">{(details.openings || details.job?.openings) ? `${details.openings || details.job?.openings} Openings` : '—'}</span>
+            </div>
+
+            <div className="sad-grid-item">
+              <span className="sad-grid-label">Application Deadline</span>
+              <span className="sad-grid-val">{fmtDate(details.expiryDate || details.deadline || details.job?.applicationDeadline)}</span>
+            </div>
           </div>
+        </div>
 
-          {/* RIGHT COLUMN: APPLICATION SUMMARY & RESUME ACTIONS */}
-          <div className="sad-col-side">
-            
-            {/* APPLICATION SUMMARY CARD */}
-            <div className="sad-card sad-side-card">
-              <div className="sad-card-header">
-                <h3 className="sad-card-title"><FileCheck size={18} style={{ color: '#F47C20' }} /> Application Summary</h3>
-              </div>
-
-              <div className="sad-summary-rows">
-                <div className="sad-summary-row">
-                  <span className="sad-summary-label">Application ID</span>
-                  <span className="sad-summary-val font-mono">#{details.id ? details.id.toString().padStart(6, '0') : 'N/A'}</span>
-                </div>
-
-                <div className="sad-summary-row">
-                  <span className="sad-summary-label">Date Applied</span>
-                  <span className="sad-summary-val">{fmtDateTime(details.appliedAt)}</span>
-                </div>
-
-                <div className="sad-summary-row">
-                  <span className="sad-summary-label">Current Status</span>
-                  <span className="sad-summary-val"><ApplicationStatusBadge status={details.status} /></span>
-                </div>
-
-                {details.jobCreatedAt && (
-                  <div className="sad-summary-row">
-                    <span className="sad-summary-label">Job Posted Date</span>
-                    <span className="sad-summary-val">{fmtDate(details.jobCreatedAt)}</span>
-                  </div>
-                )}
-              </div>
+        {/* 5. BRANCH & ELIGIBILITY CRITERIA */}
+        <div className="sad-card">
+          <h2 className="sad-section-heading">Branch &amp; Eligibility Criteria</h2>
+          <div className="sad-eligibility-grid">
+            <div className="sad-eligibility-item">
+              <span className="sad-eligibility-label">Eligible Departments / Branches</span>
+              <span className="sad-eligibility-val">{details.eligibleDepartments || details.eligibleBranches || details.job?.eligibleDepartments || details.job?.eligibleBranches || '—'}</span>
             </div>
 
-            {/* RESUME SUBMITTED & ACTIONS CARD */}
-            <div className="sad-card sad-side-card">
-              <div className="sad-card-header">
-                <h3 className="sad-card-title"><FileText size={18} style={{ color: '#F47C20' }} /> Submitted Resume</h3>
-              </div>
-
-              <div className="sad-resume-info-box">
-                <div className="sad-resume-file-row">
-                  <FileText size={22} style={{ color: '#F47C20' }} />
-                  <div className="sad-resume-file-meta">
-                    <span className="sad-resume-name">{details.resumeFileName || 'Student_Resume.pdf'}</span>
-                    <span className="sad-resume-status">Submitted with Application</span>
-                  </div>
-                </div>
-
-                <div className="sad-resume-actions">
-                  <button className="sad-btn-orange" onClick={handleViewResume} type="button">
-                    <Eye size={16} /> View Resume
-                  </button>
-                  <button className="sad-btn-orange-outline" onClick={handleDownloadResume} type="button">
-                    <Download size={16} /> Download Resume
-                  </button>
-                </div>
-              </div>
+            <div className="sad-eligibility-item">
+              <span className="sad-eligibility-label">Minimum CGPA Required</span>
+              <span className="sad-eligibility-val">{(() => {
+                const cgpa = details.minCgpa ?? details.minimumCgpa ?? details.requiredCgpa ?? details.job?.minCgpa ?? details.job?.requiredCgpa;
+                return cgpa != null ? `${cgpa} CGPA & above` : '—';
+              })()}</span>
             </div>
 
-            {/* STUDENT CONTACT & NOTES */}
-            {(details.coverLetter || details.notes) && (
-              <div className="sad-card sad-side-card">
-                <div className="sad-card-header">
-                  <h3 className="sad-card-title"><FileText size={18} style={{ color: '#F47C20' }} /> Cover Letter &amp; Notes</h3>
-                </div>
-                {details.coverLetter && (
-                  <div className="sad-note-block">
-                    <div className="sad-note-label">Cover Letter:</div>
-                    <div className="sad-note-text">{details.coverLetter}</div>
-                  </div>
-                )}
-                {details.notes && (
-                  <div className="sad-note-block">
-                    <div className="sad-note-label">Notes:</div>
-                    <div className="sad-note-text">{details.notes}</div>
-                  </div>
-                )}
-              </div>
-            )}
+            <div className="sad-eligibility-item">
+              <span className="sad-eligibility-label">Eligible Semester / Batch</span>
+              <span className="sad-eligibility-val">{(() => {
+                const sem = details.eligibleSemester ?? details.eligibleSemesterBatch ?? details.job?.eligibleSemester;
+                if (!sem) return '—';
+                if (typeof sem === 'string' && (sem.includes('Semester') || sem.includes('Batch') || sem.includes('Year'))) return sem;
+                return `Semester ${sem} and above`;
+              })()}</span>
+            </div>
 
-            {/* BACK TO APPLICATIONS BUTTON */}
-            <button className="sad-btn-orange sad-btn-full" onClick={() => navigate('/student/applications')} type="button">
-              <ArrowLeft size={16} /> Back to All Applications
-            </button>
-
+            <div className="sad-eligibility-item">
+              <span className="sad-eligibility-label">Active Backlogs Allowed</span>
+              <span className="sad-eligibility-val">{(() => {
+                const backlogs = details.maxBacklogs ?? details.activeBacklogsAllowed ?? details.activeBacklogs ?? details.job?.maxBacklogs;
+                return backlogs != null ? `Max ${backlogs} Backlogs Allowed` : '—';
+              })()}</span>
+            </div>
           </div>
+        </div>
 
+        {/* 6. JOB DESCRIPTION */}
+        <div className="sad-card">
+          <h2 className="sad-section-heading">Job Description</h2>
+          {details.jobDescription || details.description ? (
+            <div className="sad-prose-text">{details.jobDescription || details.description}</div>
+          ) : (
+            <p className="sad-empty-text">No detailed description provided for this position.</p>
+          )}
+        </div>
+
+        {/* 7. REQUIRED SKILLS & TECHNOLOGIES */}
+        <div className="sad-card">
+          <h2 className="sad-section-heading">Required Skills &amp; Technologies</h2>
+          {skillsList.length > 0 ? (
+            <div className="sad-skills-wrap">
+              {skillsList.map((skill, i) => {
+                const label = typeof skill === 'object' ? (skill?.skillName || skill?.name || skill?.skill || '') : String(skill || '');
+                if (!label) return null;
+                return (
+                  <span key={i} className="sad-skill-pill">{label}</span>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="sad-empty-text">No specific required skills listed.</p>
+          )}
+        </div>
+
+        {/* 8. ABOUT COMPANY */}
+        <div className="sad-card">
+          <h2 className="sad-section-heading">About {companyName}</h2>
+          <div className="sad-company-box">
+            <div className="sad-company-header">
+              <div className="sad-company-avatar">{companyInitials}</div>
+              <div>
+                <h3 className="sad-company-name-lg">{companyName}</h3>
+                <p className="sad-company-sub">{details.companyIndustry || details.industry || 'Technology & Services'} · {details.companySizeInfo || details.companySize || 'Corporate'}</p>
+              </div>
+            </div>
+            <p className="sad-company-desc">
+              {details.companyDescription || `${companyName} is an esteemed recruiter partner conducting campus placement drives.`}
+            </p>
+          </div>
         </div>
 
       </div>

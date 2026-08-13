@@ -4,12 +4,14 @@ import { Mail, Lock, LogIn, Eye, EyeOff, GraduationCap, Briefcase } from 'lucide
 import { toast } from 'react-toastify';
 import api from '../utils/axiosConfig';
 import LoginErrorCard from '../components/common/LoginErrorCard';
+import { useData } from '../context/DataContext';
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { updateProfileImage } = useData() || {};
 
   useEffect(() => {
     const expiredMsg = sessionStorage.getItem('session_expired_msg');
@@ -29,10 +31,19 @@ export default function Login() {
         password: e.target.password.value
       });
 
-      const { role: userRole, name, email, verificationStatus } = response.data;
+      const { role: userRole, name, email, verificationStatus, profileImageUrl, user } = response.data;
       localStorage.setItem('role', userRole);
       if (name) localStorage.setItem('userName', name);
       if (email) localStorage.setItem('userEmail', email);
+
+      const imgUrl = profileImageUrl || user?.profileImageUrl;
+      if (imgUrl) {
+        localStorage.setItem('profileImage', imgUrl);
+        if (updateProfileImage) updateProfileImage(imgUrl, { forceRefresh: true });
+      } else {
+        localStorage.removeItem('profileImage');
+        if (updateProfileImage) updateProfileImage('');
+      }
 
       if (userRole === 'ALUMNI' && verificationStatus === 'PENDING') {
         navigate('/pending-verification');

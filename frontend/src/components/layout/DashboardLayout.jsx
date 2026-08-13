@@ -30,12 +30,13 @@ export default function DashboardLayout({ children, role = 'student' }) {
   const normalizedRole = (role || 'student').toLowerCase();
 
   React.useEffect(() => {
+    let isMounted = true;
     if (normalizedRole === 'student') {
       api.get('/student/profile')
         .then(res => {
-          if (res.data?.profileImageUrl) {
-            updateProfileImage(res.data.profileImageUrl);
-          }
+          if (!isMounted) return;
+          // forceRefresh busts browser cache so re-login always shows the current image
+          updateProfileImage(res.data?.profileImageUrl || '', { forceRefresh: true });
           if (res.data?.name) {
             setFetchedName(res.data.name);
           }
@@ -44,9 +45,9 @@ export default function DashboardLayout({ children, role = 'student' }) {
     } else if (normalizedRole === 'admin' || normalizedRole === 'super_admin') {
       api.get('/admin/profile')
         .then(res => {
-          if (res.data?.profileImageUrl) {
-            updateProfileImage(res.data.profileImageUrl);
-          }
+          if (!isMounted) return;
+          // forceRefresh busts browser cache so re-login always shows the current image
+          updateProfileImage(res.data?.profileImageUrl || '', { forceRefresh: true });
           if (res.data?.designation) {
             setUserDesignation(res.data.designation);
           }
@@ -58,12 +59,12 @@ export default function DashboardLayout({ children, role = 'student' }) {
     } else if (normalizedRole === 'alumni') {
       api.get('/alumni/profile')
         .then(res => {
+          if (!isMounted) return;
           if (res.data?.id) {
             setFetchedAlumniId(res.data.id);
           }
-          if (res.data?.profileImageUrl) {
-            updateProfileImage(res.data.profileImageUrl);
-          }
+          // forceRefresh busts browser cache so re-login always shows the current image
+          updateProfileImage(res.data?.profileImageUrl || '', { forceRefresh: true });
           if (res.data?.name) {
             setFetchedName(res.data.name);
           }
@@ -71,6 +72,7 @@ export default function DashboardLayout({ children, role = 'student' }) {
         .catch(err => console.error(err));
     }
     
+    return () => { isMounted = false; };
   }, [normalizedRole, updateProfileImage]);
 
   const handleLogout = () => {

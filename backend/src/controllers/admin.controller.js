@@ -45,26 +45,49 @@ class AdminController {
     try {
       const userIdentifier = req.user?.email || req.user?.id;
       let imageUrl = req.body?.imageUrl;
+
       if (req.file) {
-        if (req.file.buffer) {
-          const base64 = req.file.buffer.toString('base64');
-          imageUrl = `data:${req.file.mimetype};base64,${base64}`;
+        // Prefer the disk-saved file path (multer diskStorage already saved it)
+        if (req.file.filename) {
+          imageUrl = `/uploads/images/${req.file.filename}`;
         } else if (req.file.path && fs.existsSync(req.file.path)) {
-          const buffer = fs.readFileSync(req.file.path);
-          imageUrl = `data:${req.file.mimetype || 'image/png'};base64,${buffer.toString('base64')}`;
-        } else if (req.file.filename) {
-          imageUrl = `http://localhost:8082/uploads/images/${req.file.filename}`;
+          // File is on disk at req.file.path — build a relative uploads path
+          const path = require('path');
+          const env = require('../config/env');
+          const imagesDir = require('path').join(env.uploadDir, 'images');
+          if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
+          const ext = path.extname(req.file.path) || '.jpg';
+          const filename = `admin-${req.user.id}-${Date.now()}${ext}`;
+          const targetPath = path.join(imagesDir, filename);
+          fs.copyFileSync(req.file.path, targetPath);
+          imageUrl = `/uploads/images/${filename}`;
+        } else if (req.file.buffer) {
+          // memoryStorage fallback — save buffer to disk
+          const path = require('path');
+          const env = require('../config/env');
+          const imagesDir = path.join(env.uploadDir, 'images');
+          if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
+          const ext = req.file.mimetype ? '.' + req.file.mimetype.split('/')[1] : '.jpg';
+          const filename = `admin-${req.user.id}-${Date.now()}${ext}`;
+          const targetPath = path.join(imagesDir, filename);
+          fs.writeFileSync(targetPath, req.file.buffer);
+          imageUrl = `/uploads/images/${filename}`;
         }
       }
+
       if (!imageUrl) {
         return res.status(400).json({ message: 'Image data is required' });
       }
+
       const result = await AdminService.updateAdminProfileImage(userIdentifier, imageUrl);
+      // result.profileImageUrl is the stable public API endpoint (set in admin.service.js)
       res.status(200).json({
         success: true,
         message: 'Profile image updated successfully',
-        imageUrl: result.imageUrl || imageUrl,
-        profileImageUrl: result.imageUrl || imageUrl
+        imageUrl: result.profileImageUrl,
+        profileImageUrl: result.profileImageUrl,
+        url: result.profileImageUrl,
+        updatedAt: result.updatedAt
       });
     } catch (err) {
       next(err);

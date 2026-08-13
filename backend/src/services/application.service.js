@@ -139,16 +139,50 @@ class ApplicationService {
       orderBy: { appliedAt: 'desc' }
     });
 
-    return applications.map((app) => ({
-      id: Number(app.id),
-      jobId: Number(app.jobId),
-      jobTitle: app.job.title,
-      companyName: app.job.companyName,
-      location: app.job.location,
-      salaryPackage: app.job.salaryPackage,
-      status: app.status,
-      appliedAt: app.appliedAt
-    }));
+    return applications.map((app) => {
+      const j = app.job || {};
+      const compName = j.companyName || j.company || 'Company';
+      const roleTitle = j.title || j.jobTitle || 'Job Role';
+      const logo = j.imageUrl || j.companyLogoUrl || null;
+
+      return {
+        id: Number(app.id),
+        applicationId: Number(app.id),
+        jobId: Number(app.jobId),
+        role: roleTitle,
+        jobTitle: roleTitle,
+        title: roleTitle,
+        company: compName,
+        companyName: compName,
+        companyLogoUrl: logo,
+        imageUrl: logo,
+        location: j.location || '',
+        salaryPackage: j.salaryPackage || '',
+        status: app.status,
+        appliedAt: app.appliedAt,
+        createdAt: app.appliedAt,
+        job: {
+          id: j.id ? Number(j.id) : null,
+          title: roleTitle,
+          jobTitle: roleTitle,
+          company: compName,
+          companyName: compName,
+          companyLogoUrl: logo,
+          imageUrl: logo,
+          location: j.location || '',
+          salaryPackage: j.salaryPackage || '',
+          jobType: j.jobType || '',
+          experienceRequired: j.experienceRequired || '',
+          openings: j.openings != null ? j.openings : null,
+          requiredCgpa: j.requiredCgpa != null ? j.requiredCgpa : null,
+          eligibleSemester: j.eligibleSemester != null ? j.eligibleSemester : null,
+          maxBacklogs: j.maxBacklogs != null ? j.maxBacklogs : null,
+          eligibleDepartments: j.eligibleDepartments || '',
+          applicationDeadline: j.applicationDeadline || null,
+          description: j.description || ''
+        }
+      };
+    });
   }
 
   static async getAlumniPostedJobsApplications(userId) {
@@ -261,7 +295,7 @@ class ApplicationService {
   }
 
   static async updateStatus(applicationId, status, caller) {
-    const validStatuses = ['APPLIED', 'UNDER_REVIEW', 'SHORTLISTED', 'INTERVIEW_SCHEDULED', 'ACCEPTED', 'REJECTED', 'OFFERED'];
+    const validStatuses = ['APPLIED', 'UNDER_REVIEW', 'SHORTLISTED', 'INTERVIEW_SCHEDULED', 'SELECTED', 'ACCEPTED', 'REJECTED', 'OFFERED'];
     if (!validStatuses.includes(status)) {
       throw { statusCode: 400, message: 'Invalid application status' };
     }
@@ -306,13 +340,8 @@ class ApplicationService {
     const application = await prisma.application.findUnique({
       where: { id: numericAppId },
       include: {
-        job: {
-          select: {
-            title: true,
-            companyName: true,
-            postedByAlumniId: true
-          }
-        },
+        job: true,
+        answers: true,
         student: {
           include: {
             user: { select: { name: true, email: true } },
@@ -345,12 +374,77 @@ class ApplicationService {
 
     const student = application.student;
     const resume = student.resumes[0];
+    const job = application.job || {};
+
+    const companyName = job.companyName || job.company || '';
+    const jobTitle = job.title || job.jobTitle || '';
+
+    const salaryVal = job.salaryPackage || null;
+    const locationVal = job.location || null;
+    const typeVal = job.jobType || null;
+    const expVal = job.experienceRequired || null;
+    const openingsVal = job.openings != null ? job.openings : null;
+    const deadlineVal = job.applicationDeadline || null;
+    const deptVal = job.eligibleDepartments || null;
+    const cgpaVal = job.requiredCgpa != null ? job.requiredCgpa : null;
+    const semVal = job.eligibleSemester != null ? job.eligibleSemester : null;
+    const backlogsVal = job.maxBacklogs != null ? job.maxBacklogs : null;
+    const descVal = job.description || null;
+    const skillsVal = job.requiredSkills || null;
+    const logoVal = job.imageUrl || job.companyLogoUrl || null;
+    const industryVal = job.industry || null;
+    const sizeVal = job.companySize || null;
+    const websiteVal = job.applicationLink || null;
 
     return {
       id: Number(application.id),
+      applicationId: Number(application.id),
       jobId: Number(application.jobId),
-      jobTitle: application.job?.title,
-      company: application.job?.companyName,
+      jobTitle: jobTitle,
+      title: jobTitle,
+      role: jobTitle,
+      company: companyName,
+      companyName: companyName,
+      companyLogoUrl: logoVal,
+      imageUrl: logoVal,
+      companyIndustry: industryVal,
+      industry: industryVal,
+      companySizeInfo: sizeVal,
+      companySize: sizeVal,
+      companyWebsite: websiteVal,
+      companyDescription: `${companyName} is an recruiter partner conducting placement drives.`,
+      
+      jobDescription: descVal,
+      description: descVal,
+      jobLocation: locationVal,
+      location: locationVal,
+      jobType: typeVal,
+      employmentType: typeVal,
+      packageDetails: salaryVal,
+      salaryPackage: salaryVal,
+      salary: salaryVal,
+      package: salaryVal,
+      experienceRequired: expVal,
+      experience: expVal,
+      openings: openingsVal,
+      numberOfOpenings: openingsVal,
+      expiryDate: deadlineVal,
+      deadline: deadlineVal,
+      applicationDeadline: deadlineVal,
+
+      eligibleDepartments: deptVal,
+      eligibleBranches: deptVal,
+      minCgpa: cgpaVal,
+      minimumCgpa: cgpaVal,
+      requiredCgpa: cgpaVal,
+      eligibleSemester: semVal,
+      eligibleSemesterBatch: semVal,
+      maxBacklogs: backlogsVal,
+      activeBacklogs: backlogsVal,
+      activeBacklogsAllowed: backlogsVal,
+      requiredSkills: skillsVal,
+      jobStatus: job.status || null,
+
       status: application.status,
       appliedAt: application.appliedAt,
       studentId: Number(student.id),
@@ -360,7 +454,6 @@ class ApplicationService {
       cgpa: student.cgpa,
       email: student.user.email,
       mobileNumber: student.mobileNumber,
-      location: student.location,
       profileImageUrl: student.profileImageUrl ? `/api/public/student/${student.id}/profile-image` : null,
       resumeUrl: resume?.fileUrl || null,
       resumeDownloadUrl: resume?.fileUrl ? `${resume.fileUrl}/download` : null,
@@ -380,7 +473,55 @@ class ApplicationService {
       address: student.address,
       backlogs: student.backlogs,
       skills: student.skills || [],
-      projects: student.projects || []
+      projects: student.projects || [],
+      screeningAnswers: (application.answers || []).map(a => ({
+        id: Number(a.id),
+        questionText: a.question,
+        answer: a.answer
+      })),
+      job: {
+        id: Number(job.id),
+        title: jobTitle,
+        company: companyName,
+        companyName: companyName,
+        company: {
+          name: companyName,
+          industry: industryVal || 'Technology & Services',
+          companySize: sizeVal || 'Corporate'
+        },
+        description: descVal,
+        jobDescription: descVal,
+        location: locationVal,
+        jobLocation: locationVal,
+        jobType: typeVal,
+        employmentType: typeVal,
+        salaryPackage: salaryVal,
+        salary: salaryVal,
+        package: salaryVal,
+        packageDetails: salaryVal,
+        experienceRequired: expVal,
+        experience: expVal,
+        requiredSkills: skillsVal,
+        imageUrl: logoVal,
+        companyLogoUrl: logoVal,
+        industry: industryVal,
+        companySize: sizeVal,
+        openings: openingsVal,
+        numberOfOpenings: openingsVal,
+        minCgpa: cgpaVal,
+        minimumCgpa: cgpaVal,
+        requiredCgpa: cgpaVal,
+        eligibleSemester: semVal,
+        eligibleSemesterBatch: semVal,
+        maxBacklogs: backlogsVal,
+        activeBacklogs: backlogsVal,
+        activeBacklogsAllowed: backlogsVal,
+        eligibleDepartments: deptVal,
+        eligibleBranches: deptVal,
+        deadline: deadlineVal,
+        applicationDeadline: deadlineVal,
+        expiryDate: deadlineVal
+      }
     };
   }
 

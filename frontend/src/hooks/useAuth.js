@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useData } from '../context/DataContext';
 
 /**
  * useAuth - Custom hook for auth state and actions.
@@ -7,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
  */
 export default function useAuth() {
   const navigate = useNavigate();
+  const { clearProfileImage } = useData() || {};
 
   const role = localStorage.getItem('role');
   const userName = localStorage.getItem('userName');
@@ -19,8 +21,12 @@ export default function useAuth() {
     localStorage.removeItem('userName');
     localStorage.removeItem('userEmail');
     localStorage.removeItem('profileImage');
+    if (clearProfileImage) {
+      clearProfileImage();
+    }
+    window.dispatchEvent(new Event('storage'));
     navigate('/login');
-  }, [navigate]);
+  }, [navigate, clearProfileImage]);
 
   return { role, userName, userEmail, isAuthenticated, logout };
 }

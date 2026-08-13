@@ -158,9 +158,14 @@ export default function AdminAlumni() {
   // Filtering
   const filteredUsers = useMemo(() => {
     return alumniUsers.filter(u => {
-      const name = u.user?.name || '';
-      const email = u.user?.email || '';
-      const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase()) || email.toLowerCase().includes(searchTerm.toLowerCase());
+      const q = searchTerm.toLowerCase().trim();
+      const name = (u.user?.name || u.name || '').toLowerCase();
+      const email = (u.user?.email || u.email || '').toLowerCase();
+      const company = (u.companyName || u.company || u.currentCompany || '').toLowerCase();
+      const designation = (u.designation || u.role || '').toLowerCase();
+      const dept = (u.department || '').toLowerCase();
+      
+      const matchesSearch = !q || name.includes(q) || email.includes(q) || company.includes(q) || designation.includes(q) || dept.includes(q);
       
       let matchesVer = true;
       if (filters.verificationStatus) {
@@ -231,6 +236,64 @@ export default function AdminAlumni() {
           active={filters.verificationStatus==="REJECTED"} onClick={() => setFilters(p => ({...p, verificationStatus:"REJECTED"}))} />
       </div>
 
+      {/* SEARCH & FILTER BAR */}
+      <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs mb-6 flex flex-col md:flex-row gap-3 items-center justify-between">
+        <div className="relative w-full md:w-96">
+          <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search by alumni name, email, company, or department..."
+            value={searchTerm}
+            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+            className="w-full h-11 pl-10 pr-10 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:border-[#F47C20] focus:bg-white transition-all shadow-2xs"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => { setSearchTerm(''); setCurrentPage(1); }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-700 bg-slate-200/60 hover:bg-slate-200 rounded-full transition-colors cursor-pointer"
+              title="Clear search"
+              aria-label="Clear search"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+          {departments.length > 0 && (
+            <select
+              value={filters.department}
+              onChange={(e) => { setFilters(p => ({ ...p, department: e.target.value })); setCurrentPage(1); }}
+              className="h-11 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] cursor-pointer"
+            >
+              <option value="">All Departments</option>
+              {departments.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+          )}
+
+          <select
+            value={filters.verificationStatus}
+            onChange={(e) => { setFilters(p => ({ ...p, verificationStatus: e.target.value })); setCurrentPage(1); }}
+            className="h-11 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] cursor-pointer"
+          >
+            <option value="">All Verification Status</option>
+            <option value="VERIFIED">Verified</option>
+            <option value="PENDING">Pending</option>
+            <option value="REJECTED">Rejected</option>
+          </select>
+
+          {(searchTerm || filters.department || filters.verificationStatus || filters.graduationYear) && (
+            <button
+              onClick={resetFilters}
+              className="h-11 px-3.5 bg-slate-100 text-slate-700 hover:bg-slate-200 font-extrabold text-xs rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Reset filters"
+            >
+              <RefreshCw size={14} /> Reset
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* ALUMNI TABLE */}
       {isLoading ? (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mt-6">
@@ -247,32 +310,33 @@ export default function AdminAlumni() {
         </div>
       ) : (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mt-6">
-          <div className="overflow-x-auto min-h-[300px]">
+          {/* DESKTOP TABLE */}
+          <div className="hidden md:block overflow-x-auto min-h-[300px]">
             <table className="w-full text-left border-collapse">
               <thead className="bg-[#F8FAFC]">
                 <tr>
                   <th className="py-4 px-5 text-[10px] font-extrabold text-slate-500 uppercase tracking-widest border-b border-slate-200">Alumni Details</th>
-                  <th className="py-4 px-5 text-[10px] font-extrabold text-slate-500 uppercase tracking-widest border-b border-slate-200 hidden md:table-cell">Professional Info</th>
+                  <th className="py-4 px-5 text-[10px] font-extrabold text-slate-500 uppercase tracking-widest border-b border-slate-200">Professional Info</th>
                   <th className="py-4 px-5 text-[10px] font-extrabold text-slate-500 uppercase tracking-widest border-b border-slate-200">Status & OCR</th>
                   <th className="py-4 px-5 text-[10px] font-extrabold text-slate-500 uppercase tracking-widest border-b border-slate-200 text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {currentUsers.map(alum => (
-                  <tr key={alum.id} className="  transition-colors group">
+                  <tr key={alum.id} className="hover:bg-slate-50/80 transition-colors group">
                     <td className="py-4 px-5">
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-full overflow-hidden shadow-sm border border-slate-200 flex-shrink-0 bg-slate-100 flex items-center justify-center">
                            <img src={getImageUrl(alum.profileImageUrl) || generateAvatarSVG(alum.user?.name || 'Unknown', 'random')} onError={(e) => { e.target.onerror = null; e.target.src = generateAvatarSVG(alum.user?.name || 'Unknown', 'random'); }} alt="Profile" className="w-full h-full object-cover" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-bold text-slate-800 truncate leading-tight   transition-colors">{toTitleCase(alum.user?.name)}</p>
+                          <p className="text-sm font-bold text-slate-800 truncate leading-tight transition-colors">{toTitleCase(alum.user?.name)}</p>
                           <p className="text-xs font-semibold text-slate-500 truncate mt-0.5">{alum.department || "N/A"}</p>
                           <p className="text-xs text-slate-400 mt-0.5 truncate">{alum.passingYear ? `Class of ${alum.passingYear}` : 'Year N/A'}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="py-4 px-5 hidden md:table-cell">
+                    <td className="py-4 px-5">
                       <div className="text-sm font-bold text-slate-700 truncate max-w-[200px]">{alum.company || "Not Provided"}</div>
                       {alum.designation && <div className="text-xs font-medium text-slate-500 mt-1 truncate max-w-[200px]">{alum.designation}</div>}
                     </td>
@@ -293,7 +357,7 @@ export default function AdminAlumni() {
                     </td>
                     <td className="py-4 px-5 text-right align-middle">
                       <button onClick={() => setSelectedAlumni(alum)}
-                        className="px-3 py-1.5 bg-white border border-[#F47C20] text-[#F47C20] text-[11px] font-bold rounded-lg   active:scale-95 transition-all shadow-sm focus:outline-none whitespace-nowrap">
+                        className="px-3 py-1.5 bg-white border border-[#F47C20] text-[#F47C20] text-[11px] font-bold rounded-lg active:scale-95 transition-all shadow-sm focus:outline-none whitespace-nowrap cursor-pointer">
                         View Details
                       </button>
                     </td>
@@ -301,6 +365,43 @@ export default function AdminAlumni() {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* MOBILE RESPONSIVE CARDS */}
+          <div className="block md:hidden divide-y divide-slate-100">
+            {currentUsers.map(alum => (
+              <div key={alum.id} className="p-4 hover:bg-slate-50/80 transition-colors">
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-full overflow-hidden shadow-sm border border-slate-200 shrink-0 bg-slate-100 flex items-center justify-center">
+                      <img src={getImageUrl(alum.profileImageUrl) || generateAvatarSVG(alum.user?.name || 'Unknown', 'random')} onError={(e) => { e.target.onerror = null; e.target.src = generateAvatarSVG(alum.user?.name || 'Unknown', 'random'); }} alt="Profile" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="font-bold text-slate-800 text-sm truncate">{toTitleCase(alum.user?.name)}</h4>
+                      <p className="text-xs font-semibold text-[#F47C20] truncate">{alum.company || 'Company N/A'}</p>
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={() => setSelectedAlumni(alum)}
+                    className="px-3 py-1.5 bg-white border border-[#F47C20] text-[#F47C20] text-xs font-bold rounded-lg transition-all whitespace-nowrap shadow-2xs shrink-0 cursor-pointer"
+                  >
+                    Details
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between text-xs text-slate-500 gap-2 border-t border-slate-100 pt-2.5">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-slate-700">{alum.department || 'N/A'}</span>
+                    {alum.passingYear && <span>• Class of {alum.passingYear}</span>}
+                  </div>
+
+                  <span className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider ${getStatusStyle(alum.verificationStatus)}`}>
+                    {alum.verificationStatus}
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
           {totalPages > 1 && (
             <div className="flex items-center justify-between gap-4 px-5 py-3.5 border-t border-slate-100 bg-slate-50/50">

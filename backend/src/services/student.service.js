@@ -687,11 +687,13 @@ class StudentService {
       })
     ]);
 
+    const publicUrl = `/api/public/student/${student.id}/profile-image`;
+
     return {
       success: true,
       message: 'Profile photo updated successfully',
-      url: imageUrl,
-      profileImageUrl: imageUrl,
+      url: publicUrl,
+      profileImageUrl: publicUrl,
       updatedAt: now.toISOString()
     };
   }

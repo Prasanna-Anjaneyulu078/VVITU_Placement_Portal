@@ -220,34 +220,10 @@ class EligibilityService {
   }
 
   static calculateSkillMatch(student, job) {
-    if (!job.requiredSkills || !job.requiredSkills.trim()) {
-      return { skillMatchPercentage: 100, matchedSkills: [], missingSkills: [] };
-    }
-
-    const requiredSkills = job.requiredSkills.split(',').map((s) => s.trim()).filter(Boolean);
-    if (requiredSkills.length === 0) {
-      return { skillMatchPercentage: 100, matchedSkills: [], missingSkills: [] };
-    }
-
-    const studentSkills = (student.skills || []).map((s) => s.skillName.trim().toLowerCase());
-
-    const matchedSkills = [];
-    const missingSkills = [];
-
-    for (const reqSkill of requiredSkills) {
-      if (studentSkills.includes(reqSkill.toLowerCase())) {
-        matchedSkills.push(reqSkill);
-      } else {
-        missingSkills.push(reqSkill);
-      }
-    }
-
-    const percentage = Math.round((matchedSkills.length / requiredSkills.length) * 100);
-    return {
-      skillMatchPercentage: percentage,
-      matchedSkills,
-      missingSkills
-    };
+    const { matchSkills } = require('../utils/skillMatcher');
+    const studentSkills = student ? (student.skills || []) : [];
+    const requiredSkills = job ? (job.requiredSkills || '') : '';
+    return matchSkills(studentSkills, requiredSkills);
   }
 
   static async getRecommendedJobs(userId, limit = 10) {
