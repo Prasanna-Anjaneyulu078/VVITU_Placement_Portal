@@ -4,7 +4,7 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Install build tools for native packages
-RUN apk add --no-cache python3 make g++ cairo-dev pango-dev jpeg-dev giflib-dev librsvg-dev
+RUN apk add --no-cache openssl python3 make g++ cairo-dev pango-dev jpeg-dev giflib-dev librsvg-dev
 
 # Copy dependency files
 COPY package.json package-lock.json ./
@@ -24,8 +24,8 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install runtime dependencies for OCR / Image processing
-RUN apk add --no-cache cairo pango jpeg giflib librsvg tesseract-ocr tesseract-ocr-data-eng
+# Install runtime dependencies for OCR / Image processing & OpenSSL for Prisma
+RUN apk add --no-cache openssl cairo pango jpeg giflib librsvg tesseract-ocr tesseract-ocr-data-eng
 
 # Copy application artifacts from builder
 COPY --from=builder /app /app
