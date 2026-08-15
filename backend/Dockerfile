@@ -1,41 +1,44 @@
-# Build Stage
-FROM maven:3.9.6-eclipse-temurin-21-alpine AS builder
+# Node.js 20 Alpine Builder Stage
+FROM node:20-alpine AS builder
+
 WORKDIR /app
 
-# Cache dependencies
-COPY pom.xml .
-RUN mvn dependency:go-offline -B
+# Install build tools for native packages
+RUN apk add --no-cache python3 make g++ cairo-dev pango-dev jpeg-dev giflib-dev librsvg-dev
 
-# Copy source and package application
-COPY src ./src
-RUN mvn package -DskipTests -B
+# Copy dependency files
+COPY package.json package-lock.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy Prisma schema and generate Prisma client
+COPY prisma ./prisma
+RUN npx prisma generate
+
+# Copy source code
+COPY . .
 
 # Runtime Stage
-FROM eclipse-temurin:21-jre-alpine
+FROM node:20-alpine
+
 WORKDIR /app
 
-# Create non-root group and user
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+# Install runtime dependencies for OCR / Image processing
+RUN apk add --no-cache cairo pango jpeg giflib librsvg tesseract-ocr tesseract-ocr-data-eng
 
-# Create upload and log directories with proper permissions
-RUN mkdir -p /app/uploads /app/logs && \
-    chown -R appuser:appgroup /app
+# Copy application artifacts from builder
+COPY --from=builder /app /app
 
-# Copy built artifact from builder stage
-COPY --from=builder /app/target/placementportal-0.0.1-SNAPSHOT.jar app.jar
-RUN chown appuser:appgroup app.jar
+# Ensure uploads and logs directories exist
+RUN mkdir -p /app/uploads /app/logs
 
-# Switch to non-root user
-USER appuser
-
-# Expose Spring Boot port
 EXPOSE 8082
 
-# Health check probing Actuator endpoint
+ENV NODE_ENV=production
+
+# Health check probing health endpoint
 HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=5 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8082/actuator/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8082/api/health || exit 1
 
-# Container-aware JVM options
-ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom"
-
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+CMD ["sh", "-c", "npx prisma db push && npm start"]
