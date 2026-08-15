@@ -633,7 +633,7 @@ const StudentManagement = forwardRef(({ isTab = false, onCountsUpdate }, ref) =>
                         </button>
                         <button
                           onClick={() => { setSelectedStudent(s); setShowRemoveModal(true); }}
-                          className="px-3 py-1.5 bg-red-50 border border-red-200 text-red-600 text-xs font-bold rounded-xl shadow-2xs whitespace-nowrap focus:outline-none"
+                          className="px-3 py-1.5 bg-[#FFF4EB] border border-[#F47C20]/40 text-[#F47C20] text-xs font-bold rounded-xl shadow-2xs whitespace-nowrap focus:outline-none"
                         >
                           Delete Student
                         </button>
@@ -682,9 +682,9 @@ const StudentManagement = forwardRef(({ isTab = false, onCountsUpdate }, ref) =>
                         </button>
                         <button
                           onClick={() => { setOpenMenuId(null); setSelectedStudent(s); setShowRemoveModal(true); }}
-                          className="w-full px-4 py-2.5 text-left text-xs font-semibold text-red-600 flex items-center gap-2 transition-colors border-t border-slate-100"
+                          className="w-full px-4 py-2.5 text-left text-xs font-semibold text-[#F47C20] flex items-center gap-2 transition-colors border-t border-slate-100"
                         >
-                          <Trash2 size={14} className="text-red-500" /> Delete Student
+                          <Trash2 size={14} className="text-[#F47C20]" /> Delete Student
                         </button>
                       </div>
                     )}
@@ -766,12 +766,12 @@ const StudentManagement = forwardRef(({ isTab = false, onCountsUpdate }, ref) =>
         <div className="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden p-6">
             <div className="text-center">
-              <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500">
+              <div className="w-16 h-16 bg-[#FFF4EB] rounded-full flex items-center justify-center mx-auto mb-4 text-[#F47C20]">
                 <AlertCircle size={32} />
               </div>
               <h3 className="text-xl font-extrabold text-slate-800 mb-2">Delete Student Account</h3>
               <p className="text-sm text-slate-600 font-medium mb-1">Are you sure you want to permanently delete this student account?</p>
-              <p className="text-xs text-red-500 font-bold mb-3">This action cannot be undone. The student's account and all associated records will be permanently removed from the system.</p>
+              <p className="text-xs text-[#F47C20] font-bold mb-3">This action cannot be undone. The student's account and all associated records will be permanently removed from the system.</p>
               <p className="text-xs text-slate-500 mb-4">Type the student's Roll Number <span className="font-bold font-mono text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded">{selectedStudent?.rollNumber}</span> to confirm deletion.</p>
             </div>
             <input 
@@ -779,14 +779,14 @@ const StudentManagement = forwardRef(({ isTab = false, onCountsUpdate }, ref) =>
               placeholder={`Type ${selectedStudent?.rollNumber || 'Roll Number'}`} 
               value={removeConfirmText}
               onChange={(e) => setRemoveConfirmText(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-center font-bold text-slate-800 mb-6 outline-none focus:border-red-400 focus:bg-white transition-all font-mono text-sm"
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-center font-bold text-slate-800 mb-6 outline-none focus:border-[#F47C20] focus:bg-white transition-all font-mono text-sm"
             />
             <div className="flex gap-3">
-              <button onClick={() => {setShowRemoveModal(false); setRemoveConfirmText("");}} className="flex-1 py-2.5 bg-slate-100 text-slate-700 font-bold   rounded-xl text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2">Cancel</button>
+              <button onClick={() => {setShowRemoveModal(false); setRemoveConfirmText("");}} className="flex-1 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2">Cancel</button>
               <button 
                 onClick={handleDeleteStudent} 
                 disabled={removeConfirmText !== selectedStudent?.rollNumber}
-                className="flex-1 py-2.5 bg-red-50 border border-[#F47C20] text-[#F47C20] font-bold rounded-xl text-sm shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#F47C20] focus:ring-offset-2">
+                className="flex-1 py-2.5 bg-[#FFF4EB] border border-[#F47C20] text-[#F47C20] font-bold rounded-xl text-sm shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#F47C20] focus:ring-offset-2">
                 Delete Student
               </button>
             </div>
