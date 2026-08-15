@@ -23,11 +23,8 @@ const app = express();
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || env.allowedOrigins.includes(origin) || env.allowedOrigins.includes('*')) {
-        callback(null, true);
-      } else {
-        callback(null, true); // Allow dev origins dynamically
-      }
+      if (!origin) return callback(null, true);
+      return callback(null, origin);
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],

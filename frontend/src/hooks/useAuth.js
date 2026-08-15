@@ -24,6 +24,7 @@ export default function useAuth() {
     } catch {
       // Ignore network errors during logout
     }
+    localStorage.removeItem('token');
     localStorage.removeItem('role');
     localStorage.removeItem('userName');
     localStorage.removeItem('userEmail');

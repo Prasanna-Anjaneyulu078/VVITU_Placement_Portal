@@ -31,7 +31,11 @@ export default function Login() {
         password: e.target.password.value
       });
 
-      const { role: userRole, name, email, verificationStatus, profileImageUrl, user } = response.data;
+      const { role: userRole, name, email, verificationStatus, profileImageUrl, user, token, accessToken } = response.data;
+      const jwtToken = token || accessToken || user?.token;
+      if (jwtToken) {
+        localStorage.setItem('token', jwtToken);
+      }
       localStorage.setItem('role', userRole);
       if (name) localStorage.setItem('userName', name);
       if (email) localStorage.setItem('userEmail', email);
