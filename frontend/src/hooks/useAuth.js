@@ -17,6 +17,7 @@ export default function useAuth() {
   const isAuthenticated = !!role;
 
   const logout = useCallback(() => {
+    localStorage.removeItem('token');
     localStorage.removeItem('role');
     localStorage.removeItem('userName');
     localStorage.removeItem('userEmail');
