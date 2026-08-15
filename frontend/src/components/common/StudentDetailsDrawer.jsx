@@ -102,12 +102,14 @@ export default function StudentDetailsDrawer({
 
     if (targetAppId) {
       try {
-        const response = await api.get(`/applications/${targetAppId}/resume/view`, {
-          responseType: 'blob'
-        });
-        const blob = new Blob([response.data], { type: 'application/pdf' });
+        const response = await api.get(`/applications/${targetAppId}/resume/view`, { responseType: 'blob' });
+        const disposition = response.headers['content-disposition'] || '';
+        const match = disposition.match(/filename="?([^"]+)"?/);
+        const filename = match ? match[1] : (details?.resumeFileName || `${details?.rollNumber || 'Student'}_Resume.pdf`);
+        const blob = new Blob([response.data], { type: response.headers['content-type'] || 'application/pdf' });
         const blobUrl = URL.createObjectURL(blob);
         setViewerUrl(blobUrl);
+        setViewerMetadata(prev => ({ ...prev, fileName: filename }));
       } catch (err) {
         console.error('API resume view failed, attempting fallback', err);
         if (fallbackUrl) {

@@ -108,11 +108,14 @@ export default function AdminVerifications() {
 
     try {
       const docPath = `/admin/alumni/${alum.id}/document`;
-
       const res = await api.get(docPath, { responseType: 'blob' });
+      const disposition = res.headers['content-disposition'] || '';
+      const match = disposition.match(/filename="?([^"]+)"?/);
+      const filename = match ? match[1] : `${alum.rollNumber || 'Alumni'}_VerificationDocument.pdf`;
       const blob = new Blob([res.data], { type: res.headers['content-type'] || 'application/pdf' });
       const url = URL.createObjectURL(blob);
       setDocBlobUrl(url);
+      setViewingDocAlumni(prev => prev ? ({ ...prev, fileName: filename }) : prev);
     } catch (err) {
       console.error('Failed to view verification document:', err);
       const status = err.response?.status;

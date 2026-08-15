@@ -99,8 +99,12 @@ export default function AlumniProfile() {
         try {
           const endpoint = res.data.url.startsWith('/api/') ? res.data.url.substring(4) : res.data.url;
           const blobRes = await api.get(endpoint, { responseType: 'blob' });
+          const disposition = blobRes.headers['content-disposition'] || '';
+          const match = disposition.match(/filename="?([^"]+)"?/);
+          const filename = match ? match[1] : (res.data.documentName || res.data.url.split('/').pop() || 'Verification_Document.pdf');
           const blobUrl = URL.createObjectURL(blobRes.data);
           setDocBlobUrl(blobUrl);
+          setDocumentMeta(prev => ({ ...prev, documentName: filename }));
         } catch (blobErr) {
           console.error('Failed to fetch document blob', blobErr);
         }
