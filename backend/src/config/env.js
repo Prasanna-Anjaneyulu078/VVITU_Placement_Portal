@@ -2,10 +2,10 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
 module.exports = {
-  port: process.env.PORT || 8082,
+  port: parseInt(process.env.PORT || '8082', 10),
   env: process.env.NODE_ENV || 'development',
-  databaseUrl: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/vvitu_placement_portal',
-  jwtSecret: process.env.JWT_SECRET || 'dnZpdF9wbGFjZW1lbnRfcG9ydGFsX3N1cGVyX3NlY3JldF9qd3Rfa2V5XzIwMjRfZG9fbm90X2V4cG9zZQ==',
+  databaseUrl: process.env.DATABASE_URL,
+  jwtSecret: process.env.JWT_SECRET,
   jwtExpiration: parseInt(process.env.JWT_EXPIRATION || '86400000', 10),
   jwtRefreshExpiration: parseInt(process.env.JWT_REFRESH_EXPIRATION || '604800000', 10),
   clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',

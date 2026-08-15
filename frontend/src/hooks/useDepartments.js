@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/axiosConfig';
 
 const useDepartments = () => {
     const [departments, setDepartments] = useState([]);
@@ -9,9 +9,7 @@ const useDepartments = () => {
     useEffect(() => {
         const fetchDepartments = async () => {
             try {
-                // Determine base URL dynamically if possible, or use standard
-                const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:8082';
-                const response = await axios.get(`${baseURL}/api/departments`);
+                const response = await api.get('/departments');
                 setDepartments(response.data);
                 setError(null);
             } catch (err) {

@@ -1,8 +1,10 @@
+require('dotenv').config();
 const { PrismaClient } = require('@prisma/client');
+
 const prisma = new PrismaClient({
   datasources: {
     db: {
-      url: 'postgresql://vvitu_placement_portal_user:QuwJCeVOEZ9TEXJew0Yy8hywtYIA246D@dpg-d9usn6ajobas73bmdnvg-a.virginia-postgres.render.com/vvitu_placement_portal'
+      url: process.env.DATABASE_URL
     }
   }
 });
