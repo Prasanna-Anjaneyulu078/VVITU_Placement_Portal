@@ -6,18 +6,6 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// Request interceptor: attach token from localStorage if present
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
 // Flag to prevent multiple simultaneous redirect loops
 let isRedirecting = false;
 

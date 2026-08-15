@@ -2,9 +2,11 @@ import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 
+import api from '../utils/axiosConfig';
+
 /**
  * useAuth - Custom hook for auth state and actions.
- * Reads token/role from localStorage and provides a logout function.
+ * Reads user state from localStorage and provides a cookie-clearing logout function.
  */
 export default function useAuth() {
   const navigate = useNavigate();
@@ -16,8 +18,12 @@ export default function useAuth() {
 
   const isAuthenticated = !!role;
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('token');
+  const logout = useCallback(async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch {
+      // Ignore network errors during logout
+    }
     localStorage.removeItem('role');
     localStorage.removeItem('userName');
     localStorage.removeItem('userEmail');
