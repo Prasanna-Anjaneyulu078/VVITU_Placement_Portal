@@ -88,7 +88,8 @@ export default function StudentDetailsDrawer({
   };
 
   const handleViewResume = async () => {
-    const targetAppId = applicationId || details?.id;
+    const targetAppId = applicationId;
+    const targetStudentId = studentId || details?.id;
     const fallbackUrl = cleanUrl(details?.resumeUrl || details?.resumeFileUrl);
 
     setViewerOpen(true);
@@ -100,9 +101,16 @@ export default function StudentDetailsDrawer({
       rollNumber: details?.rollNumber
     });
 
+    let endpoint = '';
     if (targetAppId) {
+      endpoint = `/applications/${targetAppId}/resume/view`;
+    } else if (targetStudentId) {
+      endpoint = `/admin/students/${targetStudentId}/resume/view`;
+    }
+
+    if (endpoint) {
       try {
-        const response = await api.get(`/applications/${targetAppId}/resume/view`, { responseType: 'blob' });
+        const response = await api.get(endpoint, { responseType: 'blob' });
         const disposition = response.headers['content-disposition'] || '';
         const match = disposition.match(/filename="?([^"]+)"?/);
         const filename = match ? match[1] : (details?.resumeFileName || `${details?.rollNumber || 'Student'}_Resume.pdf`);
@@ -112,10 +120,23 @@ export default function StudentDetailsDrawer({
         setViewerMetadata(prev => ({ ...prev, fileName: filename }));
       } catch (err) {
         console.error('API resume view failed, attempting fallback', err);
+        let errMsg = 'Failed to load resume';
+        if (err.response?.data && err.response.data instanceof Blob) {
+          try {
+            const text = await err.response.data.text();
+            const parsed = JSON.parse(text);
+            if (parsed?.message) errMsg = parsed.message;
+          } catch (e) {
+            errMsg = err.response?.status === 404 ? 'Student resume not found or missing from storage.' : err.message;
+          }
+        } else {
+          errMsg = err.response?.status === 404 ? 'Student resume not found or missing from storage.' : (err.message || 'Failed to load resume');
+        }
+
         if (fallbackUrl) {
           setViewerUrl(fallbackUrl);
         } else {
-          setViewerError(err);
+          setViewerError(new Error(errMsg));
         }
       } finally {
         setViewerLoading(false);
@@ -130,15 +151,21 @@ export default function StudentDetailsDrawer({
   };
 
   const handleDownloadResume = async () => {
-    const targetAppId = applicationId || details?.id;
+    const targetAppId = applicationId;
+    const targetStudentId = studentId || details?.id;
     const fallbackUrl = cleanUrl(details?.resumeUrl || details?.resumeFileUrl);
     const fileName = details?.resumeFileName || `${details?.rollNumber || 'Student'}_Resume.pdf`;
 
+    let endpoint = '';
     if (targetAppId) {
+      endpoint = `/applications/${targetAppId}/resume/download`;
+    } else if (targetStudentId) {
+      endpoint = `/admin/students/${targetStudentId}/resume/download`;
+    }
+
+    if (endpoint) {
       try {
-        const response = await api.get(`/applications/${targetAppId}/resume/download`, {
-          responseType: 'blob'
-        });
+        const response = await api.get(endpoint, { responseType: 'blob' });
         const blob = new Blob([response.data], { type: 'application/pdf' });
         const blobUrl = URL.createObjectURL(blob);
         const link = document.createElement('a');

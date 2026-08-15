@@ -70,8 +70,18 @@ export default function AdminAlumni() {
       setDocMetadata({ documentName: fileName });
     } catch (err) {
       console.error('Failed to load document:', err);
-      const status = err.response?.status;
-      const errMsg = status === 404 ? '404: Document Not Found' : status === 403 ? '403: Forbidden' : (err.message || 'Failed to load document');
+      let errMsg = 'Failed to load document';
+      if (err.response?.data && err.response.data instanceof Blob) {
+        try {
+          const text = await err.response.data.text();
+          const parsed = JSON.parse(text);
+          if (parsed?.message) errMsg = parsed.message;
+        } catch (e) {
+          errMsg = err.response?.status === 404 ? 'Verification document not found or missing from storage.' : err.message;
+        }
+      } else {
+        errMsg = err.response?.status === 404 ? 'Verification document not found or missing from storage.' : (err.message || 'Failed to load document');
+      }
       setDocError(errMsg);
     } finally {
       setIsDocLoading(false);

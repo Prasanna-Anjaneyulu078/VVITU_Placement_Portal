@@ -366,8 +366,18 @@ export default function StudentProfile() {
       setViewerMetadata(prev => ({ ...prev, fileName: filename }));
     } catch (err) {
       console.error("Error viewing resume:", err);
-      const status = err.response?.status;
-      const errMsg = status === 404 ? '404: Resume Not Found' : status === 403 ? '403: Forbidden' : (err.message || 'Failed to view resume');
+      let errMsg = 'Failed to view resume';
+      if (err.response?.data && err.response.data instanceof Blob) {
+        try {
+          const text = await err.response.data.text();
+          const parsed = JSON.parse(text);
+          if (parsed?.message) errMsg = parsed.message;
+        } catch (e) {
+          errMsg = err.response?.status === 404 ? 'Resume document not found or missing from storage.' : err.message;
+        }
+      } else {
+        errMsg = err.response?.status === 404 ? 'Resume document not found or missing from storage.' : (err.message || 'Failed to view resume');
+      }
       setViewerError(errMsg);
     } finally {
       setViewerLoading(false);

@@ -2,8 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, Download, FileText, Calendar, User, Hash, ExternalLink, AlertCircle, ShieldAlert, RefreshCw, FileQuestion, ZoomIn, ZoomOut, Maximize2, ChevronLeft, ChevronRight, FileCode } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Configure PDF.js worker using reliable cdnjs worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version || '3.11.174'}/pdf.worker.min.js`;
+// Configure PDF.js worker using reliable jsdelivr worker URL with version fallback
+if (pdfjsLib?.GlobalWorkerOptions) {
+  const version = pdfjsLib.version || '3.11.174';
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${version}/build/pdf.worker.min.mjs`;
+}
 
 /* PDF Canvas Page Renderer Component */
 const PdfPage = ({ pdf, pageNum, scale }) => {
