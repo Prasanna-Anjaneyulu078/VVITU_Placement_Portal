@@ -786,7 +786,7 @@ const StudentManagement = forwardRef(({ isTab = false, onCountsUpdate }, ref) =>
               <button 
                 onClick={handleDeleteStudent} 
                 disabled={removeConfirmText !== selectedStudent?.rollNumber}
-                className="flex-1 py-2.5 bg-red-600 border border-red-600 text-white font-bold rounded-xl text-sm shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                className="flex-1 py-2.5 bg-red-50 border border-[#F47C20] text-[#F47C20] font-bold rounded-xl text-sm shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#F47C20] focus:ring-offset-2">
                 Delete Student
               </button>
             </div>
