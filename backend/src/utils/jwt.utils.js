@@ -36,18 +36,19 @@ const verifyToken = (token) => {
 };
 
 const setAuthCookies = (res, accessToken, refreshToken) => {
+  const isProd = env.env === 'production';
   res.cookie('accessToken', accessToken, {
     httpOnly: true,
-    secure: env.env === 'production',
-    sameSite: 'lax',
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
     maxAge: env.jwtExpiration
   });
 
   if (refreshToken) {
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: env.env === 'production',
-      sameSite: 'lax',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: env.jwtRefreshExpiration
     });
   }
