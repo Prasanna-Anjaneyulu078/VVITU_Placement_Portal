@@ -126,7 +126,7 @@ class AdminController {
 
   static async getAllStudents(req, res, next) {
     try {
-      const students = await AdminService.getAllStudents();
+      const students = await AdminService.getAllStudents(req.query);
       res.status(200).json(students);
     } catch (err) {
       next(err);

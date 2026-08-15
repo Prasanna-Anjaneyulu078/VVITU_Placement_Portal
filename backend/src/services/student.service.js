@@ -64,7 +64,7 @@ class StudentService {
       codechefUrl: student.codechefUrl,
       gfgUrl: student.gfgUrl,
       hackerrankUrl: student.hackerrankUrl,
-      profileImageUrl: student.profileImageUrl ? `/api/public/student/${student.id}/profile-image` : null,
+      profileImageUrl: student.profileImageUrl,
       cgpa: student.cgpa,
       semester: student.semester,
       backlogs: student.backlogs,
@@ -325,7 +325,7 @@ class StudentService {
       codechefUrl: updated.codechefUrl,
       gfgUrl: updated.gfgUrl,
       hackerrankUrl: updated.hackerrankUrl,
-      profileImageUrl: updated.profileImageUrl ? `/api/public/student/${updated.id}/profile-image` : null,
+      profileImageUrl: updated.profileImageUrl,
       cgpa: updated.cgpa,
       semester: updated.semester,
       backlogs: updated.backlogs,
@@ -365,7 +365,7 @@ class StudentService {
       codechefUrl: updated.codechefUrl,
       gfgUrl: updated.gfgUrl,
       hackerrankUrl: updated.hackerrankUrl,
-      profileImageUrl: updated.profileImageUrl ? `/api/public/student/${updated.id}/profile-image` : null,
+      profileImageUrl: updated.profileImageUrl,
       cgpa: updated.cgpa,
       semester: updated.semester,
       backlogs: updated.backlogs,
@@ -687,13 +687,11 @@ class StudentService {
       })
     ]);
 
-    const publicUrl = `/api/public/student/${student.id}/profile-image`;
-
     return {
       success: true,
       message: 'Profile photo updated successfully',
-      url: publicUrl,
-      profileImageUrl: publicUrl,
+      url: imageUrl,
+      profileImageUrl: imageUrl,
       updatedAt: now.toISOString()
     };
   }
@@ -848,18 +846,25 @@ class StudentService {
       });
       const existingNamesLower = new Set(existingManualSkills.map(s => s.skillName.toLowerCase()));
 
+      const skillsToInsert = [];
       for (const skillName of extractedSkills) {
         if (!existingNamesLower.has(skillName.toLowerCase())) {
-          await tx.studentSkill.create({
-            data: {
-              studentId: student.id,
-              skillName,
-              source: 'RESUME'
-            }
+          skillsToInsert.push({
+            studentId: student.id,
+            skillName,
+            source: 'RESUME'
           });
           existingNamesLower.add(skillName.toLowerCase()); // Avoid duplicates within extracted list
         }
       }
+
+      if (skillsToInsert.length > 0) {
+        await tx.studentSkill.createMany({
+          data: skillsToInsert
+        });
+      }
+    }, {
+      timeout: 10000 // Increase timeout to 10s just in case
     });
 
     const allSkills = await prisma.studentSkill.findMany({

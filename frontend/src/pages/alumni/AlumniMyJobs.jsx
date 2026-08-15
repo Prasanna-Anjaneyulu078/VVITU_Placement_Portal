@@ -3,6 +3,7 @@ import DashboardLayout from '../../components/layout/DashboardLayout';
 import { Briefcase, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader, JobCard, JobFilterBar, JobDetailsModal } from '../../components/common';
+import Pagination from '../../components/common/Pagination';
 import api from '../../utils/axiosConfig';
 import { toast } from 'react-toastify';
 import useDebounce from '../../hooks/useDebounce';
@@ -129,13 +130,21 @@ export default function AlumniMyJobs() {
     });
   }, [jobs, debouncedSearch, filterStatus, filterType, filterCompany]);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 6;
+
   const hasActiveFilters = Boolean(searchTerm || filterStatus || filterType || filterCompany);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, filterStatus, filterType, filterCompany]);
 
   const resetFilters = () => {
     setSearchTerm('');
     setFilterStatus('');
     setFilterType('');
     setFilterCompany('');
+    setCurrentPage(1);
   };
 
   /* ── Render ── */
@@ -167,7 +176,7 @@ export default function AlumniMyJobs() {
           rightSlot={
             <button
               onClick={() => navigate('/alumni/post-job')}
-              className="flex items-center gap-2 px-4 py-2.5 bg-[#FFF4EB] border border-[#F47C20] text-[#F47C20] text-sm font-bold rounded-xl transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F47C20]/50 whitespace-nowrap hover:bg-[#ffe8d6]"
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#FFF4EB] border border-[#F47C20] text-[#F47C20] text-sm font-bold rounded-xl transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F47C20]/50 whitespace-nowrap"
             >
               <Plus size={16} className="text-[#F47C20]" /> Post New Job
             </button>
@@ -206,19 +215,15 @@ export default function AlumniMyJobs() {
                 Clear Filters
               </button>
             ) : (
-              <button onClick={() => navigate('/alumni/post-job')} className="px-6 py-2.5 bg-[#FFF4EB] border border-[#F47C20] text-[#F47C20] font-bold rounded-xl transition-all shadow-sm hover:bg-[#ffe8d6]">
+              <button onClick={() => navigate('/alumni/post-job')} className="px-6 py-2.5 bg-[#FFF4EB] border border-[#F47C20] text-[#F47C20] font-bold rounded-xl transition-all shadow-sm">
                 Post Your First Job
               </button>
             )}
           </div>
         ) : (
           <>
-            <p className="text-sm text-slate-400 font-medium mb-4">
-              Showing <strong className="text-slate-700">{filteredJobs.length}</strong> job{filteredJobs.length !== 1 ? 's' : ''}
-              {hasActiveFilters && ' matching your filters'}
-            </p>
             <div className="job-grid">
-              {filteredJobs.map(job => (
+              {filteredJobs.slice((currentPage - 1) * pageSize, currentPage * pageSize).map(job => (
                 <JobCard
                   key={job.id}
                   job={job}
@@ -230,6 +235,14 @@ export default function AlumniMyJobs() {
                 />
               ))}
             </div>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.max(1, Math.ceil(filteredJobs.length / pageSize))}
+              onPageChange={(p) => setCurrentPage(p)}
+              totalItems={filteredJobs.length}
+              pageSize={pageSize}
+              itemLabel="jobs"
+            />
           </>
         )}
       </div>

@@ -180,7 +180,7 @@ function NameVerificationErrorModal({ error, onClose }) {
 
           <button
             onClick={onClose}
-            className="w-full py-3.5 px-4 rounded-xl text-sm font-bold text-[#F47C20] bg-white border border-[#F47C20] hover:bg-[#FFF4EB] shadow-sm transition-all duration-200 active:scale-[0.99]"
+            className="w-full py-3.5 px-4 rounded-xl text-sm font-bold text-[#F47C20] bg-white border border-[#F47C20] shadow-sm transition-all duration-200 active:scale-[0.99]"
           >
             I Understand — Correct Name &amp; Try Again
           </button>
@@ -196,6 +196,7 @@ function NameVerificationErrorModal({ error, onClose }) {
 export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [errorReasonCode, setErrorReasonCode] = useState('');
   const [showNameErrorModal, setShowNameErrorModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStage, setLoadingStage] = useState('');
@@ -300,8 +301,10 @@ export default function Register() {
         (typeof err.response?.data === 'string' ? err.response.data : null) ||
         err.message ||
         'Registration failed. Please verify your details and try again.';
+      const code = err.response?.data?.reasonCode || err.response?.data?.code || '';
       setError(msg);
-      if (msg.includes('Name Verification Failed')) {
+      setErrorReasonCode(code);
+      if (msg.includes('Name Verification Failed') || code.includes('NAME')) {
         setShowNameErrorModal(true);
       }
     } finally {
@@ -456,12 +459,12 @@ export default function Register() {
                       </div>
                       <input name="fullName" type="text" required placeholder="John Doe" value={formData.fullName} onChange={handleChange}
                         className={`block w-full pl-10 pr-3 py-2.5 bg-gray-50/50 border rounded-xl focus:bg-white focus:ring-2 sm:text-sm outline-none transition-all ${
-                          error.includes('Name Verification Failed')
-                            ? 'border-red-500 focus:ring-red-500/20 focus:border-red-500'
+                          (error.includes('Name Verification Failed') || errorReasonCode.includes('NAME'))
+                            ? 'border-red-500 ring-2 ring-red-100 focus:ring-red-500/20 focus:border-red-500'
                             : 'border-gray-200 focus:ring-orange-500/20 focus:border-orange-500'
                         }`} />
                     </div>
-                    {error.includes('Name Verification Failed') && (
+                    {(error.includes('Name Verification Failed') || errorReasonCode.includes('NAME')) && (
                       <div className="mt-2 p-2.5 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-start gap-2 shadow-xs">
                         <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
                         <div>
@@ -490,7 +493,11 @@ export default function Register() {
                         <CreditCard className="h-5 w-5 transition-colors" />
                       </div>
                       <input name="rollNumber" type="text" required placeholder="23BQ1A5401 or 24BQ5A5403" value={formData.rollNumber} onChange={handleChange}
-                        className="block w-full pl-10 pr-3 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 sm:text-sm outline-none transition-all uppercase" />
+                        className={`block w-full pl-10 pr-3 py-2.5 bg-gray-50/50 border rounded-xl focus:bg-white focus:ring-2 sm:text-sm outline-none transition-all uppercase ${
+                          errorReasonCode.includes('ROLL')
+                            ? 'border-red-500 ring-2 ring-red-100 focus:ring-red-500/20 focus:border-red-500'
+                            : 'border-gray-200 focus:ring-orange-500/20 focus:border-orange-500'
+                        }`} />
                     </div>
 
                     {/* Real-time Roll Number Eligibility Feedback Card */}

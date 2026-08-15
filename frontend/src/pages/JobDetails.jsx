@@ -5,6 +5,8 @@ import { PageHeader, Button, LoadingSpinner, Badge, EligibilityBadge, PreApplica
 import { MapPin, DollarSign, Users, Briefcase, Calendar, Award, ExternalLink, MessageSquare, Building2, Globe, Linkedin, CheckCircle, ChevronRight, XCircle, ChevronLeft, Info, Hourglass, CheckCircle2, Circle, X, AlertCircle, Lock } from 'lucide-react';
 import api from '../utils/axiosConfig';
 import { getImageUrl } from '../utils/imageUrl';
+import Avatar from '../components/common/Avatar';
+import { getPosterInfo } from '../utils/roleUtils';
 import { toast } from 'react-toastify';
 
 export default function JobDetails() {
@@ -289,6 +291,15 @@ export default function JobDetails() {
                 </span>
               )}
             </div>
+            {(() => {
+              const poster = getPosterInfo(job);
+              return (
+                <div className="flex items-center gap-2 mt-2 text-xs text-slate-500 font-medium">
+                  <Avatar src={poster.profileImageUrl} name={poster.name} size="sm" className="w-5 h-5 border border-slate-200 shrink-0 text-[10px]" />
+                  <span>Posted by: <strong className="font-semibold text-slate-700">{poster.name}</strong> • <span className="font-medium text-slate-600">{poster.formattedRole}</span></span>
+                </div>
+              );
+            })()}
           </div>
           <div className="w-14 h-14 bg-white border border-gray-200 rounded-xl p-1 flex items-center justify-center shrink-0 ml-4 overflow-hidden">
             {getImageUrl(job.companyLogoUrl || job.imageUrl) ? (

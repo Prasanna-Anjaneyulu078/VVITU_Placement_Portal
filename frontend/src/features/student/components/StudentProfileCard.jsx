@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { generateAvatarSVG } from '../../utils/avatarUtils';
-import { getImageUrl } from '../../utils/imageUrl';
+import Avatar from '../../components/common/Avatar';
 import { 
   MoreVertical, Eye, Edit2, Trash2, 
   Monitor, User, Calendar, Star, 
@@ -14,9 +13,6 @@ export default function StudentProfileCard({ user }) {
   const name = user.name || 'N/A';
   const rollNo = user.rollNo || user.rollNumber || 'N/A';
   const rawImg = user.img || user.profileImageUrl;
-  const img = rawImg && !rawImg.includes('ui-avatars.com') 
-    ? getImageUrl(rawImg) 
-    : generateAvatarSVG(name, 'F47C20', 'fff');
   const department = user.department || 'N/A';
   const section = user.section || user.semester ? `Semester ${user.semester}` : 'N/A';
   const batch = user.batch || user.academicYear || 'N/A';
@@ -76,15 +72,7 @@ export default function StudentProfileCard({ user }) {
             {/* Gradient Border Avatar Container */}
             <div className="w-[100px] h-[100px] lg:w-[120px] lg:h-[120px] rounded-full p-[3px] bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-500 shadow-md transition-transform duration-300   relative z-0">
               <div className="w-full h-full rounded-full overflow-hidden bg-white border-2 border-white relative">
-                <img
-                  src={img}
-                  alt={name}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = generateAvatarSVG(name, 'F47C20', 'fff');
-                  }}
-                />
+                <Avatar src={rawImg} name={name} size="xl" className="w-full h-full" />
               </div>
             </div>
             {/* Status Dot */}

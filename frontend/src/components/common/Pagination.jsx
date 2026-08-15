@@ -1,75 +1,76 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import './Pagination.css';
 
-export default function Pagination({ 
-  currentPage, 
-  totalPages, 
+/**
+ * Shared Compact Enterprise Pagination Component
+ * Spec:
+ * ┌──────────────────────────────────────────────────────────────────────────────┐
+ * │                                                                              │
+ * │  21–30 of 47 alumni                                      ‹    3    ›         │
+ * │                                                                              │
+ * └──────────────────────────────────────────────────────────────────────────────┘
+ */
+export default function Pagination({
+  currentPage = 1,
+  totalPages = 1,
   onPageChange,
-  showFirstLast = false 
+  hasNextPage,
+  hasPreviousPage,
+  totalItems,
+  pageSize = 10,
+  itemLabel = 'items'
 }) {
-  if (totalPages <= 1) return null;
+  const page = Number(currentPage) || 1;
+  const total = Number(totalPages) || 1;
 
-  const pages = [];
-  // Logic to show limited page numbers with ellipsis
-  // Simple version: show all pages if <= 7, otherwise show first, last, current, and neighbors
-  
-  if (totalPages <= 7) {
-    for (let i = 1; i <= totalPages; i++) {
-      pages.push(i);
-    }
-  } else {
-    if (currentPage <= 4) {
-      for (let i = 1; i <= 5; i++) pages.push(i);
-      pages.push('...');
-      pages.push(totalPages);
-    } else if (currentPage >= totalPages - 3) {
-      pages.push(1);
-      pages.push('...');
-      for (let i = totalPages - 4; i <= totalPages; i++) pages.push(i);
-    } else {
-      pages.push(1);
-      pages.push('...');
-      for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
-      pages.push('...');
-      pages.push(totalPages);
-    }
+  const items = (totalItems !== undefined && totalItems !== null)
+    ? Number(totalItems)
+    : (total * pageSize);
+
+  if (items <= 0 && total <= 0) {
+    return null;
   }
 
+  const canGoPrevious = hasPreviousPage !== undefined ? hasPreviousPage : page > 1;
+  const canGoNext = hasNextPage !== undefined ? hasNextPage : page < total;
+
+  const startItem = items === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endItem = Math.min(page * pageSize, items);
+
   return (
-    <div className="pagination-container">
-      <button 
-        className="pagination-btn" 
-        onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage === 1}
-        aria-label="Previous Page"
-      >
-        <ChevronLeft size={18} />
-      </button>
-      
-      {pages.map((page, index) => (
-        <React.Fragment key={index}>
-          {page === '...' ? (
-            <span className="pagination-ellipsis">...</span>
-          ) : (
-            <button
-              className={`pagination-page-btn ${currentPage === page ? 'active' : ''}`}
-              onClick={() => onPageChange(page)}
-            >
-              {page}
-            </button>
-          )}
-        </React.Fragment>
-      ))}
-      
-      <button 
-        className="pagination-btn" 
-        onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
-        aria-label="Next Page"
-      >
-        <ChevronRight size={18} />
-      </button>
+    <div className="pagination-footer">
+      <span className="pagination-range">
+        {startItem}–{endItem} of {items} {itemLabel}
+      </span>
+
+      <div className="pagination-controls">
+        <button
+          type="button"
+          className="pagination-button"
+          disabled={!canGoPrevious}
+          onClick={() => canGoPrevious && onPageChange && onPageChange(page - 1)}
+          aria-label="Previous Page"
+          title="Previous Page"
+        >
+          ‹
+        </button>
+
+        <span className="pagination-button pagination-current" aria-current="page">
+          {page}
+        </span>
+
+        <button
+          type="button"
+          className="pagination-button"
+          disabled={!canGoNext}
+          onClick={() => canGoNext && onPageChange && onPageChange(page + 1)}
+          aria-label="Next Page"
+          title="Next Page"
+        >
+          ›
+        </button>
+      </div>
     </div>
   );
 }
+

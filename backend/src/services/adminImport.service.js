@@ -1,6 +1,7 @@
 const fs = require('fs');
 const prisma = require('../config/db');
-const { hashPassword, generateDefaultPassword } = require('../utils/password.utils');
+const { hashPassword } = require('../utils/password.utils');
+const { generateStudentDefaultPassword } = require('../utils/studentPassword.util');
 
 class AdminImportService {
   /**
@@ -69,7 +70,7 @@ class AdminImportService {
       }
 
       try {
-        const tempPassword = generateDefaultPassword(cleanRoll);
+        const tempPassword = generateStudentDefaultPassword(cleanRoll);
         const hashedPassword = await hashPassword(tempPassword);
 
         await prisma.$transaction(async (tx) => {

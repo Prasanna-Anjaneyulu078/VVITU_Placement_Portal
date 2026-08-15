@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { Check, X, Eye, FileText, AlertTriangle, ShieldCheck, ShieldAlert, ClipboardList } from 'lucide-react';
 import { PageHeader, Table, Button, LoadingSpinner, Modal, DocumentViewerModal } from '../../components/common';
-import { generateAvatarSVG } from '../../utils/avatarUtils';
+
 import { getImageUrl } from '../../utils/imageUrl';
+import Avatar from '../../components/common/Avatar';
 import api from '../../utils/axiosConfig';
 import { toast } from 'react-toastify';
 import { toTitleCase } from '../../utils/nameUtils';
@@ -185,14 +186,12 @@ export default function AdminVerifications() {
       header: 'Alumni',
       render: (alum) => (
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-200 flex-shrink-0">
-            <img
-              src={alum.profileImageUrl ? getImageUrl(alum.profileImageUrl) : generateAvatarSVG(alum.user?.name || 'A', 'F47C20', 'fff')}
-              onError={e => { e.target.src = generateAvatarSVG(alum.user?.name || 'A', 'F47C20', 'fff'); }}
-              alt={alum.user?.name}
-              className="w-full h-full object-cover"
-            />
-          </div>
+          <Avatar 
+            src={alum.profileImageUrl} 
+            name={alum.user?.name || 'A'} 
+            size="md" 
+            className="w-10 h-10 border border-gray-200 shrink-0" 
+          />
           <div>
             <div className="flex items-center gap-2">
               <span className="font-semibold text-gray-900 text-sm">{toTitleCase(alum.user?.name)}</span>
@@ -267,7 +266,7 @@ export default function AdminVerifications() {
             {alum.verificationDocumentUrl && (
               <button
                 onClick={() => handleViewDoc(alum)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#F47C20] text-[#F47C20] text-xs font-bold rounded-lg transition-colors hover:bg-orange-50 active:scale-95"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#F47C20] text-[#F47C20] text-xs font-bold rounded-lg transition-colors active:scale-95"
               >
                 <FileText size={13} /> Document
               </button>
@@ -333,7 +332,10 @@ export default function AdminVerifications() {
             pagination={{
               currentPage,
               totalPages,
-              onPageChange: setCurrentPage
+              onPageChange: setCurrentPage,
+              totalItems: filteredUsers.length,
+              pageSize: itemsPerPage,
+              itemLabel: "alumni"
             }}
           />
         )}

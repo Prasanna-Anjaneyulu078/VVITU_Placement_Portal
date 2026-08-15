@@ -8,7 +8,7 @@ class SuperAdminService {
       include: {
         user: { select: { id: true, name: true, email: true, role: true, accountStatus: true, createdAt: true } }
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { id: 'desc' }
     });
 
     return adminProfiles.map((ap) => ({
@@ -20,7 +20,9 @@ class SuperAdminService {
       accountStatus: ap.user?.accountStatus || 'ACTIVE',
       department: ap.department || 'Administration',
       designation: ap.designation || 'System Admin',
-      phone: ap.phone || '',
+      employeeId: ap.employeeId || null,
+      phone: ap.mobileNumber || ap.phone || '',
+      mobileNumber: ap.mobileNumber || ap.phone || '',
       createdAt: ap.user?.createdAt || ap.createdAt
     }));
   }
@@ -44,13 +46,15 @@ class SuperAdminService {
       accountStatus: admin.user?.accountStatus || 'ACTIVE',
       department: admin.department || 'Administration',
       designation: admin.designation || 'System Admin',
-      phone: admin.phone || '',
+      employeeId: admin.employeeId || null,
+      phone: admin.mobileNumber || admin.phone || '',
+      mobileNumber: admin.mobileNumber || admin.phone || '',
       createdAt: admin.user?.createdAt || admin.createdAt
     };
   }
 
   static async createAdmin(data, operatorEmail = null) {
-    const { name, email, password, department, designation, phone, role } = data;
+    const { name, email, password, department, designation, employeeId, phone, role } = data;
 
     if (!email || !email.trim()) {
       throw { statusCode: 400, message: 'Email is required' };
@@ -60,6 +64,21 @@ class SuperAdminService {
     const existing = await prisma.user.findUnique({ where: { email: cleanEmail } });
     if (existing) {
       throw { statusCode: 400, message: 'User with this email already exists' };
+    }
+
+    let cleanEmpId = employeeId ? String(employeeId).trim() : null;
+    if (cleanEmpId === '') cleanEmpId = null;
+
+    if (cleanEmpId !== null) {
+      const existingEmp = await prisma.adminProfile.findFirst({
+        where: {
+          employeeId: cleanEmpId,
+          deletedAt: null
+        }
+      });
+      if (existingEmp) {
+        throw { statusCode: 400, message: 'Employee ID already exists. Please enter a different Employee ID.' };
+      }
     }
 
     const tempPassword = password || `VVIT@Admin${Math.floor(100 + Math.random() * 900)}`;
@@ -82,7 +101,8 @@ class SuperAdminService {
           userId: newUser.id,
           department: department ? department.trim() : 'Administration',
           designation: designation ? designation.trim() : 'System Admin',
-          phone: phone ? phone.trim() : null
+          employeeId: cleanEmpId,
+          mobileNumber: phone || data.mobileNumber ? String(phone || data.mobileNumber).trim() : null
         }
       });
 
@@ -115,7 +135,26 @@ class SuperAdminService {
       throw { statusCode: 404, message: `Admin profile not found with ID: ${adminId}` };
     }
 
-    const { name, department, designation, phone, role } = updateData;
+    const { name, department, designation, employeeId, phone, role } = updateData;
+
+    let cleanEmpId = undefined;
+    if (employeeId !== undefined) {
+      cleanEmpId = employeeId ? String(employeeId).trim() : null;
+      if (cleanEmpId === '') cleanEmpId = null;
+
+      if (cleanEmpId !== null) {
+        const existingEmp = await prisma.adminProfile.findFirst({
+          where: {
+            employeeId: cleanEmpId,
+            id: { not: BigInt(adminId) },
+            deletedAt: null
+          }
+        });
+        if (existingEmp) {
+          throw { statusCode: 400, message: 'Employee ID already exists. Please enter a different Employee ID.' };
+        }
+      }
+    }
 
     await prisma.$transaction(async (tx) => {
       if (name || role) {
@@ -133,7 +172,10 @@ class SuperAdminService {
         data: {
           ...(department !== undefined && { department: department ? department.trim() : null }),
           ...(designation !== undefined && { designation: designation ? designation.trim() : null }),
-          ...(phone !== undefined && { phone: phone ? phone.trim() : null })
+          ...(cleanEmpId !== undefined && { employeeId: cleanEmpId }),
+          ...((phone !== undefined || updateData.mobileNumber !== undefined) && {
+            mobileNumber: (phone || updateData.mobileNumber) ? String(phone || updateData.mobileNumber).trim() : null
+          })
         }
       });
 

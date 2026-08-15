@@ -600,14 +600,14 @@ export default function AlumniEditJob() {
             <button 
               type="button" 
               onClick={() => navigate(-1)}
-              className="px-6 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors"
+              className="px-6 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold transition-colors"
             >
               Cancel
             </button>
             <button 
               type="submit" 
               disabled={isSubmitting}
-              className="px-8 py-3 bg-[#F47C20] text-white rounded-xl text-sm font-bold hover:bg-[#d46510] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-8 py-3 bg-[#F47C20] text-white rounded-xl text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? 'Updating Job...' : 'Update Job'}
             </button>

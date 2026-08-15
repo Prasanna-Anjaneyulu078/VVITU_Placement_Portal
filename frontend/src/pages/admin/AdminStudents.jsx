@@ -171,7 +171,10 @@ export default function AdminStudents() {
               pagination={{
                 currentPage,
                 totalPages,
-                onPageChange: setCurrentPage
+                onPageChange: setCurrentPage,
+                totalItems: filteredUsers.length,
+                pageSize: itemsPerPage,
+                itemLabel: "students"
               }}
             />
           </div>

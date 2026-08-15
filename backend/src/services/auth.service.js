@@ -35,7 +35,7 @@ class AuthService {
         where: { userId: user.id }
       });
       if (student && student.profileImageUrl) {
-        profileImageUrl = `/api/public/student/${student.id}/profile-image`;
+        profileImageUrl = student.profileImageUrl;
       }
     } else if (user.role === 'ALUMNI') {
       const alumni = await prisma.alumni.findUnique({
@@ -44,14 +44,14 @@ class AuthService {
       const { VERIFICATION_STATUS } = require('../utils/constants');
       verificationStatus = alumni ? alumni.verificationStatus : VERIFICATION_STATUS.PENDING;
       if (alumni && alumni.profileImageUrl) {
-        profileImageUrl = `/api/public/alumni/${alumni.id}/profile-image`;
+        profileImageUrl = alumni.profileImageUrl;
       }
     } else if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
       const adminProfile = await prisma.adminProfile.findUnique({
         where: { userId: user.id }
       });
       if (adminProfile && adminProfile.profileImageUrl) {
-        profileImageUrl = `/api/public/admin/${user.id}/profile-image`;
+        profileImageUrl = adminProfile.profileImageUrl;
       }
     }
 
@@ -219,41 +219,13 @@ class AuthService {
         try { fs.unlinkSync(file.path); } catch (e) {}
       }
 
-      const reasonCode = ocrResult.reasonCode;
-
-      if (reasonCode === ReasonCode.NAME_MISMATCH) {
-        throw {
-          statusCode: 422,
-          code: 'NAME_MISMATCH',
-          message: 'The name entered in the registration form does not match the uploaded document. Please verify your name and upload the correct VVIT/VVITU document.'
-        };
-      }
-      if (reasonCode === ReasonCode.ROLL_NUMBER_MISMATCH) {
-        throw {
-          statusCode: 422,
-          code: 'ROLL_NUMBER_MISMATCH',
-          message: 'The Roll Number entered in the registration form does not match the uploaded document. Please verify your Roll Number.'
-        };
-      }
-      if (reasonCode === ReasonCode.COLLEGE_MISMATCH) {
-        throw {
-          statusCode: 422,
-          code: 'COLLEGE_MISMATCH',
-          message: 'The uploaded document could not be verified as a VVIT/VVITU-issued document. Please upload a valid VVIT/VVITU document.'
-        };
-      }
-      if (reasonCode === ReasonCode.DUPLICATE_DOCUMENT) {
-        throw {
-          statusCode: 409,
-          code: 'DUPLICATE_DOCUMENT',
-          message: 'This document has already been used for another registration. Please upload a different verification document.'
-        };
-      }
-
+      const statusCode = ocrResult.reasonCode === ReasonCode.DUPLICATE_DOCUMENT ? 409 : 422;
       throw {
-        statusCode: 422,
-        code: 'IDENTITY_MISMATCH',
-        message: 'The information entered in the registration form does not match the uploaded document. Please verify your Name, Roll Number, and upload a valid VVIT/VVITU document.'
+        statusCode,
+        code: ocrResult.reasonCode,
+        reasonCode: ocrResult.reasonCode,
+        message: ocrResult.message,
+        verification: ocrResult.verification || ocrResult.fieldResults
       };
     }
 

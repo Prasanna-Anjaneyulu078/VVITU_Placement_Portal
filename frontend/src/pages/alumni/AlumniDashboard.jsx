@@ -150,20 +150,18 @@ export default function AlumniDashboard() {
                   {recentApps.map(app => {
                     const studentName = app.studentName || app.student?.name || 'Student';
                     const rollNo = app.rollNumber || app.student?.rollNumber || '';
-                    const avatarSrc = getImageUrl(app.profileImageUrl || app.student?.profileImageUrl) || 
-                      `https://ui-avatars.com/api/?name=${encodeURIComponent(studentName)}&background=F47C20&color=fff`;
-
                     return (
                       <div 
                         key={app.id} 
                         className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors border border-slate-100 cursor-pointer" 
                         onClick={() => navigate(`/alumni/applications`)}
                       >
-                        <img 
-                          src={avatarSrc} 
-                          alt={studentName}
-                          loading="lazy"
-                          className="w-11 h-11 rounded-full object-cover border border-slate-200 shadow-2xs shrink-0"
+                        <Avatar 
+                          src={app.profileImageUrl || app.student?.profileImageUrl} 
+                          name={studentName}
+                          size="md"
+                          className="w-11 h-11 shadow-2xs border border-slate-200 shrink-0"
+                          bgColor="F47C20"
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between items-start gap-1">
@@ -205,20 +203,18 @@ export default function AlumniDashboard() {
                   {recentSelected.map(app => {
                     const studentName = app.studentName || app.student?.name || 'Student';
                     const rollNo = app.rollNumber || app.student?.rollNumber || '';
-                    const avatarSrc = getImageUrl(app.profileImageUrl || app.student?.profileImageUrl) || 
-                      `https://ui-avatars.com/api/?name=${encodeURIComponent(studentName)}&background=10b981&color=fff`;
-
                     return (
                       <div 
                         key={app.id} 
                         className="flex items-center gap-3 p-3 rounded-xl hover:bg-emerald-50/50 transition-colors border border-emerald-100 cursor-pointer" 
                         onClick={() => navigate(`/alumni/applications`)}
                       >
-                        <img 
-                          src={avatarSrc} 
-                          alt={studentName}
-                          loading="lazy"
-                          className="w-11 h-11 rounded-full object-cover border-2 border-emerald-200 shadow-2xs shrink-0"
+                        <Avatar 
+                          src={app.profileImageUrl || app.student?.profileImageUrl} 
+                          name={studentName}
+                          size="md"
+                          className="w-11 h-11 shadow-2xs border-2 border-emerald-200 shrink-0"
+                          bgColor="10b981"
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between items-center gap-1">

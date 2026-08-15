@@ -1,7 +1,7 @@
 import React from 'react';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { AlertCircle, RotateCcw } from 'lucide-react';
 
-export default class ErrorBoundary extends React.Component {
+export class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -12,35 +12,33 @@ export default class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error("Uncaught React Error:", error, errorInfo);
+    console.error('[React Error Boundary]', error, errorInfo);
   }
 
-  handleReload = () => {
+  handleReset = () => {
     this.setState({ hasError: false, error: null });
-    window.location.reload();
   };
 
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50 font-sans">
-          <div className="max-w-md w-full bg-white rounded-3xl border border-slate-200 p-8 shadow-xl text-center space-y-5">
-            <div className="w-16 h-16 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center mx-auto text-red-500 shadow-sm">
-              <AlertTriangle size={32} />
-            </div>
-            <div>
-              <h2 className="text-xl font-extrabold text-slate-800">Something went wrong</h2>
-              <p className="text-xs text-slate-500 font-medium mt-1.5 leading-relaxed">
-                An unexpected user interface error occurred. You can reload the page to continue.
-              </p>
-            </div>
-            <button
-              onClick={this.handleReload}
-              className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#FFF4EB] border border-[#F47C20] text-[#F47C20] text-xs font-bold rounded-xl shadow-2xs min-h-[44px] focus:ring-2 focus:ring-[#F47C20]/20 focus:outline-none"
-            >
-              <RefreshCw size={14} className="text-[#F47C20]" /> Reload Page
-            </button>
+        <div className="p-6 bg-red-50/50 border border-red-200 rounded-2xl my-4 text-center max-w-lg mx-auto">
+          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-3 text-red-600">
+            <AlertCircle className="w-6 h-6" />
           </div>
+          <h3 className="text-base font-bold text-slate-800 mb-1">
+            {this.props.title || 'Section Unavailable'}
+          </h3>
+          <p className="text-xs text-slate-500 mb-4 leading-relaxed">
+            {this.state.error?.message || 'Something went wrong while rendering this component.'}
+          </p>
+          <button
+            onClick={this.handleReset}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl shadow-xs transition-colors"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            Try Again
+          </button>
         </div>
       );
     }
@@ -48,3 +46,5 @@ export default class ErrorBoundary extends React.Component {
     return this.props.children;
   }
 }
+
+export default ErrorBoundary;

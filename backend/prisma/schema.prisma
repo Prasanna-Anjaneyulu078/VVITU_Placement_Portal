@@ -66,6 +66,7 @@ model User {
   student      Student?
   alumni       Alumni?
   adminProfile AdminProfile?
+  createdJobs  Job[]         @relation("CreatedJobs")
 
   @@map("users")
 }
@@ -147,7 +148,7 @@ model AdminProfile {
   gender          String?   @db.VarChar(255)
   department      String?   @db.VarChar(255)
   designation     String?   @db.VarChar(255)
-  employeeId      String?   @map("employee_id") @db.VarChar(255)
+  employeeId      String?   @unique @map("employee_id") @db.VarChar(255)
   officeLocation  String?   @map("office_location") @db.VarChar(255)
   profileImageUrl String?   @map("profile_image_url") @db.Text
   deletedAt       DateTime? @map("deleted_at")
@@ -176,6 +177,7 @@ model Job {
   eligibleSemester    Int?       @map("eligible_semester")
   maxBacklogs         Int?       @map("max_backlogs")
   eligibleDepartments String?    @map("eligible_departments") @db.VarChar(500)
+  createdById         BigInt?    @map("created_by_id")
   postedByAlumniId    BigInt?    @map("posted_by_id")
   status              JobStatus? @default(PENDING)
   applicationDeadline DateTime?  @map("expiry_date")
@@ -185,6 +187,7 @@ model Job {
   createdAt           DateTime?  @default(now()) @map("created_at")
   deletedAt           DateTime?  @map("deleted_at")
 
+  createdBy      User?         @relation("CreatedJobs", fields: [createdById], references: [id], onDelete: SetNull)
   postedByAlumni Alumni?       @relation(fields: [postedByAlumniId], references: [id], onDelete: SetNull)
   applications   Application[]
 

@@ -8,7 +8,8 @@
  */
 export function isBase64Image(value) {
   if (!value || typeof value !== 'string') return false;
-  return /^data:image\/[a-zA-Z0-9.+-]+;base64,/i.test(value.trim());
+  const trimmed = value.trim();
+  return /^data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]+/i.test(trimmed);
 }
 
 /**
@@ -16,7 +17,8 @@ export function isBase64Image(value) {
  */
 export function isHttpUrl(value) {
   if (!value || typeof value !== 'string') return false;
-  return /^https?:\/\//i.test(value.trim());
+  const trimmed = value.trim();
+  return /^https?:\/\/.+/i.test(trimmed);
 }
 
 /**
@@ -45,7 +47,11 @@ export function withCacheBust(url, version) {
   }
 
   // CRITICAL RULE: BASE64 AND BLOB URLS MUST NEVER BE APPENDED WITH QUERY PARAMETERS
-  if (isBase64Image(trimmed) || trimmed.startsWith('data:') || trimmed.startsWith('blob:')) {
+  if (trimmed.startsWith('data:')) {
+    if (isBase64Image(trimmed)) return trimmed;
+    return null;
+  }
+  if (trimmed.startsWith('blob:')) {
     return trimmed;
   }
 
@@ -54,7 +60,9 @@ export function withCacheBust(url, version) {
     return null;
   }
 
-  const vParam = version ? encodeURIComponent(String(version)) : Date.now();
+  if (!version) return trimmed;
+
+  const vParam = encodeURIComponent(String(version));
 
   // If the url already has a v= parameter, replace it
   const urlObj = new URL(trimmed, 'http://localhost'); // dummy base for parsing relative
@@ -84,6 +92,11 @@ export function withCacheBust(url, version) {
  * @returns {string|null} Resolved image URL, Base64 string, or null for fallback avatar.
  */
 export function resolveImageUrl(value, options = {}) {
+  // Alias for backward compatibility
+  return resolveProfileImage(value, options);
+}
+
+export function resolveProfileImage(value, options = {}) {
   if (!value || typeof value !== 'string') return null;
 
   const trimmed = value.trim();
@@ -91,14 +104,22 @@ export function resolveImageUrl(value, options = {}) {
     !trimmed ||
     trimmed === 'undefined' ||
     trimmed === 'null' ||
+    trimmed === 'false' ||
     trimmed === '[object Object]' ||
-    trimmed === 'data:'
+    trimmed === 'data:' ||
+    trimmed === 'data:image' ||
+    trimmed === 'http://' ||
+    trimmed === 'https://'
   ) {
     return null;
   }
 
   // 1. Base64 & Blob URLs -> Return EXACTLY as-is (NO cache busting query string EVER)
-  if (isBase64Image(trimmed) || trimmed.startsWith('data:') || trimmed.startsWith('blob:')) {
+  if (trimmed.startsWith('data:')) {
+    if (isBase64Image(trimmed)) return trimmed;
+    return null; // Malformed Base64 -> immediately use initials
+  }
+  if (trimmed.startsWith('blob:')) {
     return trimmed;
   }
 
@@ -131,4 +152,4 @@ export function resolveImageUrl(value, options = {}) {
 /**
  * Backward-compatible helper used throughout the frontend components.
  */
-export const getImageUrl = (path, options) => resolveImageUrl(path, options);
+export const getImageUrl = (path, options) => resolveProfileImage(path, options);

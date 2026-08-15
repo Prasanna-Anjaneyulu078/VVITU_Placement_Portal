@@ -34,6 +34,13 @@ const errorHandler = (err, req, res, next) => {
   if (err.code) {
     responsePayload.code = err.code;
   }
+  if (err.reasonCode) {
+    responsePayload.reasonCode = err.reasonCode;
+    responsePayload.status = 'REJECTED';
+  }
+  if (err.verification) {
+    responsePayload.verification = err.verification;
+  }
   if (err.details) {
     responsePayload.details = err.details;
   }

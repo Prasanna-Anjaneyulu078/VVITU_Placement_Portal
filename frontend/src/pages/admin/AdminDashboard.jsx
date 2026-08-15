@@ -5,10 +5,14 @@ import { PageHeader } from '../../components/common';
 import { CardLoader, SectionLoader } from '../../components/common/loading';
 import { toast } from 'react-toastify';
 import api from '../../utils/axiosConfig';
-import { Users, UserCheck, Briefcase, FileText, CheckCircle, Percent, ArrowRight, Shield } from 'lucide-react';
+import useAuth from '../../hooks/useAuth';
+import { canCreateAdmin } from '../../utils/permissionUtils';
+import { Users, UserCheck, Briefcase, FileText, CheckCircle, Percent, ArrowRight, Shield, Plus } from 'lucide-react';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
+  const { role } = useAuth();
+  const isSuperAdmin = canCreateAdmin(role);
   const [stats, setStats] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -44,10 +48,15 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <DashboardLayout role="admin">
+    <DashboardLayout role={isSuperAdmin ? 'super_admin' : 'admin'}>
       <PageHeader 
-        title="Admin Dashboard" 
+        title={isSuperAdmin ? "Super Admin Dashboard" : "Admin Dashboard"} 
         subtitle="Platform overview, statistics, and moderation tasks."
+        actionButton={isSuperAdmin ? {
+          label: "Add Admin",
+          icon: <Plus size={16} />,
+          onClick: () => navigate('/admin/profile')
+        } : null}
       />
 
       <div className="space-y-8 mt-6">

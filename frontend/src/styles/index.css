@@ -121,7 +121,7 @@ ul {
   outline: none;
 }
 
-/* Hover, Active, Focus, Selected States — Orange text is NEVER changed */
+/* Hover, Active, Focus, Selected States — Identical normal appearance on hover */
 .btn:hover, .btn:active, .btn:focus, .btn.selected, .btn[aria-selected="true"],
 .custom-btn:hover, .custom-btn:active, .custom-btn:focus, .custom-btn.selected, .custom-btn[aria-selected="true"],
 .btn-primary:hover, .btn-primary:active, .btn-primary:focus, .btn-primary.selected,
@@ -131,7 +131,16 @@ ul {
   background-color: #ffffff !important;
   color: #F47C20 !important;
   border-color: #F47C20 !important;
-  box-shadow: 0 2px 4px rgba(244, 124, 32, 0.12) !important;
+}
+
+/* Universal Rule: Remove visual hover transformations from all action buttons */
+button:hover,
+[role="button"]:hover,
+.btn:hover,
+.custom-btn:hover {
+  transform: none !important;
+  transition: none !important;
+  filter: none !important;
 }
 
 /* Accessible Focus Visible Indicator */

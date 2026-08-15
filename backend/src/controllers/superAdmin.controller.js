@@ -21,6 +21,12 @@ class SuperAdminController {
 
   static async createAdmin(req, res, next) {
     try {
+      if (req.user?.role !== 'SUPER_ADMIN') {
+        return res.status(403).json({
+          success: false,
+          message: 'You do not have permission to create administrator accounts.'
+        });
+      }
       const result = await SuperAdminService.createAdmin(req.body, req.user?.email);
       res.status(200).json(result);
     } catch (err) {

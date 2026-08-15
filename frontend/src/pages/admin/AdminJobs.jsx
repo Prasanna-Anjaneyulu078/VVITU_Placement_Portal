@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { Briefcase, ChevronLeft, ChevronRight } from 'lucide-react';
-import { PageHeader, JobCard, JobFilterBar } from '../../components/common';
+import { JobCard, JobFilterBar, PageHeader } from '../../components/common';
+import Pagination from '../../components/common/Pagination';
 import { JobCardLoader } from '../../components/common/loading';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -120,42 +121,7 @@ export default function AdminJobs() {
   const handleTypeChange    = (v) => { setFilterType(v);    setCurrentPage(1); };
   const handleStatusChange  = (v) => { setFilterStatus(v);  setCurrentPage(1); };
 
-  /* ── Pagination ── */
-  const PaginationBar = () => {
-    if (totalPages <= 1) return null;
-    const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
-    return (
-      <div className="flex items-center justify-center gap-2 mt-8">
-        <button
-          disabled={currentPage === 1}
-          onClick={() => setCurrentPage(p => p - 1)}
-          className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500   disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-        >
-          <ChevronLeft size={16} />
-        </button>
-        {pages.map(p => (
-          <button
-            key={p}
-            onClick={() => setCurrentPage(p)}
-            className={`w-9 h-9 rounded-xl text-sm font-bold transition-colors ${
-              p === currentPage
-                ? 'bg-[#F47C20] text-white shadow-sm'
-                : 'bg-white border border-slate-200 text-slate-600  '
-            }`}
-          >
-            {p}
-          </button>
-        ))}
-        <button
-          disabled={currentPage === totalPages}
-          onClick={() => setCurrentPage(p => p + 1)}
-          className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500   disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-        >
-          <ChevronRight size={16} />
-        </button>
-      </div>
-    );
-  };
+
 
   /* ── Render ── */
   return (
@@ -236,9 +202,6 @@ export default function AdminJobs() {
           </div>
         ) : (
           <>
-            <p className="text-sm text-slate-400 font-medium mb-4">
-              Showing <strong className="text-slate-700">{((currentPage - 1) * ITEMS_PER_PAGE) + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredJobs.length)}</strong> of <strong className="text-slate-700">{filteredJobs.length}</strong> jobs
-            </p>
             <div className="job-grid">
               {currentJobs.map(job => (
                 <JobCard
@@ -252,7 +215,14 @@ export default function AdminJobs() {
                 />
               ))}
             </div>
-            <PaginationBar />
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={(p) => setCurrentPage(p)}
+              totalItems={filteredJobs.length}
+              pageSize={ITEMS_PER_PAGE}
+              itemLabel="jobs"
+            />
           </>
         )}
       </div>

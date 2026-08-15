@@ -31,7 +31,7 @@ class AlumniService {
       linkedinUrl: alumni.linkedinUrl,
       degree: alumni.degree,
       verificationStatus: alumni.verificationStatus,
-      profileImageUrl: alumni.profileImageUrl ? `/api/public/alumni/${alumni.id}/profile-image` : null,
+      profileImageUrl: alumni.profileImageUrl,
       user: alumni.user ? {
         id: Number(alumni.user.id),
         name: alumni.user.name,
@@ -230,9 +230,8 @@ class AlumniService {
     return {
       success: true,
       message: 'Profile picture updated successfully',
-      // Return the stable public endpoint (same URL that login + profile APIs use)
-      profileImageUrl: publicUrl,
-      url: publicUrl,
+      profileImageUrl: imageUrl,
+      url: imageUrl,
       updatedAt: now.toISOString(),
       alumni: updated
     };

@@ -39,7 +39,7 @@ class JobController {
 
   static async getMyJobs(req, res, next) {
     try {
-      const jobs = await JobService.getMyJobs(req.user.id, req.user.role);
+      const jobs = await JobService.getMyJobs(req.user.id, req.user.role, req.query);
       res.status(200).json(jobs);
     } catch (err) {
       next(err);

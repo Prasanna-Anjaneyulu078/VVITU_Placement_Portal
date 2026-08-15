@@ -84,7 +84,7 @@ export default function Sidebar({ isOpen, onClose, navItems, user, onLogout }) {
 
         <div className="sidebar-footer">
           <div className="user-profile">
-            <Avatar src={user.img} alt={user.name} size="md" />
+            <Avatar src={user.img} name={user.name} size="md" />
             <div className="user-info">
               <p className="user-name">{user.name}</p>
               <p className="user-role">{user.role}</p>

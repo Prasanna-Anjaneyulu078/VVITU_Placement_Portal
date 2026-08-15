@@ -5,10 +5,11 @@ import {
   Briefcase, GraduationCap, ShieldCheck, CheckCircle, Save, X, BookOpen, Star, Camera, ExternalLink, Lock, Shield, FileText, Download, Eye, EyeOff
 } from 'lucide-react';
 import { getImageUrl, withCacheBust } from '../../utils/imageUrl';
+import Avatar from '../../components/common/Avatar';
 import { Modal, LoadingSpinner, DocumentViewerModal, ChangePasswordCard, SecurityAccountCard } from '../../components/common';
 import { SectionLoader } from '../../components/common/loading';
 import StatusBadge from '../../components/common/StatusBadge';
-import { generateAvatarSVG } from '../../utils/avatarUtils';
+
 import api from '../../utils/axiosConfig';
 import { toast } from 'react-toastify';
 import useDepartments from '../../hooks/useDepartments';
@@ -291,16 +292,11 @@ export default function AlumniProfile() {
                       {isLoading ? (
                         <div className="w-full h-full bg-slate-200 animate-pulse rounded-full" />
                       ) : (
-                        <img 
-                          src={
-                            imagePreview || 
-                            (profile?.profileImageUrl 
-                              ? getImageUrl(profile.profileImageUrl) 
-                              : generateAvatarSVG(profile?.name || profile?.user?.name || 'Alumni', 'F47C20', 'fff'))
-                          }
-                          onError={(e) => { e.target.onerror = null; e.target.src = generateAvatarSVG(profile?.name || profile?.user?.name || 'Alumni', 'F47C20', 'fff'); }}
-                          alt="Profile" 
-                          className={`w-full h-full object-cover ${isUploadingImage ? 'opacity-50' : ''}`}
+                        <Avatar
+                          src={imagePreview || profile?.profileImageUrl}
+                          name={profile?.name || profile?.user?.name || 'Alumni'}
+                          size="xl"
+                          className={`w-full h-full ${isUploadingImage ? 'opacity-50' : ''}`}
                         />
                       )}
                     </div>

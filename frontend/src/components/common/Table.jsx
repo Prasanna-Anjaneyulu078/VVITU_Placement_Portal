@@ -71,6 +71,11 @@ export default function Table({
             currentPage={pagination.currentPage}
             totalPages={pagination.totalPages}
             onPageChange={pagination.onPageChange}
+            totalItems={pagination.totalItems}
+            pageSize={pagination.pageSize}
+            itemLabel={pagination.itemLabel}
+            hasNextPage={pagination.hasNextPage}
+            hasPreviousPage={pagination.hasPreviousPage}
           />
         </div>
       )}

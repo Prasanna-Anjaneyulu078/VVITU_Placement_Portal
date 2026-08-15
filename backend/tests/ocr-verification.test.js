@@ -83,8 +83,7 @@ describe('Alumni OCR Document Verification Engine', () => {
       file, 'JOHN DOE', '20BQ1A0501', 'test@vvit.ac.in', '127.0.0.1'
     );
     expect(result.decision).toBe(OcrDecision.REJECTED);
-    // Could be NAME_MISMATCH or ROLL_NUMBER_MISMATCH depending on evaluation order
-    expect([ReasonCode.NAME_MISMATCH, ReasonCode.ROLL_NUMBER_MISMATCH, ReasonCode.COLLEGE_MISMATCH]).toContain(result.reasonCode);
+    expect([ReasonCode.NAME_MISMATCH, ReasonCode.ROLL_NUMBER_MISMATCH, ReasonCode.COLLEGE_MISMATCH, ReasonCode.FAILED_NAME_AND_ROLL_MISMATCH]).toContain(result.reasonCode);
   });
 
   it('should PENDING_MANUAL_REVIEW when OCR engine fails', async () => {

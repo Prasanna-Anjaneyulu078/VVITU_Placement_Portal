@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
-import { Briefcase, AlertCircle, RefreshCw, FileText, ChevronRight } from 'lucide-react';
-import { JobCard, JobFilterBar, PreApplicationScreeningModal, ScreeningAnswersViewModal } from '../../components/common';
+import { Briefcase, AlertCircle, RefreshCw, FileText } from 'lucide-react';
+import { JobCard, JobFilterBar, PreApplicationScreeningModal, ScreeningAnswersViewModal, Pagination } from '../../components/common';
 import { JobCardLoader } from '../../components/common/loading';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -12,12 +12,12 @@ import useDebounce from '../../hooks/useDebounce';
 const GRID_CSS = `
   .job-grid { display: grid; gap: 24px; align-items: start; }
   @media (max-width: 767px) { .job-grid { grid-template-columns: 1fr; gap: 16px; } }
-  @media (min-width: 768px) and (max-width: 1199px) { .job-grid { grid-template-columns: 1fr; gap: 20px; } }
-  @media (min-width: 1200px) { .job-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (min-width: 768px) and (max-width: 1199px) { .job-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; } }
+  @media (min-width: 1200px) { .job-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; } }
 `;
 
+const JOBS_PER_PAGE = 6;
 
-/* ─── Component ──────────────────────────────────────────────────── */
 export default function StudentJobs() {
   const [activeTab, setActiveTab] = useState('open'); // 'open', 'applied', 'closed'
 
@@ -37,7 +37,7 @@ export default function StudentJobs() {
   // UI states
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError]     = useState(false);
-  const [visibleCount, setVisibleCount] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Modal states
   const [screeningJob, setScreeningJob] = useState(null);
@@ -51,27 +51,41 @@ export default function StudentJobs() {
     setIsError(false);
     try {
       const [openRes, appliedRes, closedRes] = await Promise.all([
-        api.get('/student/jobs/open'),
-        api.get('/applications/my').catch(() => ({ data: [] })),
-        api.get('/student/jobs/closed').catch(() => ({ data: [] })),
+        api.get('/student/jobs/open').catch(err => {
+          console.error('Error fetching open jobs:', err);
+          return { data: [] };
+        }),
+        api.get('/applications/my').catch(err => {
+          console.error('Error fetching applied jobs:', err);
+          return { data: [] };
+        }),
+        api.get('/student/jobs/closed').catch(err => {
+          console.error('Error fetching closed jobs:', err);
+          return { data: [] };
+        }),
       ]);
+
+      // Unpack response arrays (handles direct arrays or paginated response objects)
+      const openData = Array.isArray(openRes.data) ? openRes.data : (openRes.data?.data || []);
+      const appliedData = Array.isArray(appliedRes.data) ? appliedRes.data : (appliedRes.data?.data || []);
+      const closedData = Array.isArray(closedRes.data) ? closedRes.data : (closedRes.data?.data || []);
 
       // Deduplicate/normalize open jobs
       const uniqueOpen = new Map();
-      (openRes.data || []).forEach(job => uniqueOpen.set(job.id, job));
+      openData.forEach(job => job?.id && uniqueOpen.set(job.id, job));
       setOpenJobs(Array.from(uniqueOpen.values()));
 
       // Store applications
-      setAppliedJobs(appliedRes.data || []);
+      setAppliedJobs(appliedData);
 
       // Deduplicate closed jobs
       const uniqueClosed = new Map();
-      (closedRes.data || []).forEach(job => uniqueClosed.set(job.id, job));
+      closedData.forEach(job => job?.id && uniqueClosed.set(job.id, job));
       setClosedJobs(Array.from(uniqueClosed.values()));
 
-      setVisibleCount(10);
+      setCurrentPage(1);
     } catch (err) {
-      console.error(err);
+      console.error('Failed to load student jobs:', err);
       setIsError(true);
     } finally {
       setIsLoading(false);
@@ -84,7 +98,7 @@ export default function StudentJobs() {
 
   // Applied Job IDs set for quick lookup
   const appliedJobIds = useMemo(() => {
-    return new Set(appliedJobs.map(app => app.job?.id || app.jobId));
+    return new Set(appliedJobs.map(app => app.job?.id || app.jobId).filter(Boolean));
   }, [appliedJobs]);
 
   /* ── Filtering Logic ── */
@@ -93,7 +107,6 @@ export default function StudentJobs() {
     if (activeTab === 'open') {
       list = openJobs;
     } else if (activeTab === 'applied') {
-      // Map applications to a structure compatible with JobCard
       list = appliedJobs.map(app => ({
         ...(app.job || {}),
         id: app.job?.id || app.jobId,
@@ -129,7 +142,7 @@ export default function StudentJobs() {
     });
 
     if (sortBy === 'recent') {
-      result = [...result].sort((a, b) => b.id - a.id);
+      result = [...result].sort((a, b) => (b.id || 0) - (a.id || 0));
     } else if (sortBy === 'deadline') {
       result = [...result].sort((a, b) => {
         if (!a.expiryDate) return 1;
@@ -143,7 +156,30 @@ export default function StudentJobs() {
     return result;
   }, [activeTab, openJobs, appliedJobs, closedJobs, debouncedSearch, filterCompany, filterType, filterLocation, sortBy]);
 
-  // Compute filters dynamically based on active tab's list
+  // Compute total pages
+  const totalPages = useMemo(() => {
+    return Math.max(1, Math.ceil(filteredJobs.length / JOBS_PER_PAGE));
+  }, [filteredJobs.length]);
+
+  // Slice current page jobs
+  const currentJobs = useMemo(() => {
+    const start = (currentPage - 1) * JOBS_PER_PAGE;
+    return filteredJobs.slice(start, start + JOBS_PER_PAGE);
+  }, [filteredJobs, currentPage]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, debouncedSearch, filterCompany, filterType, filterLocation, sortBy]);
+
+  // Ensure valid page number range
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  // Compute dynamic filter options
   const uniqueCompanies = useMemo(() => {
     let list = [];
     if (activeTab === 'open') list = openJobs;
@@ -168,6 +204,7 @@ export default function StudentJobs() {
     setFilterType('');
     setFilterLocation('');
     setSortBy('recent');
+    setCurrentPage(1);
   };
 
   /* ── Handlers ── */
@@ -206,7 +243,7 @@ export default function StudentJobs() {
           </p>
           <button
             onClick={fetchData}
-            className="px-6 py-2.5 bg-[#FFF4EB] border border-[#F47C20] text-[#F47C20] font-bold rounded-xl transition-colors flex items-center gap-2"
+            className="px-6 py-2.5 bg-[#FFF4EB] border border-[#F47C20] text-[#F47C20] font-bold rounded-xl flex items-center gap-2 select-none"
           >
             <RefreshCw size={16} /> Reload Page
           </button>
@@ -225,7 +262,7 @@ export default function StudentJobs() {
           </p>
           <button
             onClick={() => setActiveTab('open')}
-            className="px-6 py-2.5 bg-[#FFF4EB] border border-[#F47C20] text-[#F47C20] font-bold rounded-xl shadow-sm transition-colors"
+            className="px-6 py-2.5 bg-[#FFF4EB] border border-[#F47C20] text-[#F47C20] font-bold rounded-xl shadow-xs select-none"
           >
             Browse Open Jobs
           </button>
@@ -265,11 +302,11 @@ export default function StudentJobs() {
         <div className="flex border-b border-slate-200 mb-6 overflow-x-auto scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
           <div className="flex space-x-8 min-w-max">
             <button
-              onClick={() => { setActiveTab('open'); setVisibleCount(10); }}
+              onClick={() => { setActiveTab('open'); setCurrentPage(1); }}
               className={`pb-4 text-sm font-extrabold border-b-2 transition-all flex items-center gap-2 focus:outline-none ${
                 activeTab === 'open'
                   ? 'border-[#F47C20] text-[#F47C20]'
-                  : 'border-transparent text-slate-500    '
+                  : 'border-transparent text-slate-500'
               }`}
             >
               Open Jobs
@@ -281,11 +318,11 @@ export default function StudentJobs() {
             </button>
 
             <button
-              onClick={() => { setActiveTab('applied'); setVisibleCount(10); }}
+              onClick={() => { setActiveTab('applied'); setCurrentPage(1); }}
               className={`pb-4 text-sm font-extrabold border-b-2 transition-all flex items-center gap-2 focus:outline-none ${
                 activeTab === 'applied'
                   ? 'border-[#F47C20] text-[#F47C20]'
-                  : 'border-transparent text-slate-500    '
+                  : 'border-transparent text-slate-500'
               }`}
             >
               Applied Jobs
@@ -297,11 +334,11 @@ export default function StudentJobs() {
             </button>
 
             <button
-              onClick={() => { setActiveTab('closed'); setVisibleCount(10); }}
+              onClick={() => { setActiveTab('closed'); setCurrentPage(1); }}
               className={`pb-4 text-sm font-extrabold border-b-2 transition-all flex items-center gap-2 focus:outline-none ${
                 activeTab === 'closed'
                   ? 'border-[#F47C20] text-[#F47C20]'
-                  : 'border-transparent text-slate-500    '
+                  : 'border-transparent text-slate-500'
               }`}
             >
               Closed Jobs
@@ -343,14 +380,14 @@ export default function StudentJobs() {
             <p className="text-red-600 mb-6">Please check your connection and try again.</p>
             <button
               onClick={fetchData}
-              className="bg-red-600   text-white font-bold py-2.5 px-6 rounded-xl flex items-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400"
+              className="bg-red-600 text-white font-bold py-2.5 px-6 rounded-xl flex items-center gap-2 select-none"
             >
               <RefreshCw size={16} /> Retry
             </button>
           </div>
         ) : isLoading ? (
           <div className="job-grid">
-            {Array.from({ length: 4 }).map((_, i) => <JobCardLoader key={i} />)}
+            {Array.from({ length: 6 }).map((_, i) => <JobCardLoader key={i} />)}
           </div>
         ) : filteredJobs.length === 0 ? (
           hasActiveFilters ? (
@@ -364,7 +401,7 @@ export default function StudentJobs() {
               </p>
               <button
                 onClick={resetFilters}
-                className="px-6 py-2.5 bg-[#FFF4EB] border border-[#F47C20] text-[#F47C20] font-bold rounded-xl     transition-colors focus:outline-none focus:ring-2 focus:ring-[#F47C20]/40"
+                className="px-6 py-2.5 bg-[#FFF4EB] border border-[#F47C20] text-[#F47C20] font-bold rounded-xl select-none"
               >
                 Clear Filters
               </button>
@@ -373,14 +410,9 @@ export default function StudentJobs() {
             renderEmptyState()
           )
         ) : (
-          <>
-            <p className="text-sm text-slate-400 font-medium mb-4">
-              Showing <strong className="text-slate-700">{Math.min(visibleCount, filteredJobs.length)}</strong> of{' '}
-              <strong className="text-slate-700">{filteredJobs.length}</strong> job{filteredJobs.length !== 1 ? 's' : ''}
-              {hasActiveFilters && ' matching your filters'}
-            </p>
+          <div className="space-y-6">
             <div className="job-grid">
-              {filteredJobs.slice(0, visibleCount).map(job => (
+              {currentJobs.map(job => (
                 <JobCard
                   key={job.id}
                   job={job}
@@ -394,17 +426,16 @@ export default function StudentJobs() {
               ))}
             </div>
 
-            {filteredJobs.length > visibleCount && (
-              <div className="mt-10 flex justify-center">
-                <button
-                  onClick={() => setVisibleCount(prev => prev + 10)}
-                  className="rounded-xl px-8 py-3 bg-white border border-slate-300 font-bold text-slate-700   shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-slate-300"
-                >
-                  Load More Jobs
-                </button>
-              </div>
-            )}
-          </>
+            {/* Pagination Footer */}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={(p) => setCurrentPage(p)}
+              totalItems={filteredJobs.length}
+              pageSize={JOBS_PER_PAGE}
+              itemLabel="jobs"
+            />
+          </div>
         )}
       </div>
 

@@ -1,8 +1,7 @@
 import React from 'react';
 import { Award, Phone, MapPin, Mail, User, BookOpen, GraduationCap, Building2 } from 'lucide-react';
 import { toTitleCase } from '../../utils/nameUtils';
-import { generateAvatarSVG } from '../../utils/avatarUtils';
-import { getImageUrl } from '../../utils/imageUrl';
+import Avatar from '../../components/common/Avatar';
 
 export default function StudentProfileCard({ details }) {
   if (!details) return null;
@@ -21,8 +20,6 @@ export default function StudentProfileCard({ details }) {
     .join(' • ');
 
   const rawImg = details.profileImageUrl || details.user?.studentProfile?.profileImageUrl;
-  const fallbackAvatar = generateAvatarSVG(studentName, 'F47C20', 'ffffff', 140);
-  const avatarUrl = (rawImg && !rawImg.includes('ui-avatars.com')) ? getImageUrl(rawImg) : fallbackAvatar;
 
   const getStatusColor = (status) => {
     switch (status?.toUpperCase()) {
@@ -58,15 +55,11 @@ export default function StudentProfileCard({ details }) {
       {/* Centered Circular Profile Photo */}
       <div className="relative pt-2 shrink-0">
         <div className="p-1.5 bg-[#FFF4EB] border-2 border-orange-200/80 rounded-full shadow-md">
-          <img 
-            src={avatarUrl} 
-            alt={studentName} 
-            loading="lazy"
-            className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-36 lg:h-36 rounded-full object-cover border-2 border-white shadow-inner bg-slate-100" 
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = fallbackAvatar;
-            }}
+          <Avatar 
+            src={rawImg} 
+            name={studentName} 
+            size="xl" 
+            className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-36 lg:h-36 shadow-inner bg-slate-100" 
           />
         </div>
 

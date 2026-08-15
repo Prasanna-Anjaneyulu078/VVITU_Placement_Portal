@@ -12,8 +12,50 @@ jobImageDirs.forEach((dir) => {
   }
 });
 
+function extractPostedByInfo(job) {
+  if (!job) {
+    return { id: null, name: 'VVIT Placement Cell', role: 'ADMIN', profileImageUrl: null };
+  }
+
+  let id = null;
+  let name = null;
+  let role = 'ADMIN';
+  let profileImageUrl = null;
+
+  if (job.createdBy) {
+    id = Number(job.createdBy.id);
+    name = job.createdBy.name || 'VVIT Placement Cell';
+    role = job.createdBy.role || 'ADMIN';
+    if (job.createdBy.adminProfile?.profileImageUrl) {
+      profileImageUrl = job.createdBy.adminProfile.profileImageUrl;
+    } else if (job.createdBy.alumni?.profileImageUrl) {
+      profileImageUrl = job.createdBy.alumni.profileImageUrl;
+    }
+  } else if (job.postedByAlumni) {
+    id = Number(job.postedByAlumni.user?.id || job.postedByAlumni.id);
+    name = job.postedByAlumni.user?.name || 'Alumni';
+    role = 'ALUMNI';
+    profileImageUrl = job.postedByAlumni.profileImageUrl || null;
+  }
+
+  if (!name) {
+    console.warn(`[JOB-POSTER] WARNING: Job ID ${job.id || 'N/A'} has unresolvable creator relationship (createdById: ${job.createdById || 'null'}, postedByAlumniId: ${job.postedByAlumniId || 'null'})`);
+    name = 'VVIT Placement Cell';
+    role = 'ADMIN';
+  }
+
+  return {
+    id,
+    name,
+    role,
+    profileImageUrl
+  };
+}
+
 class JobService {
   static async getApprovedJobs(filters = {}) {
+    const page = Math.max(parseInt(filters.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(filters.limit, 10) || 6, 1), 100);
     const { search } = filters;
 
     const where = {
@@ -28,15 +70,37 @@ class JobService {
       })
     };
 
+    const totalItems = await prisma.job.count({ where });
+    const skip = (page - 1) * limit;
+
     const jobs = await prisma.job.findMany({
       where,
       include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            adminProfile: { select: { profileImageUrl: true } },
+            alumni: { select: { profileImageUrl: true } }
+          }
+        },
+        postedByAlumni: {
+          select: {
+            id: true,
+            profileImageUrl: true,
+            user: { select: { id: true, name: true, email: true, role: true } }
+          }
+        },
         _count: { select: { applications: true } }
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
+      skip: filters.page || filters.limit ? skip : undefined,
+      take: filters.page || filters.limit ? limit : undefined
     });
 
-    return jobs.map((job) => ({
+    const data = jobs.map((job) => ({
       id: Number(job.id),
       title: job.title || '',
       companyName: job.companyName || '',
@@ -64,9 +128,29 @@ class JobService {
       rejectionReason: job.rejectionReason || null,
       enableScreening: job.enableScreening ?? false,
       useDefaultScreening: job.useDefaultScreening ?? true,
+      postedBy: extractPostedByInfo(job),
+      postedByName: extractPostedByInfo(job).name,
+      postedByRole: extractPostedByInfo(job).role,
       applicationCount: job._count.applications,
       createdAt: job.createdAt || null
     }));
+
+    const totalPages = Math.ceil(totalItems / limit) || 1;
+    const pagination = {
+      page,
+      limit,
+      totalItems,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1
+    };
+
+    if (filters.page !== undefined || filters.limit !== undefined) {
+      return { data, pagination };
+    }
+
+    data.pagination = pagination;
+    return data;
   }
 
   static async getOpenJobs(filters = {}) {
@@ -96,6 +180,23 @@ class JobService {
     const jobs = await prisma.job.findMany({
       where,
       include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            adminProfile: { select: { profileImageUrl: true } },
+            alumni: { select: { profileImageUrl: true } }
+          }
+        },
+        postedByAlumni: {
+          select: {
+            id: true,
+            profileImageUrl: true,
+            user: { select: { id: true, name: true, email: true, role: true } }
+          }
+        },
         _count: { select: { applications: true } }
       },
       orderBy: { createdAt: 'desc' }
@@ -127,6 +228,9 @@ class JobService {
       rejectionReason: job.rejectionReason || null,
       enableScreening: job.enableScreening ?? false,
       useDefaultScreening: job.useDefaultScreening ?? true,
+      postedBy: extractPostedByInfo(job),
+      postedByName: extractPostedByInfo(job).name,
+      postedByRole: extractPostedByInfo(job).role,
       applicationCount: job._count.applications,
       createdAt: job.createdAt || null
     }));
@@ -146,6 +250,23 @@ class JobService {
     const jobs = await prisma.job.findMany({
       where,
       include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            adminProfile: { select: { profileImageUrl: true } },
+            alumni: { select: { profileImageUrl: true } }
+          }
+        },
+        postedByAlumni: {
+          select: {
+            id: true,
+            profileImageUrl: true,
+            user: { select: { id: true, name: true, email: true, role: true } }
+          }
+        },
         _count: { select: { applications: true } }
       },
       orderBy: { createdAt: 'desc' }
@@ -177,6 +298,9 @@ class JobService {
       rejectionReason: job.rejectionReason || null,
       enableScreening: job.enableScreening ?? false,
       useDefaultScreening: job.useDefaultScreening ?? true,
+      postedBy: extractPostedByInfo(job),
+      postedByName: extractPostedByInfo(job).name,
+      postedByRole: extractPostedByInfo(job).role,
       applicationCount: job._count.applications,
       createdAt: job.createdAt || null
     }));
@@ -254,6 +378,8 @@ class JobService {
   }
 
   static async getAllJobs(filters = {}) {
+    const page = Math.max(parseInt(filters.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(filters.limit, 10) || 6, 1), 100);
     const { search, status, department } = filters;
 
     const where = {
@@ -269,18 +395,33 @@ class JobService {
       })
     };
 
+    const totalItems = await prisma.job.count({ where });
+    const skip = (page - 1) * limit;
+
     const jobs = await prisma.job.findMany({
       where,
       include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            adminProfile: { select: { profileImageUrl: true } },
+            alumni: { select: { profileImageUrl: true } }
+          }
+        },
         postedByAlumni: {
           include: { user: { select: { id: true, name: true, email: true, role: true } } }
         },
         _count: { select: { applications: true } }
       },
-      orderBy: { id: 'desc' }
+      orderBy: { id: 'desc' },
+      skip: filters.page || filters.limit ? skip : undefined,
+      take: filters.page || filters.limit ? limit : undefined
     });
 
-    return jobs.map((job) => ({
+    const data = jobs.map((job) => ({
       id: Number(job.id),
       title: job.title || '',
       companyName: job.companyName || '',
@@ -306,12 +447,29 @@ class JobService {
       rejectionReason: job.rejectionReason || null,
       enableScreening: job.enableScreening ?? false,
       useDefaultScreening: job.useDefaultScreening ?? true,
-      postedBy: job.postedByAlumni?.user?.name || 'Admin',
-      postedById: job.postedByAlumni?.user?.id ? Number(job.postedByAlumni.user.id) : null,
-      postedByRole: job.postedByAlumni?.user?.role || 'ADMIN',
+      postedBy: extractPostedByInfo(job),
+      postedByName: extractPostedByInfo(job).name,
+      postedByRole: extractPostedByInfo(job).role,
       applicationCount: job._count.applications,
       createdAt: job.createdAt || null
     }));
+
+    const totalPages = Math.ceil(totalItems / limit) || 1;
+    const pagination = {
+      page,
+      limit,
+      totalItems,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1
+    };
+
+    if (filters.page !== undefined || filters.limit !== undefined) {
+      return { data, pagination };
+    }
+
+    data.pagination = pagination;
+    return data;
   }
 
   static async getJobById(jobIdParam) {
@@ -325,6 +483,16 @@ class JobService {
     const job = await prisma.job.findUnique({
       where: { id: jobId },
       include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            adminProfile: { select: { profileImageUrl: true } },
+            alumni: { select: { profileImageUrl: true } }
+          }
+        },
         postedByAlumni: {
           include: { user: { select: { id: true, name: true, email: true, role: true } } }
         },
@@ -368,15 +536,10 @@ class JobService {
       rejectionReason: job.rejectionReason || null,
       enableScreening: job.enableScreening ?? false,
       useDefaultScreening: job.useDefaultScreening ?? true,
-      postedBy: {
-        id: job.postedByAlumni?.user?.id ? Number(job.postedByAlumni.user.id) : null,
-        name: posterName,
-        role: posterRole,
-        type: posterType
-      },
-      postedByName: posterName,
-      postedByType: posterType,
-      postedByRole: posterRole,
+      postedBy: extractPostedByInfo(job),
+      postedByName: extractPostedByInfo(job).name,
+      postedByType: extractPostedByInfo(job).role === 'ALUMNI' ? 'Alumni' : 'Admin',
+      postedByRole: extractPostedByInfo(job).role,
       postedById: job.postedByAlumni?.user?.id ? Number(job.postedByAlumni.user.id) : null,
       applicationCount: job._count.applications,
       createdAt: job.createdAt || null
@@ -393,6 +556,16 @@ class JobService {
     const job = await prisma.job.findUnique({
       where: { id: jobId },
       include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            adminProfile: { select: { profileImageUrl: true } },
+            alumni: { select: { profileImageUrl: true } }
+          }
+        },
         postedByAlumni: {
           include: { user: { select: { id: true, name: true, email: true, role: true } } }
         },
@@ -481,15 +654,10 @@ class JobService {
       rejectionReason: job.rejectionReason || null,
       enableScreening: job.enableScreening ?? false,
       useDefaultScreening: job.useDefaultScreening ?? true,
-      postedBy: {
-        id: job.postedByAlumni?.user?.id ? Number(job.postedByAlumni.user.id) : null,
-        name: posterName,
-        role: posterRole,
-        type: posterType
-      },
-      postedByName: posterName,
-      postedByType: posterType,
-      postedByRole: posterRole,
+      postedBy: extractPostedByInfo(job),
+      postedByName: extractPostedByInfo(job).name,
+      postedByType: extractPostedByInfo(job).role === 'ALUMNI' ? 'Alumni' : 'Admin',
+      postedByRole: extractPostedByInfo(job).role,
       postedById: job.postedByAlumni?.user?.id ? Number(job.postedByAlumni.user.id) : null,
       applicationCount: job._count.applications,
       hasApplied,
@@ -636,6 +804,7 @@ class JobService {
         imageUrl: logoUrl,
         enableScreening: isEnableScreening,
         useDefaultScreening: isUseDefaultScreening,
+        createdById: BigInt(userId),
         postedByAlumniId: postedByAlumniId,
         status: 'PENDING'
       }
@@ -661,9 +830,9 @@ class JobService {
    *   ALUMNI → their own posted jobs
    *   ADMIN  → all jobs
    */
-  static async getMyJobs(userId, userRole) {
+  static async getMyJobs(userId, userRole, filters = {}) {
     if (userRole === 'ADMIN') {
-      return JobService.getAllJobs({});
+      return JobService.getAllJobs(filters);
     }
 
     const alumni = await prisma.alumni.findUnique({
@@ -674,13 +843,22 @@ class JobService {
       throw { statusCode: 404, message: 'Alumni profile not found' };
     }
 
+    const page = Math.max(parseInt(filters.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(filters.limit, 10) || 6, 1), 100);
+
+    const where = { postedByAlumniId: alumni.id, deletedAt: null };
+    const totalItems = await prisma.job.count({ where });
+    const skip = (page - 1) * limit;
+
     const jobs = await prisma.job.findMany({
-      where: { postedByAlumniId: alumni.id, deletedAt: null },
+      where,
       include: { _count: { select: { applications: true } } },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
+      skip: filters.page || filters.limit ? skip : undefined,
+      take: filters.page || filters.limit ? limit : undefined
     });
 
-    return jobs.map((job) => ({
+    const data = jobs.map((job) => ({
       id: Number(job.id),
       title: job.title || '',
       companyName: job.companyName || '',
@@ -705,9 +883,34 @@ class JobService {
       rejectionReason: job.rejectionReason || null,
       enableScreening: job.enableScreening ?? false,
       useDefaultScreening: job.useDefaultScreening ?? true,
+      postedBy: {
+        id: Number(alumni.id),
+        name: alumni.name || 'Alumni',
+        role: 'ALUMNI',
+        profileImageUrl: alumni.profileImageUrl || null
+      },
+      postedByName: alumni.name || 'Alumni',
+      postedByRole: 'ALUMNI',
       applicationCount: job._count.applications,
       createdAt: job.createdAt || null
     }));
+
+    const totalPages = Math.ceil(totalItems / limit) || 1;
+    const pagination = {
+      page,
+      limit,
+      totalItems,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1
+    };
+
+    if (filters.page !== undefined || filters.limit !== undefined) {
+      return { data, pagination };
+    }
+
+    data.pagination = pagination;
+    return data;
   }
 
   /**

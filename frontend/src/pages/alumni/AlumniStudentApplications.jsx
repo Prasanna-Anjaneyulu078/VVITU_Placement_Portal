@@ -200,7 +200,7 @@ export default function AlumniStudentApplications() {
 
             <button
               onClick={fetchData}
-              className="h-10 px-3.5 bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="h-10 px-3.5 bg-slate-100 text-slate-700 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
               title="Refresh"
             >
               <RefreshCw size={14} /> Refresh

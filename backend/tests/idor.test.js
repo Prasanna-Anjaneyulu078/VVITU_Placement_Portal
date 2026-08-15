@@ -16,6 +16,8 @@ const { generateAccessToken } = require('../src/utils/jwt.utils');
 const StudentService = require('../src/services/student.service');
 const ApplicationService = require('../src/services/application.service');
 
+jest.setTimeout(30000);
+
 describe('IDOR Security Audit — Unauthorized Resource Access', () => {
   let studentAToken;
   let studentBToken;

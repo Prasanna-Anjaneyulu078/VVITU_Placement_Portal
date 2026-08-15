@@ -11,16 +11,23 @@ const OcrDecision = {
 
 const ReasonCode = {
   VERIFIED: 'VERIFIED',
-  DOCUMENT_UNREADABLE: 'DOCUMENT_UNREADABLE',
+  PENDING_MANUAL_REVIEW: 'PENDING_MANUAL_REVIEW',
+  OCR_UNAVAILABLE: 'OCR_UNAVAILABLE',
   OCR_LOW_CONFIDENCE: 'OCR_LOW_CONFIDENCE',
-  NAME_MISMATCH: 'NAME_MISMATCH',
-  ROLL_NUMBER_MISMATCH: 'ROLL_NUMBER_MISMATCH',
-  COLLEGE_MISMATCH: 'COLLEGE_MISMATCH',
-  COLLEGE_NOT_DETECTED: 'COLLEGE_NOT_DETECTED',
+  FAILED_NAME_MISMATCH: 'FAILED_NAME_MISMATCH',
+  FAILED_ROLL_MISMATCH: 'FAILED_ROLL_MISMATCH',
+  FAILED_COLLEGE_MISMATCH: 'FAILED_COLLEGE_MISMATCH',
+  FAILED_NAME_AND_ROLL_MISMATCH: 'FAILED_NAME_AND_ROLL_MISMATCH',
+  FAILED_NAME_AND_COLLEGE_MISMATCH: 'FAILED_NAME_AND_COLLEGE_MISMATCH',
+  FAILED_ROLL_AND_COLLEGE_MISMATCH: 'FAILED_ROLL_AND_COLLEGE_MISMATCH',
+  FAILED_NAME_ROLL_AND_COLLEGE_MISMATCH: 'FAILED_NAME_ROLL_AND_COLLEGE_MISMATCH',
+  FAILED_DOCUMENT_INVALID: 'FAILED_DOCUMENT_INVALID',
   DUPLICATE_DOCUMENT: 'DUPLICATE_DOCUMENT',
-  INVALID_DOCUMENT: 'INVALID_DOCUMENT',
-  UNSUPPORTED_FILE: 'UNSUPPORTED_FILE',
-  OCR_UNAVAILABLE: 'OCR_UNAVAILABLE'
+  // Backwards compatibility aliases
+  NAME_MISMATCH: 'FAILED_NAME_MISMATCH',
+  ROLL_NUMBER_MISMATCH: 'FAILED_ROLL_MISMATCH',
+  COLLEGE_MISMATCH: 'FAILED_COLLEGE_MISMATCH',
+  INVALID_DOCUMENT: 'FAILED_DOCUMENT_INVALID'
 };
 
 class DocumentVerificationService {
@@ -130,55 +137,168 @@ class DocumentVerificationService {
 
     // 3. College Verification
     this.verifyCollege(result.rawText, result.college);
-    if (result.college.status === 'MISMATCH') {
-      result.decision = OcrDecision.REJECTED;
-      result.reasonCode = ReasonCode.COLLEGE_MISMATCH;
-      result.message = 'The uploaded document could not be verified as a VVIT/VVITU-issued document. Please upload a valid VVIT/VVITU document.';
-      await this.saveAuditLog(result, file, formName, formRoll, formEmail, ipAddress, documentHash);
-      return result;
-    }
 
     // 4. Roll Number Verification
     this.verifyRollNumber(result.rawText, formRoll, result.rollNumber);
-    if (result.rollNumber.status === 'MISMATCH') {
-      result.decision = OcrDecision.REJECTED;
-      result.reasonCode = ReasonCode.ROLL_NUMBER_MISMATCH;
-      result.message = 'The Roll Number entered in the registration form does not match the uploaded document. Please verify your Roll Number.';
-      await this.saveAuditLog(result, file, formName, formRoll, formEmail, ipAddress, documentHash);
-      return result;
-    }
 
     // 5. Name Verification
     this.verifyName(result.rawText, formName, result.name);
-    if (result.name.status === 'MISMATCH') {
-      result.decision = OcrDecision.REJECTED;
-      result.reasonCode = ReasonCode.NAME_MISMATCH;
-      result.message = 'The name entered in the registration form does not match the uploaded document. Please verify your name and upload the correct VVIT/VVITU document.';
-      await this.saveAuditLog(result, file, formName, formRoll, formEmail, ipAddress, documentHash);
-      return result;
-    }
 
     // 6. Central Decision Engine
+    const decisionResult = this.determineVerificationResult({
+      formName,
+      formRollNumber: formRoll,
+      formCollege: 'VVIT/VVITU',
+      nameResult: result.name,
+      rollResult: result.rollNumber,
+      collegeResult: result.college,
+      documentReadable: result.documentReadable,
+      ocrPerformed: result.ocrPerformed,
+      rawText: result.rawText
+    });
+
+    result.decision = decisionResult.decision;
+    result.reasonCode = decisionResult.reasonCode;
+    result.message = decisionResult.message;
+    result.manualReviewRequired = decisionResult.manualReviewRequired;
     result.overallConfidence = (result.name.confidence + result.rollNumber.confidence + result.college.confidence) / 3;
 
-    if (result.college.status === 'MATCH' && result.rollNumber.status === 'MATCH' && result.name.status === 'MATCH') {
-      result.decision = OcrDecision.VERIFIED;
-      result.reasonCode = ReasonCode.VERIFIED;
-      result.message = 'Document verified successfully.';
-      result.manualReviewRequired = false;
-    } else if (result.college.status === 'REJECTED' || result.rollNumber.status === 'MISMATCH' || result.name.status === 'MISMATCH') {
-      result.decision = OcrDecision.REJECTED;
-      // reasonCode already set by the first failing condition block above
-    } else {
-      // Anything that is HIGH_CONFIDENCE, POSSIBLE_MATCH, MANUAL_REVIEW, NOT_DETECTED goes here
-      result.decision = OcrDecision.PENDING_MANUAL_REVIEW;
-      result.reasonCode = ReasonCode.OCR_LOW_CONFIDENCE;
-      result.manualReviewRequired = true;
-      result.message = 'We could not confidently read all information from the uploaded document. Your registration has been submitted for manual verification.';
-    }
+    result.verification = {
+      name: {
+        status: result.name.status,
+        confidence: Math.round(result.name.confidence * 100),
+        formValue: formName,
+        extractedValue: result.name.extractedValue || null
+      },
+      rollNumber: {
+        status: result.rollNumber.status,
+        confidence: Math.round(result.rollNumber.confidence * 100),
+        formValue: formRoll,
+        extractedValue: result.rollNumber.extractedValue || null
+      },
+      college: {
+        status: result.college.status,
+        confidence: Math.round(result.college.confidence * 100),
+        formValue: 'VVIT/VVITU',
+        extractedValue: result.college.extractedValue || null
+      }
+    };
 
     await this.saveAuditLog(result, file, formName, formRoll, formEmail, ipAddress, documentHash);
     return result;
+  }
+
+  // ==========================================
+  // CENTRAL VERIFICATION DECISION ENGINE
+  // ==========================================
+  static determineVerificationResult({
+    formName,
+    formRollNumber,
+    formCollege = 'VVIT/VVITU',
+    nameResult,
+    rollResult,
+    collegeResult,
+    documentReadable = true,
+    ocrPerformed = true,
+    rawText = ''
+  }) {
+    const fieldResults = {
+      name: {
+        status: nameResult.status || 'NOT_DETECTED',
+        confidence: Math.round((nameResult.confidence || 0) * 100),
+        formValue: formName,
+        extractedValue: nameResult.extractedValue || null
+      },
+      rollNumber: {
+        status: rollResult.status || 'NOT_DETECTED',
+        confidence: Math.round((rollResult.confidence || 0) * 100),
+        formValue: formRollNumber,
+        extractedValue: rollResult.extractedValue || null
+      },
+      college: {
+        status: collegeResult.status || 'NOT_DETECTED',
+        confidence: Math.round((collegeResult.confidence || 0) * 100),
+        formValue: formCollege,
+        extractedValue: collegeResult.extractedValue || null
+      }
+    };
+
+    // OCR Failure / Unreadable Document rule
+    if (!ocrPerformed || !documentReadable || !rawText || rawText.trim().length < 10) {
+      return {
+        decision: OcrDecision.PENDING_MANUAL_REVIEW,
+        reasonCode: ReasonCode.OCR_UNAVAILABLE,
+        manualReviewRequired: true,
+        fieldResults,
+        message: 'Document Verification Unavailable: We could not reliably read the uploaded document. Your registration has been sent for manual verification. Please ensure that the uploaded document is clear and readable.'
+      };
+    }
+
+    const isNameMatch = nameResult.status === 'MATCH';
+    const isRollMatch = rollResult.status === 'MATCH';
+    const isCollegeMatch = collegeResult.status === 'MATCH';
+
+    const isNameMismatch = nameResult.status === 'MISMATCH';
+    const isRollMismatch = rollResult.status === 'MISMATCH';
+    const isCollegeMismatch = collegeResult.status === 'MISMATCH';
+
+    // Case 1 — Everything matches
+    if (isNameMatch && isRollMatch && isCollegeMatch) {
+      return {
+        decision: OcrDecision.VERIFIED,
+        reasonCode: ReasonCode.VERIFIED,
+        manualReviewRequired: false,
+        fieldResults,
+        message: 'Document verified successfully.'
+      };
+    }
+
+    // Cases 3-9 — Field Mismatches
+    if (isNameMismatch || isRollMismatch || isCollegeMismatch) {
+      let decision = OcrDecision.REJECTED;
+      let reasonCode = null;
+      let message = null;
+
+      if (isNameMismatch && isRollMismatch && isCollegeMismatch) {
+        reasonCode = ReasonCode.FAILED_NAME_ROLL_AND_COLLEGE_MISMATCH;
+        message = 'Document Verification Failed: The Roll Number, Name, and College details entered in the registration form could not be verified against the uploaded document. Please check your details and upload a valid VVIT/VVITU document.';
+      } else if (isNameMismatch && isRollMismatch) {
+        reasonCode = ReasonCode.FAILED_NAME_AND_ROLL_MISMATCH;
+        message = 'Document Verification Failed: The Name and Roll Number entered in the registration form do not match the uploaded document. Please verify both details and try again.';
+      } else if (isNameMismatch && isCollegeMismatch) {
+        reasonCode = ReasonCode.FAILED_NAME_AND_COLLEGE_MISMATCH;
+        message = 'Document Verification Failed: The Name does not match the uploaded document, and the document could not be verified as a VVIT/VVITU document. Please verify your name and upload a valid document.';
+      } else if (isRollMismatch && isCollegeMismatch) {
+        reasonCode = ReasonCode.FAILED_ROLL_AND_COLLEGE_MISMATCH;
+        message = 'Document Verification Failed: The Roll Number does not match the uploaded document, and the document could not be verified as a VVIT/VVITU document. Please verify your Roll Number and upload a valid document.';
+      } else if (isNameMismatch) {
+        reasonCode = ReasonCode.FAILED_NAME_MISMATCH;
+        message = 'Name Verification Failed: The name entered in the registration form does not sufficiently match the name found in the uploaded document. Please enter your full name exactly as shown on the official document.';
+      } else if (isRollMismatch) {
+        reasonCode = ReasonCode.FAILED_ROLL_MISMATCH;
+        message = 'Roll Number Verification Failed: The Roll Number entered in the registration form does not match the Roll Number found in the uploaded document. Please enter the correct Roll Number exactly as shown on your document.';
+      } else if (isCollegeMismatch) {
+        reasonCode = ReasonCode.FAILED_COLLEGE_MISMATCH;
+        message = 'College Verification Failed: The uploaded document could not be verified as an official VVIT/VVITU document. Please upload a valid document issued by VVIT/VVITU.';
+      }
+
+      return {
+        decision,
+        reasonCode,
+        manualReviewRequired: false,
+        fieldResults,
+        message
+      };
+    }
+
+    // Case 2 — Low Confidence / Partial Matches -> PENDING_MANUAL_REVIEW
+    return {
+      decision: OcrDecision.PENDING_MANUAL_REVIEW,
+      reasonCode: ReasonCode.OCR_LOW_CONFIDENCE,
+      manualReviewRequired: true,
+      fieldResults,
+      message: 'Document Verification Requires Review: We could not confidently verify the details from the uploaded document. Your registration has been submitted for manual review.'
+    };
   }
 
   // ==========================================

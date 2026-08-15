@@ -75,7 +75,7 @@ class AdminService {
       designation: p.designation || 'System Admin',
       employeeId: p.employeeId || '',
       officeLocation: p.officeLocation || '',
-      profileImageUrl: p.profileImageUrl ? `/api/public/admin/${user.id}/profile-image` : null,
+      profileImageUrl: p.profileImageUrl,
       role: user.role || 'ADMIN',
       status: user.accountStatus || 'ACTIVE',
       accountCreatedDate: user.createdAt ? user.createdAt.toISOString() : null
@@ -96,6 +96,25 @@ class AdminService {
 
     const { name, mobileNumber, location, gender, department, designation, employeeId, officeLocation, profileImageUrl } = updateData;
 
+    let cleanEmpId = undefined;
+    if (employeeId !== undefined) {
+      cleanEmpId = employeeId ? String(employeeId).trim() : null;
+      if (cleanEmpId === '') cleanEmpId = null;
+
+      if (cleanEmpId !== null) {
+        const existingWithEmpId = await prisma.adminProfile.findFirst({
+          where: {
+            employeeId: cleanEmpId,
+            userId: { not: user.id },
+            deletedAt: null
+          }
+        });
+        if (existingWithEmpId) {
+          throw { statusCode: 400, message: 'Employee ID already exists. Please enter a different Employee ID.' };
+        }
+      }
+    }
+
     if (name) {
       await prisma.user.update({
         where: { id: user.id },
@@ -112,7 +131,7 @@ class AdminService {
         gender: gender || null,
         department: department || null,
         designation: designation || null,
-        employeeId: employeeId || null,
+        employeeId: cleanEmpId !== undefined ? cleanEmpId : null,
         officeLocation: officeLocation || null,
         ...(profileImageUrl !== undefined && { profileImageUrl })
       },
@@ -122,7 +141,7 @@ class AdminService {
         ...(gender !== undefined && { gender }),
         ...(department !== undefined && { department }),
         ...(designation !== undefined && { designation }),
-        ...(employeeId !== undefined && { employeeId }),
+        ...(cleanEmpId !== undefined && { employeeId: cleanEmpId }),
         ...(officeLocation !== undefined && { officeLocation }),
         ...(profileImageUrl !== undefined && { profileImageUrl })
       }
@@ -155,13 +174,11 @@ class AdminService {
       })
     ]);
 
-    const publicUrl = `/api/public/admin/${user.id}/profile-image`;
-
     return { 
       success: true, 
-      imageUrl: publicUrl, 
-      profileImageUrl: publicUrl,
-      url: publicUrl,
+      imageUrl: imageUrl, 
+      profileImageUrl: imageUrl,
+      url: imageUrl,
       updatedAt: now.toISOString() 
     };
   }
@@ -229,7 +246,7 @@ class AdminService {
         cgpa: s.cgpa || null,
         academicYear: s.academicYear || '',
         mobileNumber: s.mobileNumber || '',
-        profileImageUrl: s.profileImageUrl ? `/api/public/student/${s.id}/profile-image` : null,
+        profileImageUrl: s.profileImageUrl,
         user: {
           id: u.id ? Number(u.id) : null,
           name: u.name || '',
@@ -242,26 +259,50 @@ class AdminService {
             cgpa: s.cgpa || null,
             academicYear: s.academicYear || '',
             mobileNumber: s.mobileNumber || '',
-            profileImageUrl: s.profileImageUrl ? `/api/public/student/${s.id}/profile-image` : null
+            profileImageUrl: s.profileImageUrl
           }
         }
       };
     });
   }
 
-  static async getAllStudents() {
+  static async getAllStudents(query = {}) {
     try {
+      const page = Math.max(parseInt(query.page, 10) || 1, 1);
+      const limit = Math.min(Math.max(parseInt(query.limit, 10) || 10, 1), 100);
+      const search = (query.search || '').trim();
+      const department = (query.department || '').trim();
+      const verificationStatus = (query.verificationStatus || '').trim();
+
+      const where = {
+        deletedAt: null,
+        ...(department && { department: { equals: department, mode: 'insensitive' } }),
+        ...(verificationStatus && { verificationStatus: { equals: verificationStatus, mode: 'insensitive' } }),
+        ...(search && {
+          OR: [
+            { rollNumber: { contains: search, mode: 'insensitive' } },
+            { user: { name: { contains: search, mode: 'insensitive' } } },
+            { user: { email: { contains: search, mode: 'insensitive' } } }
+          ]
+        })
+      };
+
+      const totalItems = await prisma.student.count({ where });
+      const skip = (page - 1) * limit;
+
       const students = await prisma.student.findMany({
-        where: { deletedAt: null },
+        where,
         include: {
           user: { select: { id: true, name: true, email: true, role: true, accountStatus: true } },
           skills: { where: { deletedAt: null } },
           projects: { where: { deletedAt: null } }
         },
-        orderBy: { id: 'desc' }
+        orderBy: { id: 'desc' },
+        skip: query.page || query.limit ? skip : undefined,
+        take: query.page || query.limit ? limit : undefined
       });
 
-      return students.map((s) => ({
+      const data = students.map((s) => ({
         id: Number(s.id),
         userId: Number(s.userId),
         user: {
@@ -279,10 +320,10 @@ class AdminService {
         location: s.location,
         githubUrl: s.githubUrl,
         linkedinUrl: s.linkedinUrl,
-        profileImageUrl: s.profileImageUrl ? `/api/public/student/${s.id}/profile-image` : null,
+        profileImageUrl: s.profileImageUrl,
         cgpa: s.cgpa,
         backlogs: s.backlogs,
-        verificationStatus: 'VERIFIED',
+        verificationStatus: s.verificationStatus || 'VERIFIED',
         skillsCount: s.skills.length,
         skills: s.skills.map((sk) => sk.skillName),
         projectsCount: s.projects.length,
@@ -295,8 +336,25 @@ class AdminService {
         })),
         createdAt: s.createdAt
       }));
+
+      const totalPages = Math.ceil(totalItems / limit) || 1;
+      const pagination = {
+        page,
+        limit,
+        totalItems,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1
+      };
+
+      if (query.page !== undefined || query.limit !== undefined) {
+        return { data, pagination };
+      }
+
+      data.pagination = pagination;
+      return data;
     } catch (err) {
-      console.warn('[ADMIN-SERVICE] getAllStudents database fallback:', err.message);
+      console.warn('[ADMIN-SERVICE] getAllStudents database error:', err.message);
       return [];
     }
   }
@@ -341,7 +399,9 @@ class AdminService {
   }
 
   static async getAllAlumni(query = {}) {
-    const { sortBy, sortOrder, order } = query;
+    const { sortBy, sortOrder, order, search, department, verificationStatus } = query;
+    const page = Math.max(parseInt(query.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(query.limit, 10) || 10, 1), 100);
     const direction = (sortOrder || order || '').toLowerCase() === 'asc' ? 'asc' : 'desc';
 
     const allowedFields = {
@@ -362,15 +422,35 @@ class AdminService {
 
     const orderByClause = allowedFields[sortBy] || { id: 'desc' };
 
+    const where = {
+      deletedAt: null,
+      ...(department && { department: { equals: department, mode: 'insensitive' } }),
+      ...(verificationStatus && { verificationStatus: { equals: verificationStatus, mode: 'insensitive' } }),
+      ...(search && {
+        OR: [
+          { company: { contains: search, mode: 'insensitive' } },
+          { designation: { contains: search, mode: 'insensitive' } },
+          { rollNumber: { contains: search, mode: 'insensitive' } },
+          { user: { name: { contains: search, mode: 'insensitive' } } },
+          { user: { email: { contains: search, mode: 'insensitive' } } }
+        ]
+      })
+    };
+
+    const totalItems = await prisma.alumni.count({ where });
+    const skip = (page - 1) * limit;
+
     const alumniList = await prisma.alumni.findMany({
-      where: { deletedAt: null },
+      where,
       include: {
         user: { select: { name: true, email: true } }
       },
-      orderBy: orderByClause
+      orderBy: orderByClause,
+      skip: query.page || query.limit ? skip : undefined,
+      take: query.page || query.limit ? limit : undefined
     });
 
-    return alumniList.map((a) => ({
+    const data = alumniList.map((a) => ({
       id: Number(a.id),
       userId: Number(a.userId),
       name: a.user?.name || '',
@@ -379,12 +459,29 @@ class AdminService {
       designation: a.designation,
       passingYear: a.passingYear,
       verificationStatus: a.verificationStatus,
-      profileImageUrl: a.profileImageUrl ? `/api/public/alumni/${a.id}/profile-image` : null,
+      profileImageUrl: a.profileImageUrl,
       department: a.department,
       rollNumber: a.rollNumber,
       mobileNumber: a.mobileNumber,
       user: a.user ? { name: a.user.name, email: a.user.email } : null
     }));
+
+    const totalPages = Math.ceil(totalItems / limit) || 1;
+    const pagination = {
+      page,
+      limit,
+      totalItems,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1
+    };
+
+    if (query.page !== undefined || query.limit !== undefined) {
+      return { data, pagination };
+    }
+
+    data.pagination = pagination;
+    return data;
   }
 
   static async verifyAlumni(alumniId, status) {
@@ -580,7 +677,8 @@ class AdminService {
   }
 
   static async resetStudentPassword(studentId) {
-    const { hashPassword, generateDefaultPassword } = require('../utils/password.utils');
+    const { hashPassword } = require('../utils/password.utils');
+    const { generateStudentDefaultPassword } = require('../utils/studentPassword.util');
     let student;
     try {
       student = await prisma.student.findUnique({
@@ -596,7 +694,7 @@ class AdminService {
     }
 
     const rollNumber = student.rollNumber;
-    const tempPassword = generateDefaultPassword(rollNumber);
+    const tempPassword = generateStudentDefaultPassword(rollNumber);
     const hashedPassword = await hashPassword(tempPassword);
 
     await prisma.user.update({
@@ -624,7 +722,8 @@ class AdminService {
   }
 
   static async addStudent(request) {
-    const { hashPassword, generateDefaultPassword } = require('../utils/password.utils');
+    const { hashPassword } = require('../utils/password.utils');
+    const { generateStudentDefaultPassword } = require('../utils/studentPassword.util');
     const { name, email, rollNumber, mobileNumber, department, semester, academicYear } = request;
 
     if (!email || !rollNumber || !name) {
@@ -645,37 +744,40 @@ class AdminService {
       throw { statusCode: 400, message: 'This roll number is already associated with an existing student account.' };
     }
 
-    const tempPassword = generateDefaultPassword(rollNumber.trim().toUpperCase());
+    const tempPassword = generateStudentDefaultPassword(rollNumber.trim().toUpperCase());
     const hashedPassword = await hashPassword(tempPassword);
 
-    const user = await prisma.user.create({
-      data: {
-        name: name.trim(),
-        email: email.trim().toLowerCase(),
-        password: hashedPassword,
-        role: 'STUDENT',
-        accountStatus: 'ACTIVE',
-        passwordChanged: false
-      }
-    });
+    const result = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
+          password: hashedPassword,
+          role: 'STUDENT',
+          accountStatus: 'ACTIVE',
+          passwordChanged: false
+        }
+      });
 
-    const student = await prisma.student.create({
-      data: {
-        userId: user.id,
-        rollNumber: rollNumber.trim().toUpperCase(),
-        mobileNumber: mobileNumber ? mobileNumber.trim() : null,
-        department: department ? department.trim() : null,
-        semester: semester ? parseInt(semester, 10) : 1,
-        academicYear: academicYear ? academicYear.trim() : null,
-        verificationStatus: 'VERIFIED',
-        profileImageUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(name.trim())}&background=random`
-      }
+      const student = await tx.student.create({
+        data: {
+          userId: user.id,
+          rollNumber: rollNumber.trim().toUpperCase(),
+          mobileNumber: mobileNumber ? mobileNumber.trim() : null,
+          department: department ? department.trim() : null,
+          semester: semester ? parseInt(semester, 10) : 1,
+          academicYear: academicYear ? academicYear.trim() : null,
+          verificationStatus: 'VERIFIED'
+        }
+      });
+
+      return { user, student };
     });
 
     return {
-      name: user.name,
-      email: user.email,
-      identifier: student.rollNumber,
+      name: result.user.name,
+      email: result.user.email,
+      identifier: result.student.rollNumber,
       temporaryPassword: tempPassword
     };
   }
@@ -789,7 +891,7 @@ class AdminService {
       graduationYear: student.academicYear || '2026',
       cgpa: student.cgpa || null,
       backlogs: student.backlogs || 0,
-      profileImageUrl: student.profileImageUrl ? `/api/public/student/${student.id}/profile-image` : null,
+      profileImageUrl: student.profileImageUrl,
       mobileNumber: student.mobileNumber || null,
       location: student.location || null,
       verificationStatus: student.verificationStatus || 'VERIFIED',

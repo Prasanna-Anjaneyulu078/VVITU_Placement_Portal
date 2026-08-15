@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, Briefcase, DollarSign, Award, Calendar, Link as LinkIcon, CheckCircle, XCircle, Target, TrendingUp } from 'lucide-react';
 import { Modal, Button, Badge } from './index';
+import Avatar from './Avatar';
+import { getPosterInfo } from '../../utils/roleUtils';
 import api from '../../utils/axiosConfig';
 
 export default function JobDetailsModal({
@@ -118,6 +120,15 @@ export default function JobDetailsModal({
             <div>
               <h2 className="text-2xl font-extrabold text-slate-800">{job.title}</h2>
               <p className="text-slate-500 font-bold mt-1 text-sm">{job.company} • {job.location || 'Remote'}</p>
+              {(() => {
+                const poster = getPosterInfo(job);
+                return (
+                  <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-500 font-medium">
+                    <Avatar src={poster.profileImageUrl} name={poster.name} size="sm" className="w-4 h-4 border border-slate-200 shrink-0 text-[8px]" />
+                    <span>Posted by: <strong className="font-semibold text-slate-700">{poster.name}</strong> • {poster.formattedRole}</span>
+                  </div>
+                );
+              })()}
             </div>
           </div>
           {(role === 'alumni' || role === 'admin') && (

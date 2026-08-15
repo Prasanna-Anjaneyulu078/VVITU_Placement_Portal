@@ -11,8 +11,10 @@ import { useData } from '../../context/DataContext';
 import { toast } from 'react-toastify';
 import { CardLoader, JobCardLoader, SectionLoader } from '../../components/common/loading';
 import { toTitleCase } from '../../utils/nameUtils';
-import { generateAvatarSVG } from '../../utils/avatarUtils';
+
 import { getImageUrl } from '../../utils/imageUrl';
+import Avatar from '../../components/common/Avatar';
+import { getPosterInfo } from '../../utils/roleUtils';
 import './StudentDashboard.css';
 
 const DEPT_MAP = {
@@ -147,10 +149,11 @@ export default function StudentDashboard() {
                 <>
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
                     <div className="sd-avatar-wrap">
-                      <img
-                        src={(profileImage && !profileImage.includes('ui-avatars.com') ? profileImage : null) || (profile && profile.profileImageUrl && !profile.profileImageUrl.includes('ui-avatars.com') ? profile.profileImageUrl : null) || generateAvatarSVG(pName || 'Student', 'F47C20', 'fff')}
-                        onError={e => { e.target.onerror = null; e.target.src = generateAvatarSVG(pName || 'Student', 'F47C20', 'fff'); }}
-                        alt={pName} className="sd-avatar"
+                      <Avatar
+                        src={profileImage || profile?.profileImageUrl}
+                        name={pName || 'Student'}
+                        size="lg"
+                        className="sd-avatar"
                       />
                       {profile && profile.verificationStatus === 'VERIFIED' && (
                         <div className="sd-avatar-badge" title="Verified"><BadgeCheck size={18} style={{ color: '#F47C20' }} /></div>
@@ -251,6 +254,15 @@ export default function StudentDashboard() {
                           <span className="sd-job-tag sd-job-tag-location"><MapPin size={11} /> {job.location || 'Remote'}</span>
                           <span className="sd-job-tag sd-job-tag-pkg">{job.packageCtc || job.salary || 'Competitive'}</span>
                         </div>
+                        {(() => {
+                          const poster = getPosterInfo(job);
+                          return (
+                            <div className="mt-2 pt-2 border-t border-slate-100 flex items-center gap-1.5 text-[11px] text-slate-500">
+                              <Avatar src={poster.profileImageUrl} name={poster.name} size="sm" className="w-4 h-4 text-[8px] border border-slate-200 shrink-0" />
+                              <span className="truncate">Posted by: <strong className="font-semibold text-slate-700">{poster.name}</strong> • {poster.formattedRole}</span>
+                            </div>
+                          );
+                        })()}
                         <div className="sd-job-footer">
                           <span className="sd-job-deadline"><Clock size={11} /> {fmtShortDate(job.deadline)}</span>
                           <span className="sd-job-apply">Apply <ArrowUpRight size={13} /></span>

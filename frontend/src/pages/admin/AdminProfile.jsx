@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { generateAvatarSVG } from '../../utils/avatarUtils';
+
+import Avatar from '../../components/common/Avatar';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { 
   Camera, Edit2, Shield, Lock, MapPin, Mail, Phone, Briefcase, 
@@ -13,6 +14,8 @@ import { ProfileLoader } from '../../components/common/loading';
 import { toast } from 'react-toastify';
 import api from '../../utils/axiosConfig';
 import useDepartments from '../../hooks/useDepartments';
+import { canCreateAdmin } from '../../utils/permissionUtils';
+import { Plus } from 'lucide-react';
 
 import { useData } from '../../context/DataContext';
 
@@ -42,6 +45,45 @@ export default function AdminProfile() {
     newPassword: '',
     confirmPassword: ''
   });
+
+  // Add Admin state for SUPER_ADMIN
+  const [showAddAdminModal, setShowAddAdminModal] = useState(false);
+  const [isSubmittingAdmin, setIsSubmittingAdmin] = useState(false);
+  const [addAdminForm, setAddAdminForm] = useState({
+    name: '',
+    email: '',
+    department: 'Placement Cell',
+    designation: 'System Administrator',
+    mobileNumber: '',
+    password: ''
+  });
+
+  const handleAddAdminSubmit = async (e) => {
+    e.preventDefault();
+    if (!addAdminForm.name || !addAdminForm.email || !addAdminForm.password) {
+      toast.error('Name, email, and password are required.');
+      return;
+    }
+    try {
+      setIsSubmittingAdmin(true);
+      const res = await api.post('/admin/users/admins', addAdminForm);
+      toast.success(res.data?.message || 'Admin account created successfully!');
+      setShowAddAdminModal(false);
+      setAddAdminForm({
+        name: '',
+        email: '',
+        department: 'Placement Cell',
+        designation: 'System Administrator',
+        mobileNumber: '',
+        password: ''
+      });
+      fetchData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to create admin account.');
+    } finally {
+      setIsSubmittingAdmin(false);
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -136,7 +178,7 @@ export default function AdminProfile() {
       setIsEditingPersonal(false);
       setIsEditingProfessional(false);
     } catch (err) {
-      toast.error('Failed to save profile');
+      toast.error(err.response?.data?.message || 'Failed to save profile');
       console.error(err);
     } finally {
       setIsSaving(false);
@@ -232,16 +274,11 @@ export default function AdminProfile() {
                 <div className="flex justify-center -mt-16 mb-4 relative z-10">
                   <div className="relative group">
                     <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-md bg-white">
-                      <img 
-                        src={
-                          imagePreview || 
-                          (profile?.profileImageUrl 
-                            ? getImageUrl(profile.profileImageUrl) 
-                            : generateAvatarSVG(profile?.name || 'Admin', 'F47C20', 'fff'))
-                        }
-                        onError={(e) => { e.target.onerror = null; e.target.src = generateAvatarSVG(profile?.name || 'Admin', 'F47C20', 'fff'); }}
-                        alt="Profile" 
-                        className={`w-full h-full object-cover ${isUploadingImage ? 'opacity-50' : ''}`}
+                      <Avatar
+                        src={imagePreview || profile?.profileImageUrl}
+                        name={profile?.name || 'Admin'}
+                        size="xl"
+                        className={`w-full h-full ${isUploadingImage ? 'opacity-50' : ''}`}
                       />
                     </div>
                     <label className="absolute bottom-1 right-1 w-9 h-9 bg-[#F47C20] rounded-full flex items-center justify-center text-white shadow-lg cursor-pointer     transition-all border-2 border-white" title="Change Profile Picture (Max 5MB)">
@@ -348,19 +385,25 @@ export default function AdminProfile() {
                         <input type="text" value={professionalForm.designation} onChange={e => setProfessionalForm({...professionalForm, designation: e.target.value})} className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 focus:outline-none focus:bg-white focus:border-[#F47C20] transition-all" />
                       </div>
                       <div>
-                        <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Employee ID (Locked)</label>
-                        <input disabled type="text" value={professionalForm.employeeId} className="w-full h-10 px-3 bg-slate-100 border border-slate-200 rounded-lg text-sm font-semibold text-slate-500 cursor-not-allowed" />
+                        <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Employee ID</label>
+                        <input
+                          type="text"
+                          placeholder="Enter employee ID"
+                          value={professionalForm.employeeId || ''}
+                          onChange={e => setProfessionalForm({...professionalForm, employeeId: e.target.value})}
+                          className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 focus:outline-none focus:bg-white focus:border-[#F47C20] transition-all"
+                        />
                       </div>
                     </div>
                     <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                      <button type="button" onClick={() => setIsEditingProfessional(false)} className="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold   transition-colors flex items-center gap-1.5"><X size={16}/> Cancel</button>
+                      <button type="button" onClick={() => setIsEditingProfessional(false)} className="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold transition-colors flex items-center gap-1.5"><X size={16}/> Cancel</button>
                       <button type="submit" disabled={!hasProfessionalChanges || isSaving} className={actionBtnStyle + " w-auto px-6"}>
                         <Save size={16}/> {isSaving ? 'Saving...' : 'Save Changes'}
                       </button>
                     </div>
                   </form>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Department</p>
                       <p className="text-sm font-extrabold text-slate-800">{profile?.department || 'Not Specified'}</p>
@@ -418,11 +461,21 @@ export default function AdminProfile() {
 
             {/* Administrative Quick Actions */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              <div className="p-5 border-b border-slate-100 bg-slate-50/50">
+              <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                  <h4 className="font-bold text-[#F47C20] text-sm uppercase tracking-wider flex items-center gap-2"><Settings size={16}/> Administrative Operations</h4>
+                 {canCreateAdmin(profile?.role) && (
+                   <button onClick={() => setShowAddAdminModal(true)} className="px-4 py-2 bg-[#F47C20] text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition-colors">
+                     <Plus size={14} /> Add Admin
+                   </button>
+                 )}
               </div>
               <div className="p-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {canCreateAdmin(profile?.role) && (
+                    <button onClick={() => setShowAddAdminModal(true)} className="flex items-center justify-center gap-2 p-3 bg-[#FFF4EB] border border-[#F47C20]/30 text-[#F47C20] rounded-xl text-xs font-extrabold shadow-xs">
+                      <Plus size={16} /> Add New Admin
+                    </button>
+                  )}
                   <button onClick={() => navigate('/admin/users/students')} className={actionBtnStyle}>
                     <Users size={16}/> Manage Students
                   </button>
@@ -504,6 +557,50 @@ export default function AdminProfile() {
           onSuccess={() => setShowPasswordModal(false)} 
         />
       </Modal>
+      {/* Add Admin Modal for SUPER_ADMIN */}
+      {canCreateAdmin(profile?.role) && (
+        <Modal isOpen={showAddAdminModal} onClose={() => setShowAddAdminModal(false)} title="Create Administrator Account">
+          <form onSubmit={handleAddAdminSubmit} className="space-y-4">
+            <div>
+              <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Full Name *</label>
+              <input type="text" value={addAdminForm.name} onChange={e => setAddAdminForm({...addAdminForm, name: e.target.value})} required placeholder="e.g. Satish Kumar" className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 focus:outline-none focus:bg-white focus:border-[#F47C20] transition-all" />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Email Address *</label>
+              <input type="email" value={addAdminForm.email} onChange={e => setAddAdminForm({...addAdminForm, email: e.target.value})} required placeholder="e.g. satish.admin@vvit.edu.in" className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 focus:outline-none focus:bg-white focus:border-[#F47C20] transition-all" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Department</label>
+                <select value={addAdminForm.department} onChange={e => setAddAdminForm({...addAdminForm, department: e.target.value})} className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 focus:outline-none focus:bg-white focus:border-[#F47C20] transition-all cursor-pointer">
+                  <option value="Placement Cell">Placement Cell</option>
+                  {departments.map(d => <option key={d.code || d.name} value={d.name}>{d.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Designation</label>
+                <input type="text" value={addAdminForm.designation} onChange={e => setAddAdminForm({...addAdminForm, designation: e.target.value})} placeholder="e.g. Assistant Placement Officer" className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 focus:outline-none focus:bg-white focus:border-[#F47C20] transition-all" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Mobile Number</label>
+                <input type="text" value={addAdminForm.mobileNumber} onChange={e => setAddAdminForm({...addAdminForm, mobileNumber: e.target.value})} placeholder="e.g. 9876543210" className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 focus:outline-none focus:bg-white focus:border-[#F47C20] transition-all" />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Default Password *</label>
+                <input type="password" value={addAdminForm.password} onChange={e => setAddAdminForm({...addAdminForm, password: e.target.value})} required placeholder="••••••••" className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800 focus:outline-none focus:bg-white focus:border-[#F47C20] transition-all" />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <button type="button" onClick={() => setShowAddAdminModal(false)} className="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold transition-colors">Cancel</button>
+              <button type="submit" disabled={isSubmittingAdmin} className="px-6 py-2.5 bg-[#F47C20] text-white rounded-xl text-sm font-bold hover:bg-[#d96612] transition-colors flex items-center gap-2">
+                {isSubmittingAdmin ? 'Creating Admin...' : 'Create Admin Account'}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
     </DashboardLayout>
   );
 }

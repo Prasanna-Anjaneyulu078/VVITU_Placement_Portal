@@ -1,0 +1,329 @@
+/* Alumni Details Component & Modal Styles */
+
+.alumni-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background-color: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.alumni-modal-container {
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  max-width: 44rem;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #f1f5f9;
+}
+
+.alumni-modal-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #ffffff;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.alumni-modal-title {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.alumni-modal-close {
+  padding: 0.5rem;
+  color: #94a3b8;
+  border-radius: 0.75rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.alumni-modal-close:hover {
+  color: #475569;
+  background-color: #f8fafc;
+}
+
+.alumni-modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Profile Header Card */
+.alumni-header-card {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.25rem;
+  background-color: #f8fafc;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+}
+
+.alumni-avatar-wrapper {
+  flex-shrink: 0;
+}
+
+.alumni-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.alumni-header-name {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.25;
+  word-break: break-word;
+}
+
+.alumni-header-email {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748b;
+  margin: 0;
+  word-break: break-all;
+}
+
+.alumni-badges-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.375rem;
+}
+
+.alumni-role-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background-color: #FFF4EB;
+  color: #F47C20;
+  border: 1px solid rgba(244, 124, 32, 0.3);
+}
+
+.alumni-dept-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background-color: #f1f5f9;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+}
+
+/* Sections */
+.alumni-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.alumni-section-header {
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: #F47C20;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+/* Two-column layout on desktop/tablet */
+.alumni-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.875rem;
+}
+
+/* Field Cards */
+.alumni-field-card {
+  padding: 0.875rem 1rem;
+  background-color: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.alumni-field-card-full {
+  grid-column: span 2 / span 2;
+}
+
+.alumni-field-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.alumni-field-value {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+  word-break: break-word;
+}
+
+.alumni-value-na {
+  color: #94a3b8;
+  font-weight: 500;
+  font-style: normal;
+}
+
+/* Status Badges */
+.alumni-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  width: fit-content;
+}
+
+.alumni-status-verified {
+  background-color: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.alumni-status-pending {
+  background-color: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.alumni-status-rejected {
+  background-color: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+/* Footer Actions */
+.alumni-modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  background-color: #f8fafc;
+}
+
+.alumni-btn-close {
+  padding: 0.625rem 1.25rem;
+  background-color: #ffffff;
+  border: 1px solid #F47C20;
+  color: #F47C20;
+  font-weight: 800;
+  font-size: 0.8125rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.alumni-btn-close:hover {
+  background-color: #FFF4EB;
+}
+
+/* Skeleton Loading */
+.alumni-skeleton-box {
+  background-color: #e2e8f0;
+  border-radius: 8px;
+  animation: alumniPulse 1.5s infinite ease-in-out;
+}
+
+@keyframes alumniPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Error State */
+.alumni-error-container {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.alumni-error-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ef4444;
+}
+
+.alumni-btn-retry {
+  padding: 0.5rem 1.25rem;
+  background-color: #F47C20;
+  color: #ffffff;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+}
+
+/* Mobile Responsive Breakpoints */
+@media (max-width: 640px) {
+  .alumni-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .alumni-field-card-full {
+    grid-column: span 1 / span 1;
+  }
+  
+  .alumni-header-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .alumni-header-info {
+    align-items: center;
+  }
+  
+  .alumni-badges-row {
+    justify-content: center;
+  }
+}

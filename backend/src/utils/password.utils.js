@@ -35,19 +35,9 @@ const validatePasswordRequirements = (password) => {
   return hasUpper && hasLower && hasDigit && hasSpecial;
 };
 
-const generateDefaultPassword = (rollNumber) => {
-  if (!rollNumber || rollNumber.trim().length < 6) {
-    return process.env.DEFAULT_PASSWORD || 'TempPass@123456';
-  }
-  const cleanRoll = rollNumber.trim();
-  const firstTwo = cleanRoll.substring(0, 2);
-  const lastFour = cleanRoll.substring(cleanRoll.length - 4);
-  return (process.env.DEFAULT_PASSWORD_PREFIX || 'TempPass@') + firstTwo + lastFour;
-};
 
 module.exports = {
   hashPassword,
   comparePassword,
-  validatePasswordRequirements,
-  generateDefaultPassword
+  validatePasswordRequirements
 };

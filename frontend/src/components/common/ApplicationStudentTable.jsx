@@ -1,39 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Building2, Calendar, Search } from 'lucide-react';
-import { getImageUrl } from '../../utils/imageUrl';
-import { generateAvatarSVG } from '../../utils/avatarUtils';
+import Avatar from './Avatar';
 import { toTitleCase } from '../../utils/nameUtils';
 import { TableLoader } from './loading';
-
-/**
- * Avatar Image Component with automatic error handling & initials fallback
- */
-function StudentAvatar({ name, src }) {
-  const [imageError, setImageError] = useState(false);
-  const displayName = name || 'Student';
-  const safeSrc = getImageUrl(src);
-  const fallbackSvg = generateAvatarSVG(displayName, 'F47C20', 'fff');
-
-  if (safeSrc && !imageError) {
-    return (
-      <img
-        src={safeSrc}
-        alt={displayName}
-        loading="lazy"
-        className="w-11 h-11 rounded-full object-cover border border-slate-200 shadow-xs shrink-0"
-        onError={() => setImageError(true)}
-      />
-    );
-  }
-
-  return (
-    <img
-      src={fallbackSvg}
-      alt={displayName}
-      className="w-11 h-11 rounded-full object-cover border border-slate-200 shadow-xs shrink-0"
-    />
-  );
-}
 
 /**
  * Helper to get status badge styling (Display Only)
@@ -138,7 +107,7 @@ export default function ApplicationStudentTable({
                   <tr key={item.id} className="hover:bg-slate-50/80 transition-colors group">
                     {/* 1. Profile */}
                     <td className="py-4 px-5 align-middle">
-                      <StudentAvatar name={studentName} src={profileImg} />
+                      <Avatar name={studentName} src={profileImg} size="md" className="w-10 h-10 shadow-sm border-2 border-slate-100 shrink-0" />
                     </td>
 
                     {/* 2. Student (Clickable Name, Roll Number, Email) */}
@@ -215,7 +184,7 @@ export default function ApplicationStudentTable({
           return (
             <div key={item.id} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-3">
               <div className="flex items-start gap-3">
-                <StudentAvatar name={studentName} src={profileImg} />
+                <Avatar name={studentName} src={profileImg} size="md" className="w-10 h-10 shadow-sm border-2 border-slate-100 shrink-0" />
                 <div className="min-w-0 flex-1">
                   <div className="flex justify-between items-start gap-2">
                     {onSelectStudent ? (

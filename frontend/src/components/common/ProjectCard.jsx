@@ -80,10 +80,10 @@ export default function ProjectCard({
   return (
     <div className="bg-white border border-slate-200/90 hover:border-orange-200 rounded-2xl p-5 shadow-2xs space-y-3.5 transition-all">
       {/* Top Header Row */}
-      <div className="flex flex-wrap justify-between items-start gap-3">
-        <div className="space-y-1 min-w-0 flex-1">
+      <div className="flex flex-col sm:flex-row sm:justify-between items-start gap-3">
+        <div className="space-y-1 min-w-0 w-full sm:flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h5 className="text-base font-extrabold text-slate-900 leading-snug">{project.title}</h5>
+            <h5 className="text-base font-extrabold text-slate-900 leading-snug break-words">{project.title}</h5>
             
             <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase border shrink-0 ${getBadgeColor(project.projectType)}`}>
               {project.projectType || 'Academic'}
@@ -101,8 +101,8 @@ export default function ProjectCard({
           )}
         </div>
 
-        {/* Top-Right Action Buttons */}
-        <div className="flex items-center gap-1.5 shrink-0">
+        {/* Action Buttons */}
+        <div className="flex flex-wrap items-center gap-1.5 shrink-0 mt-1 sm:mt-0">
           <button
             type="button"
             onClick={() => setIsExpanded(prev => !prev)}
@@ -122,7 +122,7 @@ export default function ProjectCard({
               title="Edit Project"
             >
               <Edit2 size={13} className="text-[#F47C20]" />
-              <span className="hidden sm:inline">Edit</span>
+              <span>Edit</span>
             </button>
           )}
 
@@ -134,14 +134,14 @@ export default function ProjectCard({
               title="Delete Project"
             >
               <Trash2 size={13} className="text-[#F47C20]" />
-              <span className="hidden sm:inline">Delete</span>
+              <span>Delete</span>
             </button>
           )}
         </div>
       </div>
 
       {/* Description Snippet */}
-      <p className={`text-xs text-slate-600 leading-relaxed font-medium ${!isExpanded ? 'line-clamp-2' : ''}`}>
+      <p className={`text-xs text-slate-600 leading-relaxed font-medium break-words ${!isExpanded ? 'line-clamp-2' : ''}`}>
         {project.description}
       </p>
 

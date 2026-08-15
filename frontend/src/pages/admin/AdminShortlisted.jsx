@@ -113,7 +113,7 @@ export default function AdminShortlisted({ isTab = false, onCountsUpdate }) {
           {searchTerm && (
             <button
               onClick={() => setSearchTerm('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-700 bg-slate-200/60 hover:bg-slate-200 rounded-full transition-colors cursor-pointer"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 bg-slate-200/60 rounded-full transition-colors cursor-pointer"
               title="Clear search"
               aria-label="Clear search"
             >
@@ -129,7 +129,7 @@ export default function AdminShortlisted({ isTab = false, onCountsUpdate }) {
           
           <button
             onClick={fetchShortlisted}
-            className="h-11 px-4 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2"
+            className="h-11 px-4 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2"
             title="Refresh shortlisted list"
           >
             <RotateCcw size={15} className={isLoading ? "animate-spin" : ""} />

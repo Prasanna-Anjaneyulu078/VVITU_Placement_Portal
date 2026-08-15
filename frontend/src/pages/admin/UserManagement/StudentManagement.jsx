@@ -14,39 +14,12 @@ import { toast } from "react-toastify";
 import ExportDataModal from "./ExportDataModal";
 import useDepartments from "../../../hooks/useDepartments";
 import { DocumentViewerModal, StudentDetailsDrawer } from "../../../components/common";
+import Pagination from "../../../components/common/Pagination";
 import { TableLoader } from "../../../components/common/loading";
 import { toTitleCase } from "../../../utils/nameUtils";
 import validateVVITRollNumber from "../../../utils/vvitRollNumberUtils";
 import { getInitials } from "../../../utils/avatarUtils";
-import { getImageUrl } from '../../../utils/imageUrl';
-
-const Avatar = ({ name, src, size = "md" }) => {
-  const sz = size === "lg" ? "w-20 h-20 text-3xl rounded-2xl" : "w-10 h-10 text-sm rounded-full";
-  const [imageError, setImageError] = useState(false);
-
-  useEffect(() => {
-    setImageError(false);
-  }, [src]);
-
-  const initials = getInitials(name);
-  const colors = ["from-blue-400 to-blue-600","from-violet-400 to-violet-600","from-emerald-400 to-emerald-600","from-orange-400 to-orange-500","from-pink-400 to-pink-600"];
-  const color  = colors[(name?.charCodeAt(0) || 0) % colors.length];
-
-  const safeSrc = getImageUrl(src);
-
-  return (safeSrc && !imageError) ? (
-    <img 
-      src={safeSrc} 
-      alt={name || 'Student'} 
-      className={`${sz} object-cover border-2 border-white shadow flex-shrink-0`}
-      onError={() => setImageError(true)}
-    />
-  ) : (
-    <div className={`${sz} bg-gradient-to-br ${color} text-white flex items-center justify-center font-bold flex-shrink-0 shadow`}>
-      {initials}
-    </div>
-  );
-};
+import Avatar from '../../../components/common/Avatar';
 
 const Badge = ({ variant = "default", children }) => {
   const map = {
@@ -542,7 +515,7 @@ const StudentManagement = forwardRef(({ isTab = false, onCountsUpdate }, ref) =>
           {searchTerm && (
             <button
               onClick={() => setSearchTerm('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-700 bg-slate-200/60 hover:bg-slate-200 rounded-full transition-colors cursor-pointer"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 bg-slate-200/60 rounded-full transition-colors cursor-pointer"
               title="Clear search"
               aria-label="Clear search"
             >
@@ -574,7 +547,7 @@ const StudentManagement = forwardRef(({ isTab = false, onCountsUpdate }, ref) =>
           {hasFilters && (
             <button
               onClick={resetFilters}
-              className="h-11 px-3.5 bg-slate-100 text-slate-700 hover:bg-slate-200 font-extrabold text-xs rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="h-11 px-3.5 bg-slate-100 text-slate-700 font-extrabold text-xs rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
               title="Reset filters"
             >
               <RefreshCw size={14} /> Reset
@@ -654,13 +627,13 @@ const StudentManagement = forwardRef(({ isTab = false, onCountsUpdate }, ref) =>
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => { setSelectedStudent(s); setShowResetModal(true); }}
-                          className="px-3 py-1.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl shadow-2xs transition-all whitespace-nowrap focus:outline-none"
+                          className="px-3 py-1.5 bg-[#FFF4EB] border border-[#F47C20]/40 text-[#F47C20] text-xs font-bold rounded-xl shadow-2xs whitespace-nowrap focus:outline-none"
                         >
                           Reset Password
                         </button>
                         <button
                           onClick={() => { setSelectedStudent(s); setShowRemoveModal(true); }}
-                          className="px-3 py-1.5 bg-red-50 border border-red-200 hover:bg-red-100 text-red-600 text-xs font-bold rounded-xl shadow-2xs transition-all whitespace-nowrap focus:outline-none"
+                          className="px-3 py-1.5 bg-red-50 border border-red-200 text-red-600 text-xs font-bold rounded-xl shadow-2xs whitespace-nowrap focus:outline-none"
                         >
                           Delete Student
                         </button>
@@ -703,13 +676,13 @@ const StudentManagement = forwardRef(({ isTab = false, onCountsUpdate }, ref) =>
                       <div className="absolute right-0 top-10 z-30 w-48 bg-white rounded-2xl shadow-xl border border-slate-200 py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
                         <button
                           onClick={() => { setOpenMenuId(null); setSelectedStudent(s); setShowResetModal(true); }}
-                          className="w-full px-4 py-2.5 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition-colors"
+                          className="w-full px-4 py-2.5 text-left text-xs font-semibold text-[#F47C20] flex items-center gap-2 transition-colors"
                         >
-                          <Key size={14} className="text-slate-400" /> Reset Password
+                          <Key size={14} className="text-[#F47C20]" /> Reset Password
                         </button>
                         <button
                           onClick={() => { setOpenMenuId(null); setSelectedStudent(s); setShowRemoveModal(true); }}
-                          className="w-full px-4 py-2.5 text-left text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors border-t border-slate-100"
+                          className="w-full px-4 py-2.5 text-left text-xs font-semibold text-red-600 flex items-center gap-2 transition-colors border-t border-slate-100"
                         >
                           <Trash2 size={14} className="text-red-500" /> Delete Student
                         </button>
@@ -734,30 +707,14 @@ const StudentManagement = forwardRef(({ isTab = false, onCountsUpdate }, ref) =>
               </div>
             ))}
           </div>
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between gap-4 px-5 py-3.5 border-t border-slate-100 bg-slate-50/50">
-              <p className="text-xs text-slate-400 font-medium hidden sm:block">Page {currentPage} of {totalPages}</p>
-              <div className="flex items-center gap-1.5 mx-auto sm:mx-0">
-                <button onClick={() => setCurrentPage(p => Math.max(p-1,1))} disabled={currentPage===1}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600     disabled:opacity-40 disabled:cursor-not-allowed transition-all">
-                  <ChevronLeft size={15}/>
-                </button>
-                {[...Array(Math.min(totalPages,7))].map((_,i) => {
-                  const pg = totalPages<=7 ? i+1 : currentPage<=4 ? i+1 : currentPage>=totalPages-3 ? totalPages-6+i : currentPage-3+i;
-                  return (
-                    <button key={pg} onClick={() => setCurrentPage(pg)}
-                      className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-all ${currentPage===pg ? "border border-[#F47C20] bg-white text-[#F47C20] shadow-sm" : "border border-slate-200 bg-white text-slate-600      "}`}>
-                      {pg}
-                    </button>
-                  );
-                })}
-                <button onClick={() => setCurrentPage(p => Math.min(p+1,totalPages))} disabled={currentPage===totalPages}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600     disabled:opacity-40 disabled:cursor-not-allowed transition-all">
-                  <ChevronRight size={15}/>
-                </button>
-              </div>
-            </div>
-          )}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={(p) => setCurrentPage(p)}
+            totalItems={filteredStudents.length}
+            pageSize={itemsPerPage}
+            itemLabel="students"
+          />
         </div>
       )}
 
@@ -829,7 +786,7 @@ const StudentManagement = forwardRef(({ isTab = false, onCountsUpdate }, ref) =>
               <button 
                 onClick={handleDeleteStudent} 
                 disabled={removeConfirmText !== selectedStudent?.rollNumber}
-                className="flex-1 py-2.5 bg-red-600 border border-red-600 text-white font-bold rounded-xl text-sm shadow-sm hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                className="flex-1 py-2.5 bg-red-600 border border-red-600 text-white font-bold rounded-xl text-sm shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
                 Delete Student
               </button>
             </div>

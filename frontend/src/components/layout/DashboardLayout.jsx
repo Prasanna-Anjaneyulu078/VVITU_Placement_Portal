@@ -20,14 +20,15 @@ import api from '../../utils/axiosConfig';
 import './DashboardLayout.css';
 
 export default function DashboardLayout({ children, role = 'student' }) {
-  const { logout, userName, userEmail } = useAuth();
+  const { logout, userName, userEmail, role: authRole } = useAuth();
   const { profileImage, updateProfileImage } = useData();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userDesignation, setUserDesignation] = useState('');
   const [fetchedName, setFetchedName] = useState('');
   const [fetchedAlumniId, setFetchedAlumniId] = useState('');
 
-  const normalizedRole = (role || 'student').toLowerCase();
+  const activeRole = authRole || role || 'student';
+  const normalizedRole = activeRole.toLowerCase();
 
   React.useEffect(() => {
     let isMounted = true;

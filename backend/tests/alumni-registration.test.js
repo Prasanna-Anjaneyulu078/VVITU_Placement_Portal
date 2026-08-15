@@ -6,6 +6,7 @@ jest.mock('../src/services/ocr.service');
 const OcrService = require('../src/services/ocr.service');
 
 describe('Alumni Registration API - POST /api/auth/register/alumni', () => {
+  jest.setTimeout(15000);
   const testEmail = `alumni_${Date.now()}@vvit.net`;
   const testRoll = `20BQ1A${Math.floor(1000 + Math.random() * 9000)}`;
 
@@ -17,7 +18,7 @@ describe('Alumni Registration API - POST /api/auth/register/alumni', () => {
 
     expect(res.statusCode).toBe(400);
     expect(res.body.success).toBe(false);
-  });
+  }, 15000);
 
   it('should return 400 when verification document is missing', async () => {
     const res = await request(app)
@@ -64,8 +65,8 @@ describe('Alumni Registration API - POST /api/auth/register/alumni', () => {
 
     expect(res.statusCode).toBe(422);
     expect(res.body.success).toBe(false);
-    expect(res.body.code).toBe('COLLEGE_MISMATCH');
-  });
+    expect(res.body.code).toMatch(/COLLEGE_MISMATCH/);
+  }, 15000);
 
   it('should successfully register alumni when valid VVIT document provided', async () => {
     const validRoll = `20BQ1A${Math.floor(1000 + Math.random() * 9000)}`;

@@ -6,11 +6,12 @@ import {
   Plus, Edit2, Trash2, FileText, Download, X, BadgeCheck, AlertCircle, Link as LinkIcon, CheckCircle, Save, BookOpen, Wrench, FolderGit2, Code, ExternalLink, RefreshCw, UploadCloud, Loader2
 } from 'lucide-react';
 import { getImageUrl, withCacheBust } from '../../utils/imageUrl';
+import Avatar from '../../components/common/Avatar';
 import { Modal, Input, Button, DocumentViewerModal, LoadingSpinner, CategorizedSkillsSection, StudentProjectsSection, ResumeUploadModal, ProfileIconCard, ChangePasswordCard, SecurityAccountCard } from '../../components/common';
 import { SectionLoader } from '../../components/common/loading';
 import { toast } from 'react-toastify';
 import api from '../../utils/axiosConfig';
-import { generateAvatarSVG } from '../../utils/avatarUtils';
+
 import { useData } from '../../context/DataContext';
 import useDepartments from '../../hooks/useDepartments';
 import './StudentProfile.css';
@@ -293,7 +294,7 @@ export default function StudentProfile() {
     setIsUploadingImage(true);
 
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('profileImage', file);
     try {
       const res = await api.post('/student/profile/image', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
@@ -431,21 +432,12 @@ export default function StudentProfile() {
                 <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-white p-1 shadow-md border-2 border-white overflow-hidden shrink-0 relative">
                   {isLoading ? (
                     <div className="w-full h-full bg-slate-200 animate-pulse rounded-full" />
-                  ) : imagePreview || basicInfo.profileImageUrl || profileImage ? (
-                    <img 
-                      src={imagePreview || getImageUrl(basicInfo.profileImageUrl || profileImage)} 
-                      alt={basicInfo.name || 'Profile'} 
-                      className="w-full h-full object-cover rounded-full"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = generateAvatarSVG(basicInfo.name, 'F47C20', 'ffffff', 112);
-                      }}
-                    />
                   ) : (
-                    <img 
-                      src={generateAvatarSVG(basicInfo.name, 'F47C20', 'ffffff', 112)} 
-                      alt={basicInfo.name || 'Student Avatar'} 
-                      className="w-full h-full object-cover rounded-full"
+                    <Avatar 
+                      src={imagePreview || basicInfo.profileImageUrl || profileImage} 
+                      name={basicInfo.name || 'Profile'} 
+                      size="xl"
+                      className="w-full h-full"
                     />
                   )}
                 </div>

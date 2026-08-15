@@ -78,7 +78,10 @@ export default function AdminAuditLogs() {
               pagination={{
                 currentPage,
                 totalPages,
-                onPageChange: setCurrentPage
+                onPageChange: setCurrentPage,
+                totalItems: logs.length,
+                pageSize: itemsPerPage,
+                itemLabel: "logs"
               }}
             />
           </div>
