@@ -298,13 +298,14 @@ export default function AdminAlumni() {
             )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto filter-controls-group">
+          <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto filter-controls-group min-w-0 max-w-full">
             {departments.length > 0 && (
-              <div className="relative flex-1 sm:flex-none min-w-[130px]">
+              <div className="relative flex-1 sm:flex-none min-w-[120px] max-w-full w-full sm:w-auto">
                 <select
                   value={filters.department}
                   onChange={(e) => setFilters(p => ({ ...p, department: e.target.value }))}
-                  className="w-full min-h-[44px] h-11 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] focus:ring-2 focus:ring-[#F47C20]/20 cursor-pointer truncate max-w-full"
+                  className="w-full min-h-[44px] h-11 px-3 pr-8 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] focus:ring-2 focus:ring-[#F47C20]/20 cursor-pointer truncate max-w-full min-w-0"
+                  style={{ maxWidth: '100%', boxSizing: 'border-box' }}
                   aria-label="Filter by department"
                 >
                   <option value="">All Departments</option>
@@ -313,12 +314,13 @@ export default function AdminAlumni() {
               </div>
             )}
 
-            <div className="relative flex-1 sm:flex-none min-w-[130px]">
+            <div className="relative flex-1 sm:flex-none min-w-[120px] max-w-full w-full sm:w-auto">
               <select
                 value={filters.verificationStatus}
                 onChange={(e) => setFilters(p => ({ ...p, verificationStatus: e.target.value }))}
-                className="w-full min-h-[44px] h-11 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] focus:ring-2 focus:ring-[#F47C20]/20 cursor-pointer truncate max-w-full"
-                aria-label="Filter by verification status"
+                className="w-full min-h-[44px] h-11 px-3 pr-8 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] focus:ring-2 focus:ring-[#F47C20]/20 cursor-pointer truncate max-w-full min-w-0"
+                style={{ maxWidth: '100%', boxSizing: 'border-box' }}
+                aria-label="Filter by status"
               >
                 <option value="">All Verification Status</option>
                 <option value="VERIFIED">Verified</option>

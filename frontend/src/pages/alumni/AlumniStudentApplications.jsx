@@ -166,13 +166,14 @@ export default function AlumniStudentApplications() {
             )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto filter-controls-group">
+          <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto filter-controls-group min-w-0 max-w-full">
             {/* Job Filter Dropdown */}
-            <div className="relative flex-1 sm:flex-none min-w-[130px]">
+            <div className="relative flex-1 sm:flex-none min-w-[120px] max-w-full w-full sm:w-auto">
               <select
                 value={filterJobId}
                 onChange={handleJobChange}
-                className="w-full min-h-[44px] h-11 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] focus:ring-2 focus:ring-[#F47C20]/20 max-w-full truncate cursor-pointer"
+                className="w-full min-h-[44px] h-11 px-3 pr-8 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] focus:ring-2 focus:ring-[#F47C20]/20 max-w-full truncate cursor-pointer min-w-0"
+                style={{ maxWidth: '100%', boxSizing: 'border-box' }}
                 aria-label="Filter by job"
               >
                 <option value="">All Jobs</option>
@@ -185,11 +186,12 @@ export default function AlumniStudentApplications() {
             </div>
 
             {/* Department Filter Dropdown */}
-            <div className="relative flex-1 sm:flex-none min-w-[130px]">
+            <div className="relative flex-1 sm:flex-none min-w-[120px] max-w-full w-full sm:w-auto">
               <select
                 value={filterDepartment}
                 onChange={(e) => setFilterDepartment(e.target.value)}
-                className="w-full min-h-[44px] h-11 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] focus:ring-2 focus:ring-[#F47C20]/20 cursor-pointer truncate max-w-full"
+                className="w-full min-h-[44px] h-11 px-3 pr-8 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] focus:ring-2 focus:ring-[#F47C20]/20 cursor-pointer truncate max-w-full min-w-0"
+                style={{ maxWidth: '100%', boxSizing: 'border-box' }}
                 aria-label="Filter by department"
               >
                 <option value="">All Departments</option>
@@ -202,11 +204,12 @@ export default function AlumniStudentApplications() {
             </div>
 
             {/* Status Filter Dropdown */}
-            <div className="relative flex-1 sm:flex-none min-w-[130px]">
+            <div className="relative flex-1 sm:flex-none min-w-[120px] max-w-full w-full sm:w-auto">
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full min-h-[44px] h-11 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] focus:ring-2 focus:ring-[#F47C20]/20 cursor-pointer truncate max-w-full"
+                className="w-full min-h-[44px] h-11 px-3 pr-8 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] focus:ring-2 focus:ring-[#F47C20]/20 cursor-pointer truncate max-w-full min-w-0"
+                style={{ maxWidth: '100%', boxSizing: 'border-box' }}
                 aria-label="Filter by status"
               >
                 <option value="">All Statuses</option>

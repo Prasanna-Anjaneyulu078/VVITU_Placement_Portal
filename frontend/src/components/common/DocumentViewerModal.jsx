@@ -2,10 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, Download, FileText, Calendar, User, Hash, ExternalLink, AlertCircle, ShieldAlert, RefreshCw, FileQuestion, ZoomIn, ZoomOut, Maximize2, ChevronLeft, ChevronRight, FileCode } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Configure PDF.js worker using reliable jsdelivr worker URL with version fallback
+// Configure PDF.js worker using matching bundled worker or unpkg fallback for version 5.6.205
 if (pdfjsLib?.GlobalWorkerOptions) {
-  const version = pdfjsLib.version || '3.11.174';
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${version}/build/pdf.worker.min.mjs`;
+  const version = pdfjsLib.version || '5.6.205';
+  pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+    'pdfjs-dist/build/pdf.worker.min.mjs',
+    import.meta.url
+  ).toString();
 }
 
 /* PDF Canvas Page Renderer Component */
