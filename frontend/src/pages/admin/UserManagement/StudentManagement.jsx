@@ -502,15 +502,15 @@ const StudentManagement = forwardRef(({ isTab = false, onCountsUpdate }, ref) =>
       </div>
 
       {/* SEARCH & FILTER BAR */}
-      <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs mb-6 flex flex-col md:flex-row gap-3 items-center justify-between">
-        <div className="relative w-full md:w-96">
+      <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs mb-6 flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between filter-toolbar-container">
+        <div className="relative w-full lg:w-96 filter-search-input">
           <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             placeholder="Search by name, roll number, email, or department..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full h-11 pl-10 pr-10 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:border-[#F47C20] focus:bg-white transition-all shadow-2xs"
+            className="w-full min-h-[44px] h-11 pl-10 pr-10 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:border-[#F47C20] focus:bg-white transition-all shadow-2xs"
           />
           {searchTerm && (
             <button
@@ -524,11 +524,11 @@ const StudentManagement = forwardRef(({ isTab = false, onCountsUpdate }, ref) =>
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex flex-wrap items-center gap-2.5 w-full lg:w-auto filter-controls-group">
           <select
             value={filters.department}
             onChange={(e) => setFilters(p => ({ ...p, department: e.target.value }))}
-            className="h-11 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] cursor-pointer"
+            className="w-full sm:w-auto min-h-[44px] h-11 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] cursor-pointer truncate max-w-full"
           >
             <option value="">All Departments</option>
             {departments.map(d => <option key={d.code} value={d.code}>{d.name || d.code}</option>)}
@@ -537,7 +537,7 @@ const StudentManagement = forwardRef(({ isTab = false, onCountsUpdate }, ref) =>
           <select
             value={filters.verificationStatus}
             onChange={(e) => setFilters(p => ({ ...p, verificationStatus: e.target.value }))}
-            className="h-11 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] cursor-pointer"
+            className="w-full sm:w-auto min-h-[44px] h-11 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] cursor-pointer truncate max-w-full"
           >
             <option value="">All Verification Status</option>
             <option value="VERIFIED">Verified</option>
@@ -547,7 +547,7 @@ const StudentManagement = forwardRef(({ isTab = false, onCountsUpdate }, ref) =>
           {hasFilters && (
             <button
               onClick={resetFilters}
-              className="h-11 px-3.5 bg-slate-100 text-slate-700 font-extrabold text-xs rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="w-full sm:w-auto min-h-[44px] h-11 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
               title="Reset filters"
             >
               <RefreshCw size={14} /> Reset

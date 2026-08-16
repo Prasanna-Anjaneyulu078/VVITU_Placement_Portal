@@ -1,94 +1,12 @@
 const prisma = require('../config/db');
+const MatchingService = require('./matching.service');
 
 class EligibilityService {
   /**
-   * Validates student eligibility for a specific job against all 7 Spring Boot criteria.
+   * Validates student eligibility and calculates matching score for a specific job.
    */
   static async validateEligibility(userId, jobId) {
-    const student = await prisma.student.findUnique({
-      where: { userId: BigInt(userId) },
-      include: {
-        user: true,
-        skills: { where: { deletedAt: null } },
-        resumes: { where: { deletedAt: null } }
-      }
-    });
-
-    if (!student || student.deletedAt) {
-      throw { statusCode: 404, message: `Student profile not found for user ID: ${userId}` };
-    }
-
-    const job = await prisma.job.findUnique({
-      where: { id: BigInt(jobId) }
-    });
-
-    if (!job || job.deletedAt) {
-      throw { statusCode: 404, message: `Job not found with ID: ${jobId}` };
-    }
-
-    const checks = [];
-
-    // 1. Department Check
-    const deptCheck = this.checkDepartmentEligibility(student, job);
-    checks.push(deptCheck);
-
-    // 2. CGPA Check
-    const cgpaCheck = this.checkCgpaEligibility(student, job);
-    checks.push(cgpaCheck);
-
-    // 3. Backlogs Check
-    const backlogsCheck = this.checkBacklogsEligibility(student, job);
-    checks.push(backlogsCheck);
-
-    // 4. Semester Check
-    const semesterCheck = this.checkSemesterEligibility(student, job);
-    checks.push(semesterCheck);
-
-    // 5. Resume Check
-    const resumeCheck = this.checkResumeEligibility(student);
-    checks.push(resumeCheck);
-
-    // 6. Account Status Check
-    const accountCheck = this.checkAccountEligibility(student);
-    checks.push(accountCheck);
-
-    // 7. Verification Status Check
-    const verificationCheck = this.checkVerificationEligibility(student);
-    checks.push(verificationCheck);
-
-    // Overall eligibility evaluation
-    const isEligible = checks.every((c) => c.passed);
-
-    // Match score calculation (passed criteria count / 7 * 100)
-    const passedCount = checks.filter((c) => c.passed).length;
-    const matchScore = Math.round((passedCount / checks.length) * 100);
-
-    let status = 'NOT_ELIGIBLE';
-    if (isEligible) {
-      status = 'ELIGIBLE';
-    } else if (matchScore >= 50) {
-      status = 'PARTIALLY_ELIGIBLE';
-    }
-
-    let rejectionReason = null;
-    if (!isEligible) {
-      const failedDetails = checks.filter((c) => !c.passed).map((c) => c.detail);
-      rejectionReason = `Not eligible due to: ${failedDetails.join(', ')}`;
-    }
-
-    // Skill Match Details
-    const skillMatch = this.calculateSkillMatch(student, job);
-
-    return {
-      studentId: Number(student.id),
-      jobId: Number(job.id),
-      isEligible,
-      status,
-      matchScore,
-      rejectionReason,
-      checks,
-      skillMatch
-    };
+    return await MatchingService.calculateJobMatch(userId, jobId);
   }
 
   static checkDepartmentEligibility(student, job) {

@@ -99,15 +99,15 @@ export default function AdminShortlisted({ isTab = false, onCountsUpdate }) {
       </div>
 
       {/* SEARCH & TOOLBAR */}
-      <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs mb-6 flex flex-col md:flex-row gap-3 items-center justify-between">
-        <div className="relative w-full md:w-96">
+      <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs mb-6 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between filter-toolbar-container">
+        <div className="relative w-full sm:w-80 md:w-96 filter-search-input">
           <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             placeholder="Search by name, roll number, email, company, or job..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full h-11 pl-10 pr-10 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:border-[#F47C20] focus:bg-white transition-all shadow-2xs"
+            className="w-full min-h-[44px] h-11 pl-10 pr-10 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:border-[#F47C20] focus:bg-white transition-all shadow-2xs"
             aria-label="Search shortlisted students"
           />
           {searchTerm && (
@@ -122,14 +122,14 @@ export default function AdminShortlisted({ isTab = false, onCountsUpdate }) {
           )}
         </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+        <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
           <span className="text-xs font-bold text-slate-500">
             {filteredShortlisted.length} {filteredShortlisted.length === 1 ? 'student' : 'students'} {searchTerm ? 'found' : 'shortlisted'}
           </span>
           
           <button
             onClick={fetchShortlisted}
-            className="h-11 px-4 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2"
+            className="min-h-[44px] h-11 px-4 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2"
             title="Refresh shortlisted list"
           >
             <RotateCcw size={15} className={isLoading ? "animate-spin" : ""} />

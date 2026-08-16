@@ -179,3 +179,83 @@ button:hover,
   aspect-ratio: 1;
 }
 
+/* ─────────────────────────────────────────────────────────────
+   Responsive Filter & Dropdown Controls (Mobile & Tablet)
+   ───────────────────────────────────────────────────────────── */
+
+/* Viewport Safety & Layout Bounds */
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Base Select & Filter Controls Touch Target Standards */
+select,
+input[type="text"],
+input[type="search"],
+.filter-select,
+.filter-input {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-height: 44px;
+}
+
+/* Dropdown Options Text Truncation & Touch Targets */
+select {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+select option {
+  padding: 8px 12px;
+  min-height: 36px;
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* Dropdown Menu Popup Overlay Viewport Guard */
+.dropdown-menu,
+.select-dropdown-menu,
+.custom-dropdown-menu {
+  max-width: calc(100vw - 24px) !important;
+  max-height: 280px !important;
+  overflow-y: auto !important;
+  box-sizing: border-box !important;
+  z-index: 50 !important;
+}
+
+/* Responsive Filter Toolbar Breakpoint Adjustments */
+@media (max-width: 767px) {
+  .filter-toolbar-container {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .filter-search-input {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .filter-controls-group {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .filter-controls-group select,
+  .filter-controls-group button {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .filter-controls-group {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+

@@ -60,9 +60,8 @@ export function withCacheBust(url, version) {
     return null;
   }
 
-  if (!version) return trimmed;
-
-  const vParam = encodeURIComponent(String(version));
+  const effectiveVersion = version !== undefined && version !== null ? String(version) : String(Date.now());
+  const vParam = encodeURIComponent(effectiveVersion);
 
   // If the url already has a v= parameter, replace it
   const urlObj = new URL(trimmed, 'http://localhost'); // dummy base for parsing relative
@@ -114,6 +113,17 @@ export function resolveProfileImage(value, options = {}) {
     return null;
   }
 
+  // Determine active backend origin
+  let backendOrigin = 'http://localhost:8082';
+  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) {
+    try {
+      const parsed = new URL(import.meta.env.VITE_API_BASE_URL);
+      backendOrigin = parsed.origin;
+    } catch {
+      // Fallback to default origin
+    }
+  }
+
   // 1. Base64 & Blob URLs -> Return EXACTLY as-is (NO cache busting query string EVER)
   if (trimmed.startsWith('data:')) {
     if (isBase64Image(trimmed)) return trimmed;
@@ -125,23 +135,21 @@ export function resolveProfileImage(value, options = {}) {
 
   // 2. Absolute HTTP/HTTPS URLs
   if (isHttpUrl(trimmed)) {
-    return options.cacheBust ? withCacheBust(trimmed, options.version) : trimmed;
+    let targetUrl = trimmed;
+    try {
+      const parsed = new URL(trimmed);
+      if ((parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') && parsed.pathname.includes('/uploads/')) {
+        targetUrl = `${backendOrigin}${parsed.pathname}${parsed.search}`;
+      }
+    } catch {
+      // Keep original url
+    }
+    return options.cacheBust ? withCacheBust(targetUrl, options.version) : targetUrl;
   }
 
   // 3. Relative Upload Paths (/uploads/...) -> Convert to full backend origin URL
   if (isRelativeImageUrl(trimmed)) {
     const cleanPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
-    let backendOrigin = 'http://localhost:8082';
-
-    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) {
-      try {
-        const parsed = new URL(import.meta.env.VITE_API_BASE_URL);
-        backendOrigin = parsed.origin;
-      } catch {
-        // Fallback to default origin
-      }
-    }
-
     const fullUrl = `${backendOrigin}${cleanPath}`;
     return options.cacheBust ? withCacheBust(fullUrl, options.version) : fullUrl;
   }

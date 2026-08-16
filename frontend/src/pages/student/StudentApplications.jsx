@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout';
-import { X, MapPin, DollarSign, Briefcase } from 'lucide-react';
+import { X, MapPin, DollarSign, Briefcase, Search } from 'lucide-react';
 import { PageHeader, Table, Modal, Button, LoadingSpinner } from '../../components/common';
 import { TableLoader } from '../../components/common/loading';
 import { getImageUrl } from '../../utils/imageUrl';
@@ -21,52 +21,46 @@ export default function StudentApplications() {
   const [interviewStatusFilter, setInterviewStatusFilter] = useState('');
 
   useEffect(() => {
-    const filter = new URLSearchParams(location.search).get('filter');
-    if (filter) {
-      setAppStatusFilter(filter);
-    }
-  }, [location.search]);
-
-  useEffect(() => {
-    const fetchApps = async () => {
-      try {
-        const res = await api.get('/applications/my');
-        // Map backend response to match table requirements
-        const mappedApps = res.data.map(app => {
-          const comp = app.company || app.companyName || app.job?.company || app.job?.companyName || 'Company';
-          const role = app.role || app.jobTitle || app.title || app.job?.title || app.job?.jobTitle || 'Job Role';
-          return {
-            id: app.id,
-            company: comp,
-            role: role,
-            date: app.appliedAt ? new Date(app.appliedAt).toLocaleDateString() : 'N/A',
-            status: app.status,
-            interviewStatus: app.interviewStatus || 'N/A',
-            jobDetails: app.job || {
-              title: role,
-              company: comp,
-              companyName: comp,
-              location: app.location,
-              salary: app.salaryPackage
-            }
-          };
-        });
-        setApplications(mappedApps);
-      } catch (err) {
-        console.error('Failed to load applications', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchApps();
+    fetchApplications();
   }, []);
 
+  const fetchApplications = async () => {
+    try {
+      const res = await api.get('/applications/my');
+      // Map backend response to match table requirements
+      const mappedApps = res.data.map(app => {
+        const comp = app.company || app.companyName || app.job?.company || app.job?.companyName || 'Company';
+        const role = app.role || app.jobTitle || app.title || app.job?.title || app.job?.jobTitle || 'Job Role';
+        return {
+          id: app.id,
+          company: comp,
+          role: role,
+          date: app.appliedAt ? new Date(app.appliedAt).toLocaleDateString() : 'N/A',
+          status: app.status,
+          interviewStatus: app.interviewStatus || 'N/A',
+          jobDetails: app.job || {
+            title: role,
+            company: comp,
+            companyName: comp,
+            location: app.location,
+            salary: app.salaryPackage
+          }
+        };
+      });
+      setApplications(mappedApps);
+    } catch (err) {
+      console.error('Failed to load applications', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const getStatusBadge = (status) => {
-    switch(status) {
-      case 'SHORTLISTED': return 'px-3 py-1 rounded-full text-[11px] uppercase tracking-wider font-bold bg-green-100 text-green-700';
-      case 'APPLIED': return 'px-3 py-1 rounded-full text-[11px] uppercase tracking-wider font-bold bg-blue-100 text-blue-700';
+    switch(status?.toUpperCase()) {
+      case 'SELECTED': return 'px-3 py-1 rounded-full text-[11px] uppercase tracking-wider font-bold bg-green-100 text-green-700';
+      case 'SHORTLISTED': return 'px-3 py-1 rounded-full text-[11px] uppercase tracking-wider font-bold bg-blue-100 text-blue-700';
+      case 'APPLIED': return 'px-3 py-1 rounded-full text-[11px] uppercase tracking-wider font-bold bg-amber-100 text-amber-700';
       case 'REJECTED': return 'px-3 py-1 rounded-full text-[11px] uppercase tracking-wider font-bold bg-red-100 text-red-700';
-      case 'SELECTED': return 'px-3 py-1 rounded-full text-[11px] uppercase tracking-wider font-bold bg-emerald-100 text-emerald-700';
       default: return 'px-3 py-1 rounded-full text-[11px] uppercase tracking-wider font-bold bg-gray-100 text-gray-700';
     }
   };
@@ -149,6 +143,39 @@ export default function StudentApplications() {
             <p className="text-xs text-red-500 font-bold uppercase tracking-wider mb-1">Rejected</p>
             <p className="text-2xl font-bold text-red-600">{stats.rejected}</p>
           </div>
+        </div>
+
+        {/* SEARCH & FILTER BAR */}
+        <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs mb-6 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between filter-toolbar-container">
+          <div className="relative w-full sm:w-80 md:w-96 filter-search-input">
+            <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search applications by company or role..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full min-h-[44px] h-11 pl-10 pr-10 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:border-[#F47C20] focus:bg-white transition-all shadow-2xs"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 bg-slate-200/60 rounded-full transition-colors cursor-pointer"
+                title="Clear search"
+                aria-label="Clear search"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          {hasActiveFilters && (
+            <button
+              onClick={resetFilters}
+              className="min-h-[44px] h-11 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors whitespace-nowrap cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <X size={14} /> Clear Filters
+            </button>
+          )}
         </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mt-6">

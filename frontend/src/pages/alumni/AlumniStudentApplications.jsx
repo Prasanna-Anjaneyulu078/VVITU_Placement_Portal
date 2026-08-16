@@ -142,24 +142,24 @@ export default function AlumniStudentApplications() {
       <div className="mt-6 pb-16 space-y-6">
 
         {/* Filter Controls Bar */}
-        <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div className="relative w-full md:w-80">
+        <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between filter-toolbar-container">
+          <div className="relative w-full lg:w-80 filter-search-input">
             <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input 
               type="text"
               placeholder="Search by student name, roll no..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full h-10 pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:border-[#F47C20] transition-all"
+              className="w-full min-h-[44px] h-11 pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:border-[#F47C20] transition-all"
             />
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex flex-wrap items-center gap-2.5 w-full lg:w-auto filter-controls-group">
             {/* Job Filter Dropdown */}
             <select
               value={filterJobId}
               onChange={handleJobChange}
-              className="h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] max-w-[240px] truncate cursor-pointer"
+              className="w-full sm:w-auto min-h-[44px] h-11 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] max-w-full truncate cursor-pointer"
             >
               <option value="">All Jobs</option>
               {jobs.map(j => (
@@ -173,7 +173,7 @@ export default function AlumniStudentApplications() {
             <select
               value={filterDepartment}
               onChange={(e) => setFilterDepartment(e.target.value)}
-              className="h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] cursor-pointer"
+              className="w-full sm:w-auto min-h-[44px] h-11 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] cursor-pointer truncate max-w-full"
             >
               <option value="">All Departments</option>
               {departments.map(d => (
@@ -187,7 +187,7 @@ export default function AlumniStudentApplications() {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] cursor-pointer"
+              className="w-full sm:w-auto min-h-[44px] h-11 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] cursor-pointer truncate max-w-full"
             >
               <option value="">All Statuses</option>
               <option value="APPLIED">Applied</option>

@@ -1,5 +1,6 @@
 const fs = require('fs');
 const prisma = require('../config/db');
+const { resolveResumeFilePath } = require('../utils/file.utils');
 
 function normalizeProjectUrl(url) {
   if (!url || typeof url !== 'string') return null;
@@ -124,6 +125,7 @@ class StudentService {
         };
       }),
       hasResume: student.resumes.length > 0,
+      fileMissing: student.resumes.length > 0 && !resolveResumeFilePath(student.resumes[0]?.filePath),
       resumeFileName: student.resumes[0]?.fileName || null,
       resumeFileType: student.resumes[0]?.fileType || null,
       resumeUploadedAt: student.resumes[0]?.uploadedAt || null,
@@ -132,9 +134,11 @@ class StudentService {
         fileName: r.fileName,
         fileUrl: r.filePath,
         filePath: r.filePath,
-        uploadedAt: r.uploadedAt
+        uploadedAt: r.uploadedAt,
+        fileMissing: !resolveResumeFilePath(r.filePath)
       }))
     };
+
   }
 
   static async getSkills(userId) {
@@ -723,8 +727,11 @@ class StudentService {
       };
     }
 
+    const physicalPath = resolveResumeFilePath(latestResume.filePath);
+
     return {
       hasResume: true,
+      fileMissing: !physicalPath,
       id: Number(latestResume.id),
       fileName: latestResume.fileName,
       fileUrl: latestResume.filePath,    // schema field is filePath
@@ -732,6 +739,7 @@ class StudentService {
       fileType: latestResume.fileType || 'application/pdf',
       uploadedAt: latestResume.uploadedAt
     };
+
   }
 
   static async getResumeFile(userId, resumeId = null) {

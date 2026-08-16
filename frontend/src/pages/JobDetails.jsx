@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import { PageHeader, Button, LoadingSpinner, Badge, EligibilityBadge, PreApplicationScreeningModal } from '../components/common';
-import { MapPin, DollarSign, Users, Briefcase, Calendar, Award, ExternalLink, MessageSquare, Building2, Globe, Linkedin, CheckCircle, ChevronRight, XCircle, ChevronLeft, Info, Hourglass, CheckCircle2, Circle, X, AlertCircle, Lock } from 'lucide-react';
+import { MapPin, DollarSign, Users, Briefcase, Calendar, Award, ExternalLink, MessageSquare, Building2, Globe, Linkedin, CheckCircle, ChevronRight, XCircle, ChevronLeft, Info, Hourglass, CheckCircle2, Circle, X, AlertCircle, Lock, Sparkles, RefreshCw } from 'lucide-react';
 import api from '../utils/axiosConfig';
 import { getImageUrl } from '../utils/imageUrl';
 import Avatar from '../components/common/Avatar';
@@ -22,6 +22,10 @@ export default function JobDetails() {
   const [applicationStatus, setApplicationStatus] = useState(null);
   const [profile, setProfile] = useState(null);
 
+  // Job Match State
+  const [matchData, setMatchData] = useState(null);
+  const [isMatchLoading, setIsMatchLoading] = useState(false);
+
   // Screening State
   const [showScreening, setShowScreening] = useState(false);
   const [screeningAnswers, setScreeningAnswers] = useState({
@@ -32,8 +36,6 @@ export default function JobDetails() {
     DECLARATION: ''
   });
   const [isApplying, setIsApplying] = useState(false);
-
-
 
   useEffect(() => {
     fetchJobDetails();
@@ -81,11 +83,16 @@ export default function JobDetails() {
 
   const fetchStudentData = async () => {
     try {
-      const [profileRes, appliedRes] = await Promise.all([
+      setIsMatchLoading(true);
+      const [profileRes, appliedRes, matchRes] = await Promise.all([
         api.get('/student/profile').catch(() => ({ data: null })),
         api.get('/student/jobs/applied').catch(() => ({ data: [] })),
+        api.get(`/student/skills/job-match/${id}`).catch(() => ({ data: null }))
       ]);
       setProfile(profileRes.data);
+      if (matchRes.data) {
+        setMatchData(matchRes.data);
+      }
       
       const applied = appliedRes.data.find(app => app.jobId?.toString() === id || app.id?.toString() === id);
       if (applied) {
@@ -94,6 +101,8 @@ export default function JobDetails() {
       }
     } catch (e) {
       console.error(e);
+    } finally {
+      setIsMatchLoading(false);
     }
   };
 
@@ -510,7 +519,135 @@ export default function JobDetails() {
           </div>
 
           {/* Right Sidebar Area */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-6">
+            
+            {/* YOUR JOB MATCH CARD (Student View) */}
+            {role === 'student' && matchData && (
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                    <Sparkles size={18} className="text-[#F47C20]" />
+                    Your Job Match
+                  </h3>
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                    matchData.overallScore >= 90 ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
+                    matchData.overallScore >= 75 ? 'bg-green-100 text-green-800 border border-green-200' :
+                    matchData.overallScore >= 60 ? 'bg-blue-100 text-blue-800 border border-blue-200' :
+                    matchData.overallScore >= 40 ? 'bg-amber-100 text-amber-800 border border-amber-200' :
+                    'bg-rose-100 text-rose-800 border border-rose-200'
+                  }`}>
+                    {matchData.category}
+                  </span>
+                </div>
+
+                {/* Score Circle & Category Display */}
+                <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100 mb-6">
+                  <div className="w-16 h-16 rounded-full bg-[#FFF4EB] border-2 border-[#F47C20] flex items-center justify-center text-[#F47C20] font-black text-2xl shrink-0 shadow-xs">
+                    {matchData.overallScore}%
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-900">{matchData.category}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {matchData.isEligible 
+                        ? 'Based on your actual skills, education, experience, and branch.' 
+                        : 'Action required: Some eligibility criteria are not met.'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Hard Ineligibility Warning Banner */}
+                {!matchData.isEligible && (
+                  <div className="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs space-y-1">
+                    <div className="flex items-center gap-2 font-bold text-rose-700">
+                      <XCircle size={16} /> Not Eligible
+                    </div>
+                    <p className="font-medium text-rose-800 leading-relaxed">{matchData.rejectionReason}</p>
+                  </div>
+                )}
+
+                {/* Component Sub-scores Breakdown */}
+                {matchData.breakdown && (
+                  <div className="space-y-3 mb-6">
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Match Breakdown</p>
+                    
+                    {[
+                      { label: 'Skills', weight: '50%', score: matchData.breakdown.skills },
+                      { label: 'Education', weight: '15%', score: matchData.breakdown.education },
+                      { label: 'Branch', weight: '10%', score: matchData.breakdown.branch },
+                      { label: 'Experience', weight: '10%', score: matchData.breakdown.experience },
+                      { label: 'Eligibility', weight: '10%', score: matchData.breakdown.eligibility },
+                      { label: 'Certifications', weight: '5%', score: matchData.breakdown.certifications },
+                    ].map((item, idx) => (
+                      <div key={idx} className="space-y-1">
+                        <div className="flex justify-between text-xs font-semibold text-slate-700">
+                          <span>{item.label} <span className="text-[10px] text-slate-400">({item.weight})</span></span>
+                          <span className="font-bold">{item.score}%</span>
+                        </div>
+                        <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full transition-all duration-500 ${
+                              item.score >= 75 ? 'bg-emerald-500' :
+                              item.score >= 50 ? 'bg-[#F47C20]' : 'bg-rose-500'
+                            }`}
+                            style={{ width: `${item.score}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Matched & Missing Skills Chips */}
+                {((matchData.matchedSkills && matchData.matchedSkills.length > 0) || (matchData.missingSkills && matchData.missingSkills.length > 0)) && (
+                  <div className="space-y-4 mb-6 pt-4 border-t border-slate-100">
+                    {matchData.matchedSkills && matchData.matchedSkills.length > 0 && (
+                      <div>
+                        <p className="text-xs font-bold text-emerald-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                          <CheckCircle size={14} /> Matched Skills ({matchData.matchedSkills.length})
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {matchData.matchedSkills.map((skill, i) => (
+                            <span key={i} className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-xs font-semibold">
+                              ✓ {skill}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {matchData.missingSkills && matchData.missingSkills.length > 0 && (
+                      <div>
+                        <p className="text-xs font-bold text-amber-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                          <Circle size={13} /> Missing Skills ({matchData.missingSkills.length})
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {matchData.missingSkills.map((skill, i) => (
+                            <span key={i} className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-xs font-semibold">
+                              ○ {skill}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Why this score checklist */}
+                {matchData.explanations && matchData.explanations.length > 0 && (
+                  <div className="pt-4 border-t border-slate-100">
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Why this score?</p>
+                    <ul className="space-y-1.5 text-xs text-slate-600 font-medium">
+                      {matchData.explanations.map((exp, i) => (
+                        <li key={i} className={`flex items-start gap-1.5 ${exp.startsWith('✕') ? 'text-rose-600 font-semibold' : ''}`}>
+                          <span>{exp}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+
             {role === 'student' && hasApplied && (
               <div className="flex flex-col gap-6">
                 
@@ -583,12 +720,6 @@ export default function JobDetails() {
                         </Button>
                      </>
                    )}
-                   
-                   {role === 'student' && !hasApplied && (
-                      <Button className="w-full justify-center bg-[#F47C20]   text-white rounded-lg h-11 font-semibold shadow-sm" onClick={handleApplyClick}>
-                        Apply Now
-                      </Button>
-                    )}
                  </div>
               </div>
             )}
@@ -597,31 +728,27 @@ export default function JobDetails() {
               <div className="border border-gray-200 rounded-xl p-6 bg-gray-50">
                  <div className="flex items-center justify-between mb-4">
                    <h3 className="text-base font-semibold text-gray-900">Interested in this role?</h3>
-                   {job.requiredSkills && (
-                     <EligibilityBadge status="ELIGIBLE" matchScore={skillMatchPercentage} />
+                   {matchData ? (
+                     <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                       matchData.overallScore >= 75 ? 'bg-green-100 text-green-800' :
+                       matchData.overallScore >= 40 ? 'bg-amber-100 text-amber-800' :
+                       'bg-rose-100 text-rose-800'
+                     }`}>
+                       {matchData.overallScore}% Match
+                     </span>
+                   ) : (
+                     job.requiredSkills && (
+                       <EligibilityBadge status="ELIGIBLE" matchScore={skillMatchPercentage} />
+                     )
                    )}
                  </div>
 
-                 {/* Skill match summary */}
-                 {(matchedSkills.length > 0 || missingSkills.length > 0) && (
-                   <div className="mb-4 space-y-2">
-                     {matchedSkills.map((skill, i) => (
-                       <div key={i} className="flex items-center gap-2 text-[13px]">
-                         <CheckCircle size={14} className="text-green-500 shrink-0" />
-                         <span className="text-gray-600">{skill}</span>
-                       </div>
-                     ))}
-                     {missingSkills.map((skill, i) => (
-                       <div key={i} className="flex items-center gap-2 text-[13px]">
-                         <XCircle size={14} className="text-red-500 shrink-0" />
-                         <span className="text-red-600 font-medium">{skill} (missing)</span>
-                       </div>
-                     ))}
-                   </div>
-                 )}
-
-                 <Button className="w-full justify-center bg-[#F47C20]   text-white rounded-lg h-11 font-semibold shadow-sm" onClick={handleApplyClick}>
-                   Apply Now
+                 <Button 
+                   className="w-full justify-center bg-[#F47C20] text-white rounded-lg h-11 font-semibold shadow-sm disabled:opacity-50 disabled:cursor-not-allowed" 
+                   onClick={handleApplyClick}
+                   disabled={matchData && !matchData.isEligible}
+                 >
+                   {matchData && !matchData.isEligible ? 'Not Eligible to Apply' : 'Apply Now'}
                  </Button>
               </div>
             )}

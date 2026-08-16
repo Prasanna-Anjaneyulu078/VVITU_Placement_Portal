@@ -133,16 +133,17 @@ export default function StudentProfile() {
           }
         }
 
-        if (profileRes.data.hasResume || profileRes.data.resumeFileName) {
+        if (profileRes.data.hasResume || profileRes.data.resumeFileName || profileRes.data.fileMissing) {
           setResumeDetails({
-            hasResume: true,
+            hasResume: Boolean(profileRes.data.hasResume),
+            fileMissing: Boolean(profileRes.data.fileMissing),
             fileName: profileRes.data.resumeFileName || 'Uploaded_Resume.pdf',
             fileType: profileRes.data.resumeFileType || 'application/pdf',
             uploadedAt: profileRes.data.resumeUploadedAt || new Date().toISOString()
           });
         }
       }
-      if (resumeRes.data && resumeRes.data.hasResume) {
+      if (resumeRes.data) {
         setResumeDetails(resumeRes.data);
       }
     } catch (err) {
@@ -719,14 +720,18 @@ export default function StudentProfile() {
                 <div className="text-center py-6 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50 space-y-3">
                   <FileText size={32} className="mx-auto text-slate-300"/>
                   <div>
-                    <p className="text-xs font-bold text-slate-600">No resume uploaded yet</p>
-                    <p className="text-[11px] text-slate-400 mt-0.5">Upload your resume to automatically generate your Skills &amp; Technologies list.</p>
+                    <p className="text-xs font-bold text-slate-600">
+                      {resumeDetails?.fileMissing ? "Resume file missing from storage" : "No resume uploaded yet"}
+                    </p>
+                    <p className="text-[11px] text-slate-400 mt-0.5 max-w-sm mx-auto">
+                      {resumeDetails?.fileMissing ? "Your previously recorded resume document could not be found on storage. Please re-upload your resume." : "Upload your resume to automatically generate your Skills & Technologies list."}
+                    </p>
                   </div>
                   <button 
                     onClick={() => setShowResumeUploadModal(true)} 
-                    className="px-4 py-2 bg-[#FFF4EB] border border-[#F47C20] text-[#F47C20]   text-xs font-bold rounded-xl transition-all shadow-xs"
+                    className="px-4 py-2 bg-[#FFF4EB] border border-[#F47C20] text-[#F47C20] text-xs font-bold rounded-xl transition-all shadow-xs"
                   >
-                    Upload Resume
+                    {resumeDetails?.fileMissing ? "Re-upload Resume" : "Upload Resume"}
                   </button>
                 </div>
               )}

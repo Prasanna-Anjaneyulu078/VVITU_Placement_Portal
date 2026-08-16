@@ -23,10 +23,10 @@ const Avatar = ({
   const displayName = getDisplayName(name) || getDisplayName(alt) || getDisplayName(props.user) || '';
   const initials = getInitials(displayName);
 
-  // Reset image error state whenever user or image source changes
+  // Reset image error state whenever user, image source, or resolved URL changes
   useEffect(() => {
     setImageError(false);
-  }, [rawImage, displayName]);
+  }, [rawImage, resolvedUrl, displayName]);
 
   const showImage = Boolean(resolvedUrl) && !imageError && !resolvedUrl.includes('ui-avatars.com');
 

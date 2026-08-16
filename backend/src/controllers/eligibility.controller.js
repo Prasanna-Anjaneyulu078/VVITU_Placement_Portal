@@ -18,7 +18,10 @@ class EligibilityController {
       res.status(200).json({
         status: result.status,
         eligible: result.isEligible,
+        isEligible: result.isEligible,
+        overallScore: result.overallScore,
         matchScore: result.matchScore,
+        category: result.category,
         rejectionReason: result.rejectionReason
       });
     } catch (err) {
@@ -30,10 +33,7 @@ class EligibilityController {
     try {
       const { jobId } = req.params;
       const result = await EligibilityService.validateEligibility(req.user.id, jobId);
-      res.status(200).json({
-        matchScore: result.matchScore,
-        checks: result.checks
-      });
+      res.status(200).json(result);
     } catch (err) {
       next(err);
     }

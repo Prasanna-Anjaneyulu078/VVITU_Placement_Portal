@@ -274,15 +274,15 @@ export default function AdminAlumni() {
         </div>
 
         {/* ALUMNI SEARCH & FILTER TOOLBAR */}
-        <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col md:flex-row gap-3 items-center justify-between">
-          <div className="relative w-full md:w-96">
+        <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between filter-toolbar-container">
+          <div className="relative w-full lg:w-96 filter-search-input">
             <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               placeholder="Search by alumni name, email, company, or department..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-11 pl-10 pr-10 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:border-[#F47C20] focus:bg-white transition-all shadow-2xs"
+              className="w-full min-h-[44px] h-11 pl-10 pr-10 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:border-[#F47C20] focus:bg-white transition-all shadow-2xs"
             />
             {searchTerm && (
               <button
@@ -296,12 +296,12 @@ export default function AdminAlumni() {
             )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex flex-wrap items-center gap-2.5 w-full lg:w-auto filter-controls-group">
             {departments.length > 0 && (
               <select
                 value={filters.department}
                 onChange={(e) => setFilters(p => ({ ...p, department: e.target.value }))}
-                className="h-11 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] cursor-pointer"
+                className="w-full sm:w-auto min-h-[44px] h-11 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] cursor-pointer truncate max-w-full"
               >
                 <option value="">All Departments</option>
                 {departments.map(d => <option key={d} value={d}>{d}</option>)}
@@ -311,7 +311,7 @@ export default function AdminAlumni() {
             <select
               value={filters.verificationStatus}
               onChange={(e) => setFilters(p => ({ ...p, verificationStatus: e.target.value }))}
-              className="h-11 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] cursor-pointer"
+              className="w-full sm:w-auto min-h-[44px] h-11 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] cursor-pointer truncate max-w-full"
             >
               <option value="">All Verification Status</option>
               <option value="VERIFIED">Verified</option>
@@ -322,7 +322,7 @@ export default function AdminAlumni() {
             {hasActiveFilters && (
               <button
                 onClick={resetFilters}
-                className="h-11 px-4 bg-white border border-[#F47C20] text-[#F47C20] font-extrabold text-xs rounded-xl flex items-center gap-1.5 whitespace-nowrap cursor-pointer select-none"
+                className="w-full sm:w-auto min-h-[44px] h-11 px-4 bg-white border border-[#F47C20] text-[#F47C20] font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer select-none"
                 title="Reset filters"
               >
                 <RefreshCw size={14} /> Clear Filters
