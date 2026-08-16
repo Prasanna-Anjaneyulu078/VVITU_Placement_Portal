@@ -603,7 +603,7 @@ class JobService {
       }
     }
 
-    let skillMatchPercentage = 100;
+    let skillMatchPercentage = 0;
     let matchedSkills = [];
     let missingSkills = [];
     let isEligible = true;
@@ -614,11 +614,10 @@ class JobService {
       const eligibility = await EligibilityService.validateEligibility(userId, Number(job.id));
       isEligible = eligibility.isEligible;
       eligibilityDetails = eligibility;
-      if (eligibility.skillMatch) {
-        skillMatchPercentage = eligibility.skillMatch.skillMatchPercentage ?? 100;
-        matchedSkills = eligibility.skillMatch.matchedSkills || [];
-        missingSkills = eligibility.skillMatch.missingSkills || [];
-      }
+      
+      skillMatchPercentage = eligibility.breakdown?.skills ?? eligibility.skillMatchPercentage ?? eligibility.skillMatch?.skillMatchPercentage ?? 0;
+      matchedSkills = eligibility.matchedSkills || eligibility.skillMatch?.matchedSkills || [];
+      missingSkills = eligibility.missingSkills || eligibility.skillMatch?.missingSkills || [];
     } catch (e) {
       // Safe fallback if student profile or eligibility check fails
     }

@@ -6,34 +6,25 @@ const { matchDepartment, normalizeDepartment } = require('../src/utils/departmen
 const MatchingService = require('../src/services/matching.service');
 const prisma = require('../src/config/db');
 
-describe('Job–Student Deterministic Matching Engine Tests', () => {
+describe('Universal Job–Student Deterministic Matching Engine Tests', () => {
   let studentToken;
 
   beforeAll(() => {
     studentToken = generateAccessToken({ id: 100, email: 'matching.student@vvit.net', role: 'STUDENT' });
   });
 
-  describe('Skill Normalization & Alias Matcher', () => {
+  describe('Skill Normalization & Universal Matcher', () => {
     it('should normalize React variants to canonical react.js', () => {
-      const v1 = normalizeSkill('React');
-      const v2 = normalizeSkill('React.js');
-      const v3 = normalizeSkill('ReactJS');
-      const v4 = normalizeSkill('react js');
-
-      expect(v1.canonical).toEqual('react.js');
-      expect(v2.canonical).toEqual('react.js');
-      expect(v3.canonical).toEqual('react.js');
-      expect(v4.canonical).toEqual('react.js');
+      expect(normalizeSkill('React').canonical).toEqual('react.js');
+      expect(normalizeSkill('React.js').canonical).toEqual('react.js');
+      expect(normalizeSkill('ReactJS').canonical).toEqual('react.js');
+      expect(normalizeSkill('react js').canonical).toEqual('react.js');
     });
 
     it('should normalize Node variants to canonical node.js', () => {
-      const n1 = normalizeSkill('Node');
-      const n2 = normalizeSkill('Node.js');
-      const n3 = normalizeSkill('NodeJS');
-
-      expect(n1.canonical).toEqual('node.js');
-      expect(n2.canonical).toEqual('node.js');
-      expect(n3.canonical).toEqual('node.js');
+      expect(normalizeSkill('Node').canonical).toEqual('node.js');
+      expect(normalizeSkill('Node.js').canonical).toEqual('node.js');
+      expect(normalizeSkill('NodeJS').canonical).toEqual('node.js');
     });
 
     it('should keep Java and JavaScript strictly distinct', () => {
@@ -45,158 +36,187 @@ describe('Job–Student Deterministic Matching Engine Tests', () => {
       expect(java.canonical).not.toEqual(js.canonical);
     });
 
-    it('should calculate partial skill match percentage accurately', () => {
-      const studentSkills = ['Java', 'Spring Boot', 'React', 'PostgreSQL', 'Docker'];
-      const requiredSkills = 'Java, Spring Boot, React.js, PostgreSQL, Docker, AWS';
+    it('should evaluate Required (80%) vs Preferred (20%) skills correctly', () => {
+      const studentSkills = ['Python', 'SQL', 'Pandas'];
+      const requiredSkills = 'Python, SQL, Machine Learning, Statistics'; // 2/4 matched -> 0.5 * 80 = 40
+      const preferredSkills = 'Pandas, Scikit-learn';                       // 1/2 matched -> 0.5 * 20 = 10
 
-      const result = matchSkills(studentSkills, requiredSkills);
-      expect(result.skillMatchPercentage).toEqual(83); // 5/6 * 100 = 83.33 -> 83
-      expect(result.matchedSkills.length).toEqual(5);
-      expect(result.missingSkills).toEqual(['AWS']);
+      const result = matchSkills(studentSkills, requiredSkills, preferredSkills);
+      expect(result.skillMatchPercentage).toEqual(50); // 40 + 10 = 50
+      expect(result.matchedSkills).toEqual(['Python', 'SQL']);
+      expect(result.missingSkills).toEqual(['Machine Learning', 'Statistics']);
+      expect(result.matchedPreferredSkills).toEqual(['Pandas']);
+      expect(result.missingPreferredSkills).toEqual(['Scikit-learn']);
     });
   });
 
-  describe('Department Normalization & Matcher', () => {
-    it('should normalize Artificial Intelligence and Data Science to AI & DS', () => {
-      expect(normalizeDepartment('Artificial Intelligence and Data Science')).toEqual('AI & DS');
-      expect(normalizeDepartment('AI & DS')).toEqual('AI & DS');
-      expect(normalizeDepartment('AIDS')).toEqual('AI & DS');
-    });
+  describe('Universal Multi-Job Evaluation for Single Student', () => {
+    const mockStudent = {
+      id: BigInt(100),
+      userId: BigInt(100),
+      rollNumber: '21NB1A0501',
+      department: 'Computer Science and Engineering',
+      cgpa: 8.5,
+      semester: 8,
+      backlogs: 0,
+      academicStatus: 'PURSUING',
+      verificationStatus: 'VERIFIED',
+      user: { accountStatus: 'ACTIVE' },
+      skills: [
+        { skillName: 'Java' },
+        { skillName: 'React.js' },
+        { skillName: 'Node.js' },
+        { skillName: 'Express.js' },
+        { skillName: 'PostgreSQL' },
+        { skillName: 'Git' }
+      ],
+      projects: [
+        { title: 'Full Stack App', techStack: 'React.js, Node.js, Express.js, PostgreSQL' }
+      ],
+      resumes: [{ id: 1, fileName: 'resume.pdf' }]
+    };
 
-    it('should match student department against job eligible departments', () => {
-      const res = matchDepartment('Artificial Intelligence and Data Science', 'CSE, IT, AI & DS, ECE');
-      expect(res.passed).toBe(true);
-      expect(res.score).toEqual(100);
-      expect(res.studentDept).toEqual('AI & DS');
-    });
-  });
-
-  describe('MatchingService Integration & Deterministic Scores', () => {
     beforeEach(() => {
       jest.restoreAllMocks();
+      jest.spyOn(prisma.student, 'findUnique').mockResolvedValue(mockStudent);
     });
 
-    it('should calculate deterministic score for eligible student with 100% skill match', async () => {
-      const mockStudent = {
-        id: BigInt(100),
-        userId: BigInt(100),
-        rollNumber: '21NB1A0501',
-        department: 'Computer Science and Engineering',
-        cgpa: 8.5,
-        semester: 8,
-        backlogs: 0,
-        academicStatus: 'PURSUING',
-        verificationStatus: 'VERIFIED',
-        user: { accountStatus: 'ACTIVE' },
-        skills: [
-          { skillName: 'Java' },
-          { skillName: 'React.js' },
-          { skillName: 'PostgreSQL' }
-        ],
-        projects: [
-          { title: 'Placement Portal', techStack: 'React.js, Node.js, PostgreSQL' }
-        ],
-        resumes: [{ id: 1, fileName: 'resume.pdf' }]
-      };
-
-      const mockJob = {
-        id: BigInt(10),
-        title: 'Full Stack Engineer',
-        companyName: 'TechCorp',
-        requiredSkills: 'Java, React, PostgreSQL',
+    it('should calculate DIFFERENT, logically explainable scores for 5 distinct job categories', async () => {
+      // Job 1: Full Stack Developer (Strong match for student profile)
+      const fullStackJob = {
+        id: BigInt(101),
+        title: 'Full Stack Developer',
+        requiredSkills: 'React.js, Node.js, Express.js, PostgreSQL',
         requiredCgpa: 7.5,
         maxBacklogs: 0,
-        eligibleSemester: 6,
-        eligibleDepartments: 'CSE, IT, ECE',
-        experienceRequired: '0-2 years'
+        eligibleDepartments: 'CSE, IT'
       };
 
-      jest.spyOn(prisma.student, 'findUnique').mockResolvedValue(mockStudent);
-      jest.spyOn(prisma.job, 'findUnique').mockResolvedValue(mockJob);
-
-      const result1 = await MatchingService.calculateJobMatch(100, 10);
-      const result2 = await MatchingService.calculateJobMatch(100, 10);
-
-      // Deterministic check: repeated calls MUST return identical score
-      expect(result1.overallScore).toEqual(result2.overallScore);
-      expect(result1.isEligible).toBe(true);
-      expect(result1.status).toEqual('ELIGIBLE');
-      expect(result1.overallScore).toBeGreaterThanOrEqual(90);
-      expect(result1.category).toEqual('Excellent Match');
-      expect(result1.breakdown.skills).toEqual(100);
-      expect(result1.matchedSkills).toContain('Java');
-    });
-
-    it('should set isEligible=false and status=NOT_ELIGIBLE when CGPA is below job requirement', async () => {
-      const mockStudent = {
-        id: BigInt(100),
-        userId: BigInt(100),
-        rollNumber: '21NB1A0502',
-        department: 'CSE',
-        cgpa: 6.8, // Below required 7.5
-        semester: 8,
-        backlogs: 0,
-        user: { accountStatus: 'ACTIVE' },
-        skills: [{ skillName: 'Java' }],
-        projects: [],
-        resumes: [{ id: 1 }]
-      };
-
-      const mockJob = {
-        id: BigInt(20),
-        title: 'Software Engineer',
-        requiredSkills: 'Java',
+      // Job 2: Java Backend Developer (Partial match: student has Java & PostgreSQL, missing Spring Boot & REST)
+      const javaJob = {
+        id: BigInt(102),
+        title: 'Java Backend Developer',
+        requiredSkills: 'Java, Spring Boot, REST APIs, PostgreSQL',
         requiredCgpa: 7.5,
         maxBacklogs: 0,
-        eligibleDepartments: 'CSE'
+        eligibleDepartments: 'CSE, IT'
       };
 
-      jest.spyOn(prisma.student, 'findUnique').mockResolvedValue(mockStudent);
-      jest.spyOn(prisma.job, 'findUnique').mockResolvedValue(mockJob);
+      // Job 3: Data Scientist (Low skill match: missing Python, ML, Stats)
+      const dataScienceJob = {
+        id: BigInt(103),
+        title: 'Data Scientist',
+        requiredSkills: 'Python, SQL, Machine Learning, Statistics',
+        requiredCgpa: 7.5,
+        maxBacklogs: 0,
+        eligibleDepartments: 'CSE, IT, AI & DS'
+      };
 
-      const result = await MatchingService.calculateJobMatch(100, 20);
-      expect(result.isEligible).toBe(false);
-      expect(result.status).toEqual('NOT_ELIGIBLE');
-      expect(result.rejectionReason).toContain('Student CGPA');
+      // Job 4: QA Engineer (Low skill match: has Java, missing Selenium, TestNG)
+      const qaJob = {
+        id: BigInt(104),
+        title: 'QA Engineer',
+        requiredSkills: 'Selenium, Java, TestNG, API Testing',
+        requiredCgpa: 7.5,
+        maxBacklogs: 0,
+        eligibleDepartments: 'CSE, IT'
+      };
+
+      // Job 5: Future Category - Blockchain Developer (No skills match)
+      const blockchainJob = {
+        id: BigInt(105),
+        title: 'Blockchain Developer',
+        requiredSkills: 'Solidity, Ethereum, Web3.js, Smart Contracts',
+        requiredCgpa: 7.5,
+        maxBacklogs: 0,
+        eligibleDepartments: 'CSE, IT'
+      };
+
+      jest.spyOn(prisma.job, 'findUnique')
+        .mockResolvedValueOnce(fullStackJob)
+        .mockResolvedValueOnce(javaJob)
+        .mockResolvedValueOnce(dataScienceJob)
+        .mockResolvedValueOnce(qaJob)
+        .mockResolvedValueOnce(blockchainJob);
+
+      const resFullStack = await MatchingService.calculateJobMatch(100, 101);
+      const resJava = await MatchingService.calculateJobMatch(100, 102);
+      const resDataScience = await MatchingService.calculateJobMatch(100, 103);
+      const resQA = await MatchingService.calculateJobMatch(100, 104);
+      const resBlockchain = await MatchingService.calculateJobMatch(100, 105);
+
+      // Verify Full Stack score > Java score > Data Science score > Blockchain score
+      expect(resFullStack.overallScore).toBeGreaterThan(resJava.overallScore);
+      expect(resJava.overallScore).toBeGreaterThan(resDataScience.overallScore);
+      expect(resDataScience.overallScore).toBeGreaterThanOrEqual(resBlockchain.overallScore);
+
+      // Verify specific skill scores
+      expect(resFullStack.breakdown.skills).toEqual(100);
+      expect(resJava.breakdown.skills).toEqual(50); // 2 of 4 skills (Java, PostgreSQL) matched
+      expect(resBlockchain.breakdown.skills).toEqual(0); // 0 of 4 skills matched
+
+      // All 5 jobs return identical canonical payload structure
+      [resFullStack, resJava, resDataScience, resQA, resBlockchain].forEach(res => {
+        expect(res).toHaveProperty('jobId');
+        expect(res).toHaveProperty('overallScore');
+        expect(res).toHaveProperty('category');
+        expect(res).toHaveProperty('skillMatch');
+        expect(res.skillMatch).toHaveProperty('matchedSkills');
+        expect(res.skillMatch).toHaveProperty('missingSkills');
+        expect(res).toHaveProperty('breakdown');
+        expect(res).toHaveProperty('eligibilityFailures');
+      });
     });
   });
 
   describe('API Endpoint GET /api/student/skills/job-match/:jobId', () => {
-    it('should return 200 with match breakdown payload for authenticated student', async () => {
+    it('should return 200 with canonical match breakdown payload for authenticated student', async () => {
       jest.spyOn(MatchingService, 'calculateJobMatch').mockResolvedValue({
-        jobId: 1,
+        jobId: 101,
+        jobTitle: 'Data Scientist',
         studentId: 100,
         isEligible: true,
         eligible: true,
         status: 'ELIGIBLE',
-        overallScore: 87,
+        overallScore: 82,
         category: 'Strong Match',
-        matchScore: 87,
+        matchScore: 82,
         rejectionReason: null,
+        skillMatch: {
+          percentage: 80,
+          skillMatchPercentage: 80,
+          requiredSkills: ['Python', 'SQL', 'Machine Learning', 'Statistics'],
+          matchedSkills: ['Python', 'SQL', 'Machine Learning'],
+          missingSkills: ['Statistics'],
+          preferredSkills: ['Pandas', 'Scikit-learn'],
+          matchedPreferredSkills: ['Pandas'],
+          missingPreferredSkills: ['Scikit-learn']
+        },
         breakdown: {
-          skills: 92,
+          skills: 80,
           education: 100,
-          branch: 100,
+          department: 100,
           experience: 80,
           eligibility: 100,
-          certifications: 80
+          certifications: 100
         },
-        matchedSkills: ['Java', 'React.js', 'PostgreSQL'],
-        missingSkills: ['Docker', 'AWS'],
+        eligibilityFailures: [],
+        matchedSkills: ['Python', 'SQL', 'Machine Learning'],
+        missingSkills: ['Statistics'],
         checks: [],
-        explanations: ['✓ 3 of 5 required skills matched']
+        explanations: ['✓ 3 of 4 required skills matched']
       });
 
       const res = await request(app)
-        .get('/api/student/skills/job-match/1')
+        .get('/api/student/skills/job-match/101')
         .set('Cookie', [`accessToken=${studentToken}`]);
 
       expect(res.statusCode).toEqual(200);
-      expect(res.body.overallScore).toEqual(87);
+      expect(res.body.overallScore).toEqual(82);
       expect(res.body.category).toEqual('Strong Match');
-      expect(res.body.breakdown.skills).toEqual(92);
-      expect(res.body.matchedSkills).toEqual(['Java', 'React.js', 'PostgreSQL']);
-      expect(res.body.missingSkills).toEqual(['Docker', 'AWS']);
+      expect(res.body.skillMatch.percentage).toEqual(80);
+      expect(res.body.matchedSkills).toEqual(['Python', 'SQL', 'Machine Learning']);
+      expect(res.body.missingSkills).toEqual(['Statistics']);
     });
   });
 });

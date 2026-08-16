@@ -1,14 +1,20 @@
 /**
- * Central Configuration for Production-Ready Job–Student Matching Algorithm
+ * Central Configuration for Production-Ready Universal Job–Student Matching Algorithm
  */
 
 const MATCH_WEIGHTS = {
   skills: 0.50,
   education: 0.15,
+  department: 0.10,
   branch: 0.10,
   experience: 0.10,
   eligibility: 0.10,
   certifications: 0.05
+};
+
+const SKILL_WEIGHTS = {
+  required: 0.80,
+  preferred: 0.20
 };
 
 const MATCH_CATEGORIES = [
@@ -30,6 +36,7 @@ function getMatchCategory(score) {
 
 module.exports = {
   MATCH_WEIGHTS,
+  SKILL_WEIGHTS,
   MATCH_CATEGORIES,
   getMatchCategory
 };

@@ -99,21 +99,22 @@ export default function AdminShortlisted({ isTab = false, onCountsUpdate }) {
       </div>
 
       {/* SEARCH & TOOLBAR */}
-      <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs mb-6 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between filter-toolbar-container">
-        <div className="relative w-full sm:w-80 md:w-96 filter-search-input">
-          <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+      <div className="bg-white rounded-2xl p-3 sm:p-4 border border-slate-200 shadow-xs mb-6 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between filter-toolbar-container w-full max-w-full">
+        <div className="relative flex-1 w-full min-w-0 filter-search-input">
+          <Search size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
           <input
             type="text"
             placeholder="Search by name, roll number, email, company, or job..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full min-h-[44px] h-11 pl-10 pr-10 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:border-[#F47C20] focus:bg-white transition-all shadow-2xs"
+            className="w-full min-h-[44px] h-11 pl-10 pr-10 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#F47C20] focus:ring-2 focus:ring-[#F47C20]/20 focus:bg-white transition-all shadow-2xs"
             aria-label="Search shortlisted students"
           />
           {searchTerm && (
             <button
+              type="button"
               onClick={() => setSearchTerm('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 bg-slate-200/60 rounded-full transition-colors cursor-pointer"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 bg-slate-200/60 hover:bg-slate-200 rounded-full transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#F47C20]"
               title="Clear search"
               aria-label="Clear search"
             >
@@ -122,15 +123,17 @@ export default function AdminShortlisted({ isTab = false, onCountsUpdate }) {
           )}
         </div>
 
-        <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+        <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end shrink-0">
           <span className="text-xs font-bold text-slate-500">
             {filteredShortlisted.length} {filteredShortlisted.length === 1 ? 'student' : 'students'} {searchTerm ? 'found' : 'shortlisted'}
           </span>
           
           <button
+            type="button"
             onClick={fetchShortlisted}
-            className="min-h-[44px] h-11 px-4 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2"
+            className="min-h-[44px] h-11 px-3.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2"
             title="Refresh shortlisted list"
+            aria-label="Refresh list"
           >
             <RotateCcw size={15} className={isLoading ? "animate-spin" : ""} />
             <span className="hidden sm:inline">Refresh</span>

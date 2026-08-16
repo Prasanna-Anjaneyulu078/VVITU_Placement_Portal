@@ -1,34 +1,54 @@
 /**
- * Centralized Skill Normalization and Matching Mechanism
+ * Centralized Skill Normalization and Universal Matching Engine
  */
 
 // Comprehensive Canonical Alias Map (lowercase normalized keys -> canonical display & key)
 const CANONICAL_ALIASES = {
-  // Node.js
-  'node': { canonical: 'node.js', display: 'Node.js' },
-  'nodejs': { canonical: 'node.js', display: 'Node.js' },
-  'node js': { canonical: 'node.js', display: 'Node.js' },
-  'node.js': { canonical: 'node.js', display: 'Node.js' },
+  // JavaScript & ES6 variants
+  'javascript': { canonical: 'javascript', display: 'JavaScript (ES6+)' },
+  'java script': { canonical: 'javascript', display: 'JavaScript (ES6+)' },
+  'js': { canonical: 'javascript', display: 'JavaScript (ES6+)' },
+  'es6': { canonical: 'javascript', display: 'JavaScript (ES6+)' },
+  'es6+': { canonical: 'javascript', display: 'JavaScript (ES6+)' },
+  'javascript es6': { canonical: 'javascript', display: 'JavaScript (ES6+)' },
+  'javascript (es6+)': { canonical: 'javascript', display: 'JavaScript (ES6+)' },
+  'javascript es6+': { canonical: 'javascript', display: 'JavaScript (ES6+)' },
+  'es2015+': { canonical: 'javascript', display: 'JavaScript (ES6+)' },
+  'es2015': { canonical: 'javascript', display: 'JavaScript (ES6+)' },
 
-  // Express.js
-  'express': { canonical: 'express.js', display: 'Express.js' },
-  'expressjs': { canonical: 'express.js', display: 'Express.js' },
-  'express js': { canonical: 'express.js', display: 'Express.js' },
-  'express.js': { canonical: 'express.js', display: 'Express.js' },
+  // TypeScript
+  'typescript': { canonical: 'typescript', display: 'TypeScript' },
+  'type script': { canonical: 'typescript', display: 'TypeScript' },
+  'ts': { canonical: 'typescript', display: 'TypeScript' },
 
-  // React.js
+  // Java (STRICTLY DISTINCT from JavaScript!)
+  'java': { canonical: 'java', display: 'Java' },
+
+  // React
   'react': { canonical: 'react.js', display: 'React.js' },
   'reactjs': { canonical: 'react.js', display: 'React.js' },
   'react js': { canonical: 'react.js', display: 'React.js' },
   'react.js': { canonical: 'react.js', display: 'React.js' },
 
-  // Vue.js
+  // Node
+  'node': { canonical: 'node.js', display: 'Node.js' },
+  'nodejs': { canonical: 'node.js', display: 'Node.js' },
+  'node js': { canonical: 'node.js', display: 'Node.js' },
+  'node.js': { canonical: 'node.js', display: 'Node.js' },
+
+  // Express
+  'express': { canonical: 'express.js', display: 'Express.js' },
+  'expressjs': { canonical: 'express.js', display: 'Express.js' },
+  'express js': { canonical: 'express.js', display: 'Express.js' },
+  'express.js': { canonical: 'express.js', display: 'Express.js' },
+
+  // Vue
   'vue': { canonical: 'vue.js', display: 'Vue.js' },
   'vuejs': { canonical: 'vue.js', display: 'Vue.js' },
   'vue js': { canonical: 'vue.js', display: 'Vue.js' },
   'vue.js': { canonical: 'vue.js', display: 'Vue.js' },
 
-  // Next.js
+  // Next
   'next': { canonical: 'next.js', display: 'Next.js' },
   'nextjs': { canonical: 'next.js', display: 'Next.js' },
   'next js': { canonical: 'next.js', display: 'Next.js' },
@@ -49,10 +69,37 @@ const CANONICAL_ALIASES = {
   'spring-framework': { canonical: 'spring framework', display: 'Spring Framework' },
   'spring': { canonical: 'spring framework', display: 'Spring Framework' },
 
+  // REST APIs
+  'rest': { canonical: 'rest-api', display: 'REST APIs' },
+  'rest api': { canonical: 'rest-api', display: 'REST APIs' },
+  'rest apis': { canonical: 'rest-api', display: 'REST APIs' },
+  'restful api': { canonical: 'rest-api', display: 'REST APIs' },
+  'restful apis': { canonical: 'rest-api', display: 'REST APIs' },
+  'api': { canonical: 'rest-api', display: 'REST APIs' },
+  'apis': { canonical: 'rest-api', display: 'REST APIs' },
+
+  // Python & Data Science
+  'python': { canonical: 'python', display: 'Python' },
+  'py': { canonical: 'python', display: 'Python' },
+  'python3': { canonical: 'python', display: 'Python' },
+  'pandas': { canonical: 'pandas', display: 'Pandas' },
+  'numpy': { canonical: 'numpy', display: 'NumPy' },
+  'scikit-learn': { canonical: 'scikit-learn', display: 'Scikit-learn' },
+  'sklearn': { canonical: 'scikit-learn', display: 'Scikit-learn' },
+  'tensorflow': { canonical: 'tensorflow', display: 'TensorFlow' },
+  'pytorch': { canonical: 'pytorch', display: 'PyTorch' },
+  'keras': { canonical: 'keras', display: 'Keras' },
+  'power bi': { canonical: 'power bi', display: 'Power BI' },
+  'powerbi': { canonical: 'power bi', display: 'Power BI' },
+  'excel': { canonical: 'excel', display: 'Excel' },
+  'statistics': { canonical: 'statistics', display: 'Statistics' },
+  'stats': { canonical: 'statistics', display: 'Statistics' },
+
   // Databases
   'mongo db': { canonical: 'mongodb', display: 'MongoDB' },
   'mongodb': { canonical: 'mongodb', display: 'MongoDB' },
   'mongo': { canonical: 'mongodb', display: 'MongoDB' },
+  'sql': { canonical: 'sql', display: 'SQL' },
   'my sql': { canonical: 'mysql', display: 'MySQL' },
   'mysql': { canonical: 'mysql', display: 'MySQL' },
   'postgres': { canonical: 'postgresql', display: 'PostgreSQL' },
@@ -64,7 +111,16 @@ const CANONICAL_ALIASES = {
   'oracle': { canonical: 'oracle', display: 'Oracle' },
   'sqlite': { canonical: 'sqlite', display: 'SQLite' },
 
+  // QA & Testing
+  'selenium': { canonical: 'selenium', display: 'Selenium' },
+  'testng': { canonical: 'testng', display: 'TestNG' },
+  'junit': { canonical: 'junit', display: 'JUnit' },
+  'api testing': { canonical: 'api testing', display: 'API Testing' },
+  'cypress': { canonical: 'cypress', display: 'Cypress' },
+  'playwright': { canonical: 'playwright', display: 'Playwright' },
+
   // DevOps & Cloud
+  'linux': { canonical: 'linux', display: 'Linux' },
   'aws': { canonical: 'aws', display: 'AWS' },
   'amazon web services': { canonical: 'aws', display: 'AWS' },
   'docker': { canonical: 'docker', display: 'Docker' },
@@ -78,6 +134,13 @@ const CANONICAL_ALIASES = {
   'ci/cd': { canonical: 'cicd', display: 'CI/CD' },
   'cicd': { canonical: 'cicd', display: 'CI/CD' },
 
+  // Blockchain
+  'solidity': { canonical: 'solidity', display: 'Solidity' },
+  'ethereum': { canonical: 'ethereum', display: 'Ethereum' },
+  'web3.js': { canonical: 'web3.js', display: 'Web3.js' },
+  'web3': { canonical: 'web3.js', display: 'Web3.js' },
+  'smart contracts': { canonical: 'smart contracts', display: 'Smart Contracts' },
+
   // Developer Tools & Version Control
   'git': { canonical: 'git', display: 'Git' },
   'git hub': { canonical: 'github', display: 'GitHub' },
@@ -87,23 +150,6 @@ const CANONICAL_ALIASES = {
   'vs code': { canonical: 'vs code', display: 'VS Code' },
   'visual studio code': { canonical: 'vs code', display: 'VS Code' },
 
-  // Programming Languages
-  'java script': { canonical: 'javascript', display: 'JavaScript' },
-  'javascript': { canonical: 'javascript', display: 'JavaScript' },
-  'js': { canonical: 'javascript', display: 'JavaScript' },
-  
-  'type script': { canonical: 'typescript', display: 'TypeScript' },
-  'typescript': { canonical: 'typescript', display: 'TypeScript' },
-  'ts': { canonical: 'typescript', display: 'TypeScript' },
-
-  // Java (strictly distinct from JavaScript!)
-  'java': { canonical: 'java', display: 'Java' },
-
-  // Python
-  'python': { canonical: 'python', display: 'Python' },
-  'py': { canonical: 'python', display: 'Python' },
-  'python3': { canonical: 'python', display: 'Python' },
-
   // C / C++ / C#
   'c': { canonical: 'c', display: 'C' },
   'c++': { canonical: 'cpp', display: 'C++' },
@@ -111,22 +157,18 @@ const CANONICAL_ALIASES = {
   'c#': { canonical: 'csharp', display: 'C#' },
   'csharp': { canonical: 'csharp', display: 'C#' },
 
-  // CS Core & AI
+  // CS Core & AI / ML
   'computer science core': { canonical: 'cs core', display: 'CS Core' },
   'computer science': { canonical: 'cs core', display: 'CS Core' },
   'cs core': { canonical: 'cs core', display: 'CS Core' },
-
   'ai': { canonical: 'artificial intelligence', display: 'Artificial Intelligence' },
   'artificial intelligence': { canonical: 'artificial intelligence', display: 'Artificial Intelligence' },
-
   'ml': { canonical: 'machine learning', display: 'Machine Learning' },
   'machine learning': { canonical: 'machine learning', display: 'Machine Learning' },
-
   'dsa': { canonical: 'dsa', display: 'DSA' },
   'data structures and algorithms': { canonical: 'dsa', display: 'DSA' },
   'data structures & algorithms': { canonical: 'dsa', display: 'DSA' },
   'data structures': { canonical: 'dsa', display: 'DSA' },
-  'algorithms': { canonical: 'dsa', display: 'DSA' },
 
   // Web & Styling
   'html5': { canonical: 'html', display: 'HTML' },
@@ -168,6 +210,43 @@ function normalizeSkill(rawSkill) {
 }
 
 /**
+ * Parses raw required or preferred skills into structured requirement items.
+ * Handles comma-separated skills and compound slash skills (e.g. "MongoDB / PostgreSQL").
+ */
+function parseRequiredSkills(rawSkills) {
+  let list = [];
+  if (typeof rawSkills === 'string') {
+    list = rawSkills.split(',').map(s => s.trim()).filter(Boolean);
+  } else if (Array.isArray(rawSkills)) {
+    list = rawSkills.map(s => (typeof s === 'string' ? s.trim() : '')).filter(Boolean);
+  }
+
+  const requirements = [];
+  const seenCanonicals = new Set();
+
+  list.forEach(item => {
+    // Handle compound skills with slashes or OR, e.g., "MongoDB / PostgreSQL" or "React / Vue"
+    const options = item.split(/\s+[/|]\s+|\s+or\s+/i).map(opt => opt.trim()).filter(Boolean);
+    const parsedOptions = options.map(opt => normalizeSkill(opt)).filter(Boolean);
+
+    if (parsedOptions.length === 0) return;
+
+    const primaryCanonical = parsedOptions[0].canonical;
+
+    // Deduplicate skills in list to prevent inflated denominator
+    if (seenCanonicals.has(primaryCanonical)) return;
+    seenCanonicals.add(primaryCanonical);
+
+    requirements.push({
+      originalDisplay: item,
+      options: parsedOptions
+    });
+  });
+
+  return requirements;
+}
+
+/**
  * Extracts a unified list of raw skills from student skills and student projects.
  */
 function extractStudentSkillList(student) {
@@ -200,13 +279,14 @@ function extractStudentSkillList(student) {
 }
 
 /**
- * Matches a student's skills against a job's required skills.
+ * Universal Canonical Skill Matching Engine.
+ * Supports separating Required Skills (80% weight) and Preferred Skills (20% weight).
  * 
- * @param {Array<string|Object>|Object} rawStudentSkills - Student skills or student object
- * @param {string|Array<string>} rawRequiredSkills - Job required skills
- * @returns {Object} { skillMatchPercentage, matchedSkills, missingSkills }
+ * @param {Array|Object} rawStudentSkills - Student profile object or array of skills
+ * @param {string|Array} rawRequiredSkills - Job mandatory required skills
+ * @param {string|Array} [rawPreferredSkills] - Job optional preferred skills
  */
-function matchSkills(rawStudentSkills = [], rawRequiredSkills = '') {
+function matchSkills(rawStudentSkills = [], rawRequiredSkills = '', rawPreferredSkills = '') {
   let studentList = [];
 
   if (rawStudentSkills && typeof rawStudentSkills === 'object' && !Array.isArray(rawStudentSkills) && (rawStudentSkills.skills || rawStudentSkills.projects)) {
@@ -230,59 +310,74 @@ function matchSkills(rawStudentSkills = [], rawRequiredSkills = '') {
     }
   });
 
-  // Parse job required skills into array of strings
-  let requiredList = [];
-  if (typeof rawRequiredSkills === 'string') {
-    requiredList = rawRequiredSkills.split(',');
-  } else if (Array.isArray(rawRequiredSkills)) {
-    requiredList = rawRequiredSkills.map(s => {
-      if (typeof s === 'string') return s;
-      if (s && typeof s === 'object') return s.skillName || s.name || s.skill || s.title || '';
-      return '';
-    });
-  }
-
+  // 1. Process Required Skills
+  const reqRequirements = parseRequiredSkills(rawRequiredSkills);
+  const requiredSkills = [];
   const matchedSkills = [];
   const missingSkills = [];
-  const seenRequiredCanonicals = new Set();
 
-  requiredList.forEach(reqItem => {
-    const normalized = normalizeSkill(reqItem);
-    if (!normalized) return;
+  reqRequirements.forEach(req => {
+    const reqDisplay = req.originalDisplay;
+    requiredSkills.push(reqDisplay);
 
-    // Deduplicate required skills in the job list to prevent inflated denominator
-    if (seenRequiredCanonicals.has(normalized.canonical)) return;
-    seenRequiredCanonicals.add(normalized.canonical);
-
-    const reqDisplay = reqItem.trim();
-
-    if (studentCanonicalSet.has(normalized.canonical)) {
+    const isMatched = req.options.some(opt => studentCanonicalSet.has(opt.canonical));
+    if (isMatched) {
       matchedSkills.push(reqDisplay);
     } else {
       missingSkills.push(reqDisplay);
     }
   });
 
-  const totalRequired = matchedSkills.length + missingSkills.length;
-  if (totalRequired === 0) {
-    return {
-      skillMatchPercentage: 100, // No required skills specified means 100% skill match
-      matchedSkills: [],
-      missingSkills: []
-    };
+  // 2. Process Preferred Skills (if provided)
+  const prefRequirements = parseRequiredSkills(rawPreferredSkills);
+  const preferredSkills = [];
+  const matchedPreferredSkills = [];
+  const missingPreferredSkills = [];
+
+  prefRequirements.forEach(req => {
+    const reqDisplay = req.originalDisplay;
+    preferredSkills.push(reqDisplay);
+
+    const isMatched = req.options.some(opt => studentCanonicalSet.has(opt.canonical));
+    if (isMatched) {
+      matchedPreferredSkills.push(reqDisplay);
+    } else {
+      missingPreferredSkills.push(reqDisplay);
+    }
+  });
+
+  // 3. Calculate Weighted Skill Score
+  let skillMatchPercentage = 100;
+  const hasRequired = requiredSkills.length > 0;
+  const hasPreferred = preferredSkills.length > 0;
+
+  if (hasRequired && hasPreferred) {
+    const reqScore = (matchedSkills.length / requiredSkills.length) * 80;
+    const prefScore = (matchedPreferredSkills.length / preferredSkills.length) * 20;
+    skillMatchPercentage = Math.round(reqScore + prefScore);
+  } else if (hasRequired) {
+    skillMatchPercentage = Math.round((matchedSkills.length / requiredSkills.length) * 100);
+  } else if (hasPreferred) {
+    skillMatchPercentage = Math.round((matchedPreferredSkills.length / preferredSkills.length) * 100);
+  } else {
+    skillMatchPercentage = 100;
   }
 
-  const percentage = Math.round((matchedSkills.length / totalRequired) * 100);
-
   return {
-    skillMatchPercentage: percentage,
+    skillMatchPercentage,
+    percentage: skillMatchPercentage,
+    requiredSkills,
     matchedSkills,
-    missingSkills
+    missingSkills,
+    preferredSkills,
+    matchedPreferredSkills,
+    missingPreferredSkills
   };
 }
 
 module.exports = {
   normalizeSkill,
+  parseRequiredSkills,
   matchSkills,
   extractStudentSkillList,
   CANONICAL_ALIASES

@@ -240,11 +240,12 @@ export default function JobDetails() {
     );
   }
 
-  // Backend now guarantees job is eligible (filtered at source). Just use job data.
-  const skillMatchPercentage = job?.skillMatchPercentage ?? 100;
-  const matchedSkills = Array.isArray(job?.matchedSkills) ? job.matchedSkills : [];
-  const missingSkills = Array.isArray(job?.missingSkills) ? job.missingSkills : [];
-  const logoInitial = job.company ? job.company.charAt(0).toUpperCase() : 'C';
+  // Single Canonical Match Data derived from matchData or job
+  const skillMatchPercentage = matchData?.breakdown?.skills ?? matchData?.skillMatchPercentage ?? job?.skillMatchPercentage ?? 0;
+  const matchedSkills = matchData?.matchedSkills || (Array.isArray(job?.matchedSkills) ? job.matchedSkills : []);
+  const missingSkills = matchData?.missingSkills || (Array.isArray(job?.missingSkills) ? job.missingSkills : []);
+  const requiredSkills = matchData?.requiredSkills || (job?.requiredSkills ? job.requiredSkills.split(',').map(s => s.trim()).filter(Boolean) : []);
+  const logoInitial = job?.company ? job.company.charAt(0).toUpperCase() : 'C';
   const isClosedOrExpired = job && (job.status === 'CLOSED' || job.status === 'EXPIRED');
   const isOpenJob = job && (job.status === 'APPROVED' || job.status === 'ACTIVE' || job.status === 'OPEN') && !isClosedOrExpired;
   const tabs = [
@@ -426,7 +427,7 @@ export default function JobDetails() {
                     <div className="flex items-center justify-between gap-3 mb-4 text-gray-800">
                       <div className="flex items-center gap-3">
                         <Award size={20} className="text-gray-400" />
-                        <h3 className="text-base font-semibold">Skills Required</h3>
+                        <h3 className="text-base font-semibold">Skills Required {requiredSkills.length > 0 && `(${requiredSkills.length})`}</h3>
                       </div>
                       {job.requiredSkills && (
                         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold ${
@@ -440,44 +441,69 @@ export default function JobDetails() {
                     </div>
 
                     {job.requiredSkills ? (
-                      <div className="space-y-3">
-                        {matchedSkills.length > 0 && (
-                          <div>
-                            <p className="text-[12px] font-semibold text-green-600 uppercase tracking-wide mb-2">✓ Matched Skills</p>
-                            <div className="flex flex-wrap gap-2">
-                              {matchedSkills.map((skill, i) => (
-                                <span key={i} className="inline-flex items-center gap-1 px-2.5 py-1 bg-green-50 border border-green-200 text-green-700 rounded-md text-[12px] font-medium">
-                                  <CheckCircle size={12} />{skill}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        {missingSkills.length > 0 && (
-                          <div>
-                            <p className="text-[12px] font-semibold text-rose-500 uppercase tracking-wide mb-2">✕ Missing Skills</p>
-                            <div className="flex flex-wrap gap-2">
-                              {missingSkills.map((skill, i) => (
-                                <span key={i} className="inline-flex items-center gap-1 px-2.5 py-1 bg-red-50 border border-red-200 text-red-600 rounded-md text-[12px] font-medium">
-                                  <XCircle size={12} />{skill}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        {matchedSkills.length === 0 && missingSkills.length === 0 && (
-                          <div className="flex flex-wrap gap-2">
-                            {(job.requiredSkillsList && job.requiredSkillsList.length > 0
-                              ? job.requiredSkillsList
-                              : (job.requiredSkills ? job.requiredSkills.split(',').map(s => s.trim()).filter(Boolean) : [])
-                            ).map((skill, index) => (
+                      <div className="space-y-4">
+                        {/* 1. Canonical Required Skills List */}
+                        {requiredSkills.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            {requiredSkills.map((skill, index) => (
                               <span 
                                 key={index} 
-                                className="px-3 py-1 border border-[#F47C20]/40 text-[#F47C20] rounded-full text-xs font-semibold bg-[#F47C20]/5 uppercase tracking-wide"
+                                className="px-3 py-1 border border-slate-200 text-slate-700 rounded-full text-xs font-semibold bg-slate-50 tracking-wide"
                               >
                                 {skill}
                               </span>
                             ))}
+                          </div>
+                        )}
+
+                        {/* 2. Matched Skills (only matched required skills) */}
+                        {role === 'student' && matchedSkills.length > 0 && (
+                          <div>
+                            <p className="text-[12px] font-bold text-green-700 uppercase tracking-wide mb-2 flex items-center gap-1">
+                              <CheckCircle size={13} /> Matched Skills ({matchedSkills.length})
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {matchedSkills.map((skill, i) => (
+                                <span key={i} className="inline-flex items-center gap-1 px-2.5 py-1 bg-green-50 border border-green-200 text-green-700 rounded-md text-[12px] font-medium">
+                                  ✓ {skill}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 3. Missing Skills (only missing required skills) */}
+                        {role === 'student' && missingSkills.length > 0 && (
+                          <div>
+                            <p className="text-[12px] font-bold text-rose-600 uppercase tracking-wide mb-2 flex items-center gap-1">
+                              <Circle size={12} /> Missing Skills ({missingSkills.length})
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {missingSkills.map((skill, i) => (
+                                <span key={i} className="inline-flex items-center gap-1 px-2.5 py-1 bg-red-50 border border-red-200 text-red-600 rounded-md text-[12px] font-medium">
+                                  ○ {skill}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 4. Preferred Skills Section (if specified by job) */}
+                        {matchData?.preferredSkills && matchData.preferredSkills.length > 0 && (
+                          <div className="pt-3 border-t border-slate-100 space-y-2">
+                            <p className="text-[12px] font-bold text-slate-500 uppercase tracking-wide">Preferred Skills ({matchData.preferredSkills.length})</p>
+                            <div className="flex flex-wrap gap-2">
+                              {matchData.preferredSkills.map((skill, i) => {
+                                const isMatched = matchData.matchedPreferredSkills?.includes(skill);
+                                return (
+                                  <span key={i} className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[12px] font-medium border ${
+                                    isMatched ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-slate-50 border-slate-200 text-slate-600'
+                                  }`}>
+                                    {isMatched ? '✓' : '○'} {skill}
+                                  </span>
+                                );
+                              })}
+                            </div>
                           </div>
                         )}
                       </div>

@@ -5,7 +5,8 @@ const { matchDepartment } = require('../utils/departmentMatcher');
 
 class MatchingService {
   /**
-   * Calculates a deterministic, real-data-driven Job–Student Matching Score.
+   * Universal, Production-Ready Job–Student Matching Engine.
+   * Dynamically evaluates ANY job requirements against student profile.
    * 
    * @param {number|string|BigInt} userId - Authenticated user ID or student ID
    * @param {number|string|BigInt} jobId  - Target job ID
@@ -49,8 +50,8 @@ class MatchingService {
       throw { statusCode: 404, message: `Job not found with ID: ${jobId}` };
     }
 
-    // 3. Sub-Component 1: Skills Match (Weight 50%)
-    const skillResult = matchSkills(student, job.requiredSkills || '');
+    // 3. Sub-Component 1: Universal Skills Match (Weight 50%)
+    const skillResult = matchSkills(student, job.requiredSkills || '', job.preferredSkills || '');
     const skillsScore = skillResult.skillMatchPercentage;
 
     // 4. Sub-Component 2: Education Match (Weight 15%)
@@ -73,11 +74,11 @@ class MatchingService {
     const certificationResult = this.evaluateCertifications(student, job);
     const certificationsScore = certificationResult.score;
 
-    // 9. Overall Score Calculation (Weighted Sum)
+    // 9. Overall Score Calculation (Universal Weighted Sum)
     const rawOverallScore =
       (skillsScore * MATCH_WEIGHTS.skills) +
       (educationScore * MATCH_WEIGHTS.education) +
-      (branchScore * MATCH_WEIGHTS.branch) +
+      (branchScore * (MATCH_WEIGHTS.department || MATCH_WEIGHTS.branch)) +
       (experienceScore * MATCH_WEIGHTS.experience) +
       (eligibilityScore * MATCH_WEIGHTS.eligibility) +
       (certificationsScore * MATCH_WEIGHTS.certifications);
@@ -93,7 +94,7 @@ class MatchingService {
       ? null
       : `Not eligible due to: ${eligibilityResult.failedReasons.join(', ')}`;
 
-    // Build human-readable explanations checklist
+    // Build human-readable explainability checklist
     const explanations = [];
     if (skillResult.matchedSkills.length > 0 || skillResult.missingSkills.length > 0) {
       const totalReq = skillResult.matchedSkills.length + skillResult.missingSkills.length;
@@ -128,12 +129,13 @@ class MatchingService {
 
     if (skillResult.missingSkills.length > 0) {
       skillResult.missingSkills.forEach(skill => {
-        explanations.push(`• Missing skill: ${skill}`);
+        explanations.push(`• Missing required skill: ${skill}`);
       });
     }
 
     return {
       jobId: Number(job.id),
+      jobTitle: job.title || '',
       studentId: Number(student.id),
       isEligible,
       eligible: isEligible,
@@ -141,24 +143,44 @@ class MatchingService {
       overallScore,
       category,
       matchScore: overallScore,
+      skillMatchPercentage: Math.round(skillsScore),
       rejectionReason,
+
+      skillMatch: {
+        percentage: Math.round(skillsScore),
+        skillMatchPercentage: Math.round(skillsScore),
+        requiredSkills: skillResult.requiredSkills,
+        matchedSkills: skillResult.matchedSkills,
+        missingSkills: skillResult.missingSkills,
+        preferredSkills: skillResult.preferredSkills,
+        matchedPreferredSkills: skillResult.matchedPreferredSkills,
+        missingPreferredSkills: skillResult.missingPreferredSkills
+      },
+
       breakdown: {
         skills: Math.round(skillsScore),
         education: Math.round(educationScore),
+        department: Math.round(branchScore),
         branch: Math.round(branchScore),
         experience: Math.round(experienceScore),
         eligibility: Math.round(eligibilityScore),
         certifications: Math.round(certificationsScore)
       },
+
+      eligibilityFailures: eligibilityResult.failedReasons,
+      requiredSkills: skillResult.requiredSkills,
       matchedSkills: skillResult.matchedSkills,
       missingSkills: skillResult.missingSkills,
+      preferredSkills: skillResult.preferredSkills,
+      matchedPreferredSkills: skillResult.matchedPreferredSkills,
+      missingPreferredSkills: skillResult.missingPreferredSkills,
       checks: eligibilityResult.checks,
       explanations
     };
   }
 
   /**
-   * Education Evaluation Helper
+   * Universal Education Evaluation Helper
    */
   static evaluateEducation(student, job) {
     let score = 100;
@@ -187,7 +209,7 @@ class MatchingService {
   }
 
   /**
-   * Experience Evaluation Helper
+   * Universal Experience Evaluation Helper
    */
   static evaluateExperience(student, job) {
     const requiredExpStr = (job.experienceRequired || '').toLowerCase();
@@ -202,7 +224,7 @@ class MatchingService {
       };
     }
 
-    // Job requires experienced candidates (e.g., 2+ years, 3+ years)
+    // Job requires experienced candidates (e.g., 2+ years, 3+ years, senior)
     if (requiredExpStr.includes('2+') || requiredExpStr.includes('3+') || requiredExpStr.includes('senior')) {
       if (projectCount >= 3) {
         return { score: 75, detail: 'High project activity compensates for required industry experience' };
@@ -220,7 +242,7 @@ class MatchingService {
   }
 
   /**
-   * Eligibility Checks & Mandatory Failures Helper
+   * Universal Eligibility Checks & Mandatory Failures Helper
    */
   static evaluateEligibilityChecks(student, job, branchResult) {
     const checks = [];
@@ -302,7 +324,7 @@ class MatchingService {
   }
 
   /**
-   * Certifications Evaluation Helper
+   * Universal Certifications Evaluation Helper
    */
   static evaluateCertifications(student, job) {
     const jobSkillsStr = (job.requiredSkills || '').toLowerCase();
