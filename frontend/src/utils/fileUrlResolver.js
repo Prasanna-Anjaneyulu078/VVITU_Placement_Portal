@@ -76,7 +76,8 @@ export function getFileUrl(fileRef, options = {}) {
     !trimmed.startsWith('https://') &&
     !trimmed.startsWith('data:') &&
     !trimmed.startsWith('blob:') &&
-    !trimmed.includes('/uploads/')
+    !trimmed.includes('uploads/') &&
+    !trimmed.includes('job-logos/')
   ) {
     return null;
   }
@@ -108,8 +109,60 @@ export function getFileUrl(fileRef, options = {}) {
 
   // 3. Relative Upload Paths (/uploads/...)
   const cleanPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
-  const fullUrl = `${backendOrigin}${cleanPath}`;
+  const normalizedPath = cleanPath.startsWith('/uploads/') ? cleanPath : `/uploads${cleanPath}`;
+  const fullUrl = `${backendOrigin}${normalizedPath}`;
   return options.cacheBust ? withCacheBust(fullUrl, options.version) : fullUrl;
+}
+
+/**
+ * Known top company brand logos mapping
+ */
+const KNOWN_COMPANY_LOGOS = {
+  amazon: 'https://img.icons8.com/color/96/amazon-pay.png',
+  microsoft: 'https://img.icons8.com/color/96/microsoft.png',
+  google: 'https://img.icons8.com/color/96/google-logo.png',
+  infosys: 'https://logo.clearbit.com/infosys.com',
+  tcs: 'https://logo.clearbit.com/tcs.com',
+  wipro: 'https://logo.clearbit.com/wipro.com',
+  accenture: 'https://logo.clearbit.com/accenture.com',
+  cognizant: 'https://logo.clearbit.com/cognizant.com',
+  deloitte: 'https://logo.clearbit.com/deloitte.com',
+  meta: 'https://img.icons8.com/color/96/meta.png',
+  facebook: 'https://img.icons8.com/color/96/facebook-new.png',
+  apple: 'https://img.icons8.com/color/96/apple-logo.png',
+  netflix: 'https://img.icons8.com/color/96/netflix.png',
+  ibm: 'https://img.icons8.com/color/96/ibm.png',
+  oracle: 'https://img.icons8.com/color/96/oracle.png',
+  cisco: 'https://img.icons8.com/color/96/cisco.png',
+  salesforce: 'https://img.icons8.com/color/96/salesforce.png',
+  adobe: 'https://img.icons8.com/color/96/adobe-logo.png',
+  intel: 'https://img.icons8.com/color/96/intel.png',
+  amd: 'https://img.icons8.com/color/96/amd.png'
+};
+
+/**
+ * Company Logo Resolver.
+ * Resolves uploaded relative logo paths, HTTP URLs, or brand fallback logos.
+ */
+export function getCompanyLogoUrl(rawLogoUrl, companyName = '') {
+  if (rawLogoUrl && typeof rawLogoUrl === 'string') {
+    const trimmed = rawLogoUrl.trim();
+    if (trimmed && trimmed !== 'null' && trimmed !== 'undefined') {
+      const resolved = getFileUrl(trimmed);
+      if (resolved) return resolved;
+    }
+  }
+
+  if (companyName && typeof companyName === 'string') {
+    const clean = companyName.toLowerCase().trim();
+    for (const [key, logoUrl] of Object.entries(KNOWN_COMPANY_LOGOS)) {
+      if (clean.includes(key)) {
+        return logoUrl;
+      }
+    }
+  }
+
+  return null;
 }
 
 /**

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/layout/DashboardLayout';
-import { PageHeader, Button, LoadingSpinner, Badge, EligibilityBadge, PreApplicationScreeningModal } from '../components/common';
+import { PageHeader, Button, LoadingSpinner, Badge, EligibilityBadge, PreApplicationScreeningModal, CompanyLogo } from '../components/common';
 import { MapPin, DollarSign, Users, Briefcase, Calendar, Award, ExternalLink, MessageSquare, Building2, Globe, Linkedin, CheckCircle, ChevronRight, XCircle, ChevronLeft, Info, Hourglass, CheckCircle2, Circle, X, AlertCircle, Lock, Sparkles, RefreshCw } from 'lucide-react';
 import api from '../utils/axiosConfig';
 import { getImageUrl } from '../utils/imageUrl';
@@ -311,25 +311,12 @@ export default function JobDetails() {
               );
             })()}
           </div>
-          <div className="w-14 h-14 bg-white border border-gray-200 rounded-xl p-1 flex items-center justify-center shrink-0 ml-4 overflow-hidden">
-            {getImageUrl(job.companyLogoUrl || job.imageUrl) ? (
-              <img
-                src={getImageUrl(job.companyLogoUrl || job.imageUrl)}
-                alt={job.company || job.companyName}
-                className="w-full h-full object-contain"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  if (e.target.nextSibling) e.target.nextSibling.style.display = 'block';
-                }}
-              />
-            ) : null}
-            <span
-              className="text-2xl font-bold text-[#F47C20]"
-              style={{ display: getImageUrl(job.companyLogoUrl || job.imageUrl) ? 'none' : 'block' }}
-            >
-              {logoInitial}
-            </span>
-          </div>
+          <CompanyLogo 
+            url={job.companyLogoUrl || job.imageUrl} 
+            name={job.company || job.companyName} 
+            size="lg" 
+            className="ml-4"
+          />
         </div>
 
         {/* Metrics Box */}

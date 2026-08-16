@@ -9,7 +9,8 @@ import {
   getInitials, 
   isBase64, 
   withCacheBust,
-  getBackendOrigin
+  getBackendOrigin,
+  getCompanyLogoUrl
 } from './fileUrlResolver';
 
 export {
@@ -19,7 +20,8 @@ export {
   getInitials,
   isBase64,
   withCacheBust,
-  getBackendOrigin
+  getBackendOrigin,
+  getCompanyLogoUrl
 };
 
 export function isBase64Image(value) {

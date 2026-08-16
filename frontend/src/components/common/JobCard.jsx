@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import Button from './Button';
 import Avatar from './Avatar';
+import CompanyLogo from './CompanyLogo';
 import { toTitleCase } from '../../utils/nameUtils';
 import { getImageUrl } from '../../utils/imageUrl';
 import { getPosterInfo } from '../../utils/roleUtils';
@@ -52,30 +53,6 @@ function fmt(date) {
   try {
     return new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   } catch { return null; }
-}
-
-function CompanyLogo({ url, name }) {
-  const initial = (name || 'C').charAt(0).toUpperCase();
-  const resolvedUrl = getImageUrl(url);
-  return (
-    <div className="w-11 h-11 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden">
-      {resolvedUrl ? (
-        <img
-          src={resolvedUrl}
-          alt={name}
-          loading="lazy"
-          decoding="async"
-          className="w-full h-full object-contain p-1"
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.style.display = 'none';
-          }}
-        />
-      ) : (
-        <span className="text-lg font-bold text-[#F47C20]">{initial}</span>
-      )}
-    </div>
-  );
 }
 
 function StatusBadge({ status }) {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Briefcase } from 'lucide-react';
-import { Card, Avatar, Badge } from '../../../components/common';
+import { Card, Avatar, Badge, CompanyLogo } from '../../../components/common';
 import './RecentJobs.css';
 
 export default function RecentJobs({ jobs }) {
@@ -22,7 +22,7 @@ export default function RecentJobs({ jobs }) {
       <div className="job-list">
         {jobs.map(job => (
           <div key={job.id} className="job-item" onClick={() => navigate('/student/jobs')}>
-            <Avatar size="sm" src={job.logo} alt={job.company} />
+            <CompanyLogo size="sm" url={job.companyLogoUrl || job.imageUrl || job.logo} name={job.company || job.companyName} />
             <div className="job-details">
               <h4 className="job-title">{job.title}</h4>
               <p className="job-company">{job.company}</p>
