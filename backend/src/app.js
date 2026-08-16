@@ -38,8 +38,21 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
 // 3. Static Media Files
-app.use('/uploads', express.static(env.uploadDir));
-app.use('/api/uploads', express.static(env.uploadDir));
+const { resolveResumeFilePath } = require('./utils/file.utils');
+const fs = require('fs');
+
+const fallbackUploadsHandler = (req, res, next) => {
+  try {
+    const diskPath = resolveResumeFilePath(req.path);
+    if (diskPath && fs.existsSync(diskPath)) {
+      return res.sendFile(path.resolve(diskPath));
+    }
+  } catch (e) {}
+  next();
+};
+
+app.use('/uploads', express.static(env.uploadDir), fallbackUploadsHandler);
+app.use('/api/uploads', express.static(env.uploadDir), fallbackUploadsHandler);
 app.use('/api/student/profile/image', express.static(path.join(env.uploadDir, 'images')));
 app.use('/api/public/alumni/profile-image', express.static(path.join(env.uploadDir, 'images')));
 app.use('/api/jobs/images/logo', express.static(path.join(env.uploadDir, 'job-logos')));

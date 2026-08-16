@@ -64,6 +64,9 @@ export default function AlumniProfile() {
       const res = await api.get('/alumni/profile');
       const data = res.data;
       setProfile(data);
+      if (data.profileImageUrl) {
+        updateProfileImage(data.profileImageUrl);
+      }
       setPersonalForm({
         mobileNumber: data.mobileNumber || '',
         gender: data.gender || '',

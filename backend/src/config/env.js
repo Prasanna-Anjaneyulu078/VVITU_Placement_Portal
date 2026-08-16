@@ -10,6 +10,6 @@ module.exports = {
   jwtRefreshExpiration: parseInt(process.env.JWT_REFRESH_EXPIRATION || '604800000', 10),
   clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
   allowedOrigins: (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173').split(','),
-  uploadDir: path.join(__dirname, '../../uploads'),
+  uploadDir: process.env.UPLOAD_DIR ? path.resolve(process.env.UPLOAD_DIR) : path.join(__dirname, '../../uploads'),
   geminiApiKey: process.env.GEMINI_API_KEY || ''
 };

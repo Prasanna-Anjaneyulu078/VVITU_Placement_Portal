@@ -19,7 +19,7 @@ export function getBackendOrigin() {
  */
 export function isBase64(value) {
   if (!value || typeof value !== 'string') return false;
-  return /^data:[a-zA-Z0-9.+-]+\/[a-zA-Z0-9.+-]+;base64,/i.test(value.trim());
+  return /^data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]{2,}/i.test(value.trim());
 }
 
 /**
@@ -63,7 +63,20 @@ export function getFileUrl(fileRef, options = {}) {
     trimmed === 'false' ||
     trimmed === '[object Object]' ||
     trimmed === 'data:' ||
-    trimmed === 'data:image'
+    trimmed === 'data:image' ||
+    trimmed === 'http://' ||
+    trimmed === 'https://'
+  ) {
+    return null;
+  }
+
+  if (
+    !trimmed.startsWith('/') &&
+    !trimmed.startsWith('http://') &&
+    !trimmed.startsWith('https://') &&
+    !trimmed.startsWith('data:') &&
+    !trimmed.startsWith('blob:') &&
+    !trimmed.includes('/uploads/')
   ) {
     return null;
   }
@@ -82,8 +95,8 @@ export function getFileUrl(fileRef, options = {}) {
   if (/^https?:\/\//i.test(trimmed)) {
     try {
       const parsed = new URL(trimmed);
-      // Replace legacy localhost/127.0.0.1 origins in DB with current active backend origin
-      if ((parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') && parsed.pathname.includes('/uploads/')) {
+      // Normalize any host/port with /uploads/ path to use current active backend origin
+      if (parsed.pathname.includes('/uploads/')) {
         const normalized = `${backendOrigin}${parsed.pathname}${parsed.search}`;
         return options.cacheBust ? withCacheBust(normalized, options.version) : normalized;
       }

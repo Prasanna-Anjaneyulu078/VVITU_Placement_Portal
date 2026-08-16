@@ -21,13 +21,27 @@ const storage = multer.diskStorage({
     if (
       file.fieldname === 'profileImage' ||
       file.fieldname === 'image' ||
-      file.mimetype.startsWith('image/')
+      originalUrl.includes('/profile') ||
+      originalUrl.includes('/logo')
     ) {
       folder = 'images';
     } else if (
+      file.fieldname === 'verificationDoc' ||
+      file.fieldname === 'document' ||
+      file.fieldname === 'verificationDocument' ||
+      originalUrl.includes('/documents') ||
+      originalUrl.includes('/register/alumni') ||
+      originalUrl.includes('/verify-document')
+    ) {
+      folder = 'documents';
+    } else if (
       file.fieldname === 'resume' ||
-      file.fieldname === 'file' ||
-      originalUrl.includes('/resume') ||
+      originalUrl.includes('/resume')
+    ) {
+      folder = 'resumes';
+    } else if (file.mimetype.startsWith('image/')) {
+      folder = 'images';
+    } else if (
       file.mimetype === 'application/pdf' ||
       file.mimetype.includes('wordprocessingml') ||
       file.mimetype.includes('msword') ||
@@ -83,6 +97,13 @@ const upload = multer({
 
 const anyUpload = upload.any();
 
+const attachRelativePath = (f) => {
+  if (!f) return;
+  const destDir = f.destination || '';
+  const folder = path.basename(destDir) || 'documents';
+  f.relativePath = `/uploads/${folder}/${f.filename}`;
+};
+
 // Universal single-pass multipart handler that accepts any field name ('file', 'resume', 'document', 'verificationDoc', etc.)
 const uploadAnyFile = (req, res, next) => {
   anyUpload(req, res, (err) => {
@@ -90,6 +111,7 @@ const uploadAnyFile = (req, res, next) => {
       return next(err);
     }
     if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+      req.files.forEach(attachRelativePath);
       req.file = req.files.find((f) => f.fieldname === 'resume') ||
                  req.files.find((f) => f.fieldname === 'file') ||
                  req.files.find((f) => f.fieldname === 'document') ||
@@ -97,6 +119,9 @@ const uploadAnyFile = (req, res, next) => {
                  req.files.find((f) => f.fieldname === 'image') ||
                  req.files.find((f) => f.fieldname === 'profileImage') ||
                  req.files[0];
+      attachRelativePath(req.file);
+    } else if (req.file) {
+      attachRelativePath(req.file);
     }
     next();
   });

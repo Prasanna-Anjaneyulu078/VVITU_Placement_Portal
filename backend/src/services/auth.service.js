@@ -251,7 +251,7 @@ class AuthService {
     }
 
     const hashedPassword = await hashPassword(password);
-    const docUrl = `/uploads/documents/${file.filename}`;
+    const docUrl = file.relativePath || `/uploads/documents/${file.filename}`;
 
     // ── Atomic DB Transaction ─────────────────────────────────────────────
     let createdUser;

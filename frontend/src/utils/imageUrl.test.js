@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { resolveProfileImage, isBase64Image, isHttpUrl } from './imageUrl';
+import { resolveProfileImage, isBase64Image, isHttpUrl, getBackendOrigin } from './imageUrl';
 
 describe('imageUrl — resolveProfileImage & Base64 protection', () => {
   it('Case 4: invalid URL -> null', () => {
@@ -37,6 +37,7 @@ describe('imageUrl — resolveProfileImage & Base64 protection', () => {
   });
 
   it('Resolves relative upload paths against backend origin', () => {
-    expect(resolveProfileImage('/uploads/profiles/pic.jpg')).toBe('http://localhost:8082/uploads/profiles/pic.jpg');
+    const origin = getBackendOrigin();
+    expect(resolveProfileImage('/uploads/profiles/pic.jpg')).toBe(`${origin}/uploads/profiles/pic.jpg`);
   });
 });
