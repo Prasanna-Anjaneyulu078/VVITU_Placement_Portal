@@ -335,9 +335,10 @@ const DocumentViewerModal = ({
     const errString = typeof error === 'string' ? error : (error.message || JSON.stringify(error));
     
     if (errString.includes('404') || errString.toLowerCase().includes('not found') || errString.toLowerCase().includes('missing')) {
+      const isShortMsg = errString && !errString.includes('{') && errString.length < 160;
       return {
-        title: 'No Document Available',
-        message: 'The requested document could not be found or has not been uploaded yet.',
+        title: 'Document Unavailable (404)',
+        message: isShortMsg ? errString : 'The requested resume document was not found or is missing from storage. Please re-upload the resume.',
         icon: <FileQuestion size={44} className="text-amber-500" />
       };
     }

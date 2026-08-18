@@ -12,6 +12,10 @@ const authenticateToken = async (req, res, next) => {
   if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
     token = req.headers.authorization.split(' ')[1];
   }
+  // 3. Check Query Parameters (e.g. ?token=... for direct browser/iframe preview links)
+  if (!token && req.query && req.query.token) {
+    token = req.query.token;
+  }
 
   if (!token) {
     return res.status(401).json({ success: false, message: 'Full authentication is required to access this resource' });

@@ -127,7 +127,11 @@ class StudentController {
 
       res.setHeader('Content-Type', contentType);
       res.setHeader('Content-Disposition', `${disposition}; filename="${fileName}"`);
-      res.sendFile(filePath);
+      res.sendFile(filePath, (err) => {
+        if (err && !res.headersSent) {
+          next({ statusCode: 404, message: 'Resume file missing from storage. Please re-upload your resume.' });
+        }
+      });
     } catch (err) {
       next(err);
     }

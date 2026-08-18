@@ -392,6 +392,9 @@ export default function StudentProfile() {
         errMsg = err.message;
       }
       setViewerError(errMsg);
+      if (err.response?.status === 404) {
+        setResumeDetails(prev => (prev ? { ...prev, fileMissing: true } : { hasResume: true, fileMissing: true }));
+      }
     } finally {
       setViewerLoading(false);
     }
@@ -425,7 +428,10 @@ export default function StudentProfile() {
       link.click();
       link.remove();
     } catch (err) {
-      toast.error("Failed to download resume.");
+      toast.error("Resume file missing from storage. Please re-upload your resume.");
+      if (err.response?.status === 404) {
+        setResumeDetails(prev => (prev ? { ...prev, fileMissing: true } : { hasResume: true, fileMissing: true }));
+      }
     }
   };
 
@@ -688,7 +694,7 @@ export default function StudentProfile() {
                <h4 className="font-extrabold text-[#F47C20] text-xs uppercase tracking-wider flex items-center gap-2">
                  <FileText size={16}/> Resume / CV
                </h4>
-               {resumeDetails?.hasResume && (
+               {resumeDetails?.hasResume && !resumeDetails?.fileMissing && (
                  <button 
                    onClick={() => setShowResumeUploadModal(true)} 
                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FFF4EB] border border-[#F47C20] text-[#F47C20] rounded-xl text-xs font-bold   transition-all shadow-xs"
@@ -698,7 +704,7 @@ export default function StudentProfile() {
                )}
             </div>
             <div className="p-6">
-              {resumeDetails?.hasResume ? (
+              {resumeDetails?.hasResume && !resumeDetails?.fileMissing ? (
                 <div className="space-y-4">
                   <div className="flex items-center gap-3 p-4 bg-slate-50 border border-slate-200 rounded-xl">
                     <div className="w-10 h-10 rounded-xl bg-orange-100 text-[#F47C20] flex items-center justify-center font-bold shrink-0">
