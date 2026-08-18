@@ -2,7 +2,7 @@ const prisma = require('../config/db');
 const path = require('path');
 const fs = require('fs');
 const env = require('../config/env');
-const { resolveResumeFilePath } = require('../utils/file.utils');
+const { resolveResumeFilePath, sanitizeUploadPath } = require('../utils/file.utils');
 
 class ResumeService {
   static async uploadResume(userId, file, strategy = 'REPLACE') {
@@ -22,7 +22,7 @@ class ResumeService {
       throw { statusCode: 404, message: 'Student profile not found' };
     }
 
-    const relativePath = `/uploads/resumes/${file.filename}`;
+    const relativePath = sanitizeUploadPath(file.relativePath || `/uploads/resumes/${file.filename}`);
     const mimeType = file.mimetype || 'application/pdf';
 
     // Find any existing resume record for this student (whether deletedAt is null or not)

@@ -58,7 +58,10 @@ export const DataProvider = ({ children }) => {
   }, []);
 
   const updateProfileImage = useCallback((url, options = {}) => {
-    if (!url) {
+    if (url === undefined) {
+      return;
+    }
+    if (url === null || url === '') {
       clearProfileImage();
       return;
     }
@@ -69,7 +72,6 @@ export const DataProvider = ({ children }) => {
     });
     
     if (!resolved) {
-      clearProfileImage();
       return;
     }
 

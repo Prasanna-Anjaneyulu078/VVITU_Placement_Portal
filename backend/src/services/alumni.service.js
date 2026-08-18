@@ -1,4 +1,5 @@
 const prisma = require('../config/db');
+const { sanitizeUploadPath } = require('../utils/file.utils');
 
 class AlumniService {
   static async getProfile(userId) {
@@ -212,7 +213,8 @@ class AlumniService {
       throw { statusCode: 404, message: 'Alumni profile not found' };
     }
 
-    const imageUrl = `/uploads/images/${file.filename}`;
+    const rawPath = file.relativePath || `/uploads/images/${file.filename}`;
+    const imageUrl = sanitizeUploadPath(rawPath);
     const publicUrl = `/api/public/alumni/${alumni.id}/profile-image`;
     const now = new Date();
 

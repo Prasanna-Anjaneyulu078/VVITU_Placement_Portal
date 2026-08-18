@@ -71,11 +71,11 @@ export default function DeleteJobDialog({
             type="button"
             onClick={onConfirm}
             disabled={isDeleting}
-            className="w-full sm:flex-1 py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="w-full sm:flex-1 py-2.5 px-4 bg-red-600 hover:bg-red-700 text-[#F47C20] text-xs font-extrabold rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-500"
           >
             {isDeleting ? (
               <>
-                <Loader2 size={15} className="animate-spin text-white" />
+                <Loader2 size={15} className="animate-spin text-[#F47C20]" />
                 <span>Deleting...</span>
               </>
             ) : (

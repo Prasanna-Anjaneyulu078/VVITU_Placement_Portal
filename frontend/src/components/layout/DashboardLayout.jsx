@@ -36,8 +36,9 @@ export default function DashboardLayout({ children, role = 'student' }) {
       api.get('/student/profile')
         .then(res => {
           if (!isMounted) return;
-          // forceRefresh busts browser cache so re-login always shows the current image
-          updateProfileImage(res.data?.profileImageUrl || '', { forceRefresh: true });
+          if (res.data?.profileImageUrl) {
+            updateProfileImage(res.data.profileImageUrl, { forceRefresh: true });
+          }
           if (res.data?.name) {
             setFetchedName(res.data.name);
           }
@@ -47,8 +48,9 @@ export default function DashboardLayout({ children, role = 'student' }) {
       api.get('/admin/profile')
         .then(res => {
           if (!isMounted) return;
-          // forceRefresh busts browser cache so re-login always shows the current image
-          updateProfileImage(res.data?.profileImageUrl || '', { forceRefresh: true });
+          if (res.data?.profileImageUrl) {
+            updateProfileImage(res.data.profileImageUrl, { forceRefresh: true });
+          }
           if (res.data?.designation) {
             setUserDesignation(res.data.designation);
           }
@@ -68,8 +70,9 @@ export default function DashboardLayout({ children, role = 'student' }) {
           if (res.data?.id) {
             setFetchedAlumniId(res.data.id);
           }
-          // forceRefresh busts browser cache so re-login always shows the current image
-          updateProfileImage(res.data?.profileImageUrl || '', { forceRefresh: true });
+          if (res.data?.profileImageUrl) {
+            updateProfileImage(res.data.profileImageUrl, { forceRefresh: true });
+          }
           if (res.data?.name) {
             setFetchedName(res.data.name);
           }

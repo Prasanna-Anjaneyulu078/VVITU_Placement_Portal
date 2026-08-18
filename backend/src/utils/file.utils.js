@@ -63,6 +63,38 @@ function resolveResumeFilePath(storedPath) {
   return null;
 }
 
+/**
+ * Sanitizes an upload file path or URL for persistent DB storage.
+ * Strips query strings, hashes, and ensures clean forward-slash relative paths.
+ */
+function sanitizeUploadPath(rawPath) {
+  if (!rawPath || typeof rawPath !== 'string') return null;
+  const trimmed = rawPath.trim();
+  if (!trimmed || trimmed === 'null' || trimmed === 'undefined') return null;
+  
+  if (trimmed.startsWith('data:') || trimmed.startsWith('blob:')) {
+    return trimmed;
+  }
+
+  const pathOnly = trimmed.split('?')[0].split('#')[0];
+  const normalized = pathOnly.replace(/\\/g, '/');
+
+  if (/^https?:\/\//i.test(normalized)) {
+    try {
+      const parsed = new URL(normalized);
+      if (parsed.pathname.includes('/uploads/')) {
+        return parsed.pathname;
+      }
+    } catch {}
+    return normalized;
+  }
+
+  const clean = normalized.startsWith('/') ? normalized : `/${normalized}`;
+  return clean.startsWith('/uploads/') ? clean : `/uploads${clean}`;
+}
+
 module.exports = {
-  resolveResumeFilePath
+  resolveResumeFilePath,
+  sanitizeUploadPath
 };
+

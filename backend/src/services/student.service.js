@@ -1,6 +1,6 @@
 const fs = require('fs');
 const prisma = require('../config/db');
-const { resolveResumeFilePath } = require('../utils/file.utils');
+const { resolveResumeFilePath, sanitizeUploadPath } = require('../utils/file.utils');
 
 function normalizeProjectUrl(url) {
   if (!url || typeof url !== 'string') return null;
@@ -293,7 +293,9 @@ class StudentService {
         ...(codechefUrl !== undefined && { codechefUrl: codechefUrl ? String(codechefUrl).trim() : null }),
         ...(gfgUrl !== undefined && { gfgUrl: gfgUrl ? String(gfgUrl).trim() : null }),
         ...(hackerrankUrl !== undefined && { hackerrankUrl: hackerrankUrl ? String(hackerrankUrl).trim() : null }),
-        ...(profileImageUrl !== undefined && { profileImageUrl }),
+        ...(profileImageUrl !== undefined && profileImageUrl !== null && String(profileImageUrl).trim() !== '' && {
+          profileImageUrl: sanitizeUploadPath(profileImageUrl)
+        }),
         ...(cgpa !== undefined && { cgpa: (cgpa !== null && cgpa !== '') ? parseFloat(cgpa) : null }),
         ...(semester !== undefined && { semester: (semester !== null && semester !== '') ? parseInt(semester, 10) : null }),
         ...(backlogs !== undefined && { backlogs: (backlogs !== null && backlogs !== '') ? parseInt(backlogs, 10) : 0 }),
@@ -674,7 +676,9 @@ class StudentService {
       }
     }
 
-    if (!imageUrl) {
+    const sanitizedUrl = sanitizeUploadPath(imageUrl);
+
+    if (!sanitizedUrl) {
       throw { statusCode: 400, message: 'Profile photo is required' };
     }
 
@@ -683,7 +687,7 @@ class StudentService {
     await prisma.$transaction([
       prisma.student.update({
         where: { id: student.id },
-        data: { profileImageUrl: imageUrl }
+        data: { profileImageUrl: sanitizedUrl }
       }),
       prisma.user.update({
         where: { id: BigInt(userId) },
