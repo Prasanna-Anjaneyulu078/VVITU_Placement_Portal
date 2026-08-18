@@ -4,7 +4,7 @@ const fs = require('fs');
 const env = require('../config/env');
 
 // Ensure upload directories exist
-const uploadDirs = ['images', 'resumes', 'documents'];
+const uploadDirs = ['images', 'resumes', 'documents', 'job-logos'];
 uploadDirs.forEach((dir) => {
   const fullPath = path.join(env.uploadDir, dir);
   if (!fs.existsSync(fullPath)) {

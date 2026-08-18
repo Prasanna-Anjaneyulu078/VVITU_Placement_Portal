@@ -22,7 +22,7 @@ function resolveResumeFilePath(storedPath) {
   const uploadRoot = path.resolve(env.uploadDir);
 
   // 1. Check preferred folder if specified in path (resumes, documents, images, job-logos)
-  const subMatch = normalized.match(/\/uploads\/(resumes|documents|images|job-logos)\//i);
+  const subMatch = normalized.match(/(?:\/|^)(?:uploads\/)?(resumes|documents|images|job-logos)\//i);
   if (subMatch) {
     const preferredFolder = subMatch[1].toLowerCase();
     const preferredPath = path.join(env.uploadDir, preferredFolder, baseName);

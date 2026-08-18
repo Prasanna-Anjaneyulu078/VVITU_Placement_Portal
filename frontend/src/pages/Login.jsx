@@ -31,21 +31,24 @@ export default function Login() {
         password: e.target.password.value
       });
 
-      const { role: userRole, name, email, verificationStatus, profileImageUrl, user, token, accessToken } = response.data;
+      const { role: userRole, name, email, verificationStatus, profileImageUrl, user, token, accessToken } = response.data || {};
       const jwtToken = token || accessToken || user?.token;
       if (jwtToken) {
         localStorage.setItem('token', jwtToken);
       }
-      localStorage.setItem('role', userRole);
-      if (name) localStorage.setItem('userName', name);
-      if (email) localStorage.setItem('userEmail', email);
+      
+      const activeRole = userRole || user?.role;
+      const activeName = name || user?.name;
+      const activeEmail = email || user?.email;
+      
+      if (activeRole) localStorage.setItem('role', activeRole);
+      if (activeName) localStorage.setItem('userName', activeName);
+      if (activeEmail) localStorage.setItem('userEmail', activeEmail);
 
       const imgUrl = profileImageUrl || user?.profileImageUrl;
       if (imgUrl) {
-        localStorage.setItem('profileImage', imgUrl);
         if (updateProfileImage) updateProfileImage(imgUrl, { forceRefresh: true });
       } else {
-        localStorage.removeItem('profileImage');
         if (updateProfileImage) updateProfileImage('');
       }
 

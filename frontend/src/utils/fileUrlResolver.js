@@ -70,15 +70,20 @@ export function getFileUrl(fileRef, options = {}) {
     return null;
   }
 
-  if (
-    !trimmed.startsWith('/') &&
-    !trimmed.startsWith('http://') &&
-    !trimmed.startsWith('https://') &&
-    !trimmed.startsWith('data:') &&
-    !trimmed.startsWith('blob:') &&
-    !trimmed.includes('uploads/') &&
-    !trimmed.includes('job-logos/')
-  ) {
+  const isRelativeOrFile = 
+    trimmed.startsWith('/') ||
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('https://') ||
+    trimmed.startsWith('data:') ||
+    trimmed.startsWith('blob:') ||
+    trimmed.includes('uploads/') ||
+    trimmed.includes('job-logos/') ||
+    trimmed.includes('images/') ||
+    trimmed.includes('documents/') ||
+    trimmed.includes('resumes/') ||
+    /\.(png|jpe?g|webp|pdf|docx?|svg|gif)$/i.test(trimmed);
+
+  if (!isRelativeOrFile) {
     return null;
   }
 
