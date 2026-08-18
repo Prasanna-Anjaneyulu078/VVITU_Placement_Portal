@@ -56,7 +56,11 @@ export default function DashboardLayout({ children, role = 'student' }) {
             setFetchedName(res.data.name);
           }
         })
-        .catch(err => console.error(err));
+        .catch(err => {
+          if (err?.response?.status !== 401) {
+            console.error('Failed to fetch admin profile in DashboardLayout:', err);
+          }
+        });
     } else if (normalizedRole === 'alumni') {
       api.get('/alumni/profile')
         .then(res => {
@@ -70,7 +74,11 @@ export default function DashboardLayout({ children, role = 'student' }) {
             setFetchedName(res.data.name);
           }
         })
-        .catch(err => console.error(err));
+        .catch(err => {
+          if (err?.response?.status !== 401) {
+            console.error('Failed to fetch alumni profile in DashboardLayout:', err);
+          }
+        });
     }
     
     return () => { isMounted = false; };

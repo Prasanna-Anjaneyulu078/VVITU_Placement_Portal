@@ -109,26 +109,38 @@ export default function AdminVerifications() {
     try {
       const docPath = `/admin/alumni/${alum.id}/document`;
       const res = await api.get(docPath, { responseType: 'blob' });
+      
+      const contentType = res.headers['content-type'] || '';
+      if (contentType.includes('application/json')) {
+        const text = await res.data.text();
+        let msg = 'Verification document not found or missing from storage.';
+        try {
+          const parsed = JSON.parse(text);
+          if (parsed?.message) msg = parsed.message;
+        } catch (e) {}
+        setDocError(msg);
+        return;
+      }
+
       const disposition = res.headers['content-disposition'] || '';
       const match = disposition.match(/filename="?([^"]+)"?/);
       const filename = match ? match[1] : `${alum.rollNumber || 'Alumni'}_VerificationDocument.pdf`;
-      const blob = new Blob([res.data], { type: res.headers['content-type'] || 'application/pdf' });
+      const blob = new Blob([res.data], { type: contentType || 'application/pdf' });
       const url = URL.createObjectURL(blob);
       setDocBlobUrl(url);
       setViewingDocAlumni(prev => prev ? ({ ...prev, fileName: filename }) : prev);
     } catch (err) {
-      console.error('Failed to view verification document:', err);
-      let errMsg = 'Failed to load document';
+      let errMsg = 'Verification document not found or missing from storage.';
       if (err.response?.data && err.response.data instanceof Blob) {
         try {
           const text = await err.response.data.text();
           const parsed = JSON.parse(text);
           if (parsed?.message) errMsg = parsed.message;
         } catch (e) {
-          errMsg = err.response?.status === 404 ? 'Verification document not found or missing from storage.' : err.message;
+          if (err.response?.status !== 404) errMsg = err.message || errMsg;
         }
-      } else {
-        errMsg = err.response?.status === 404 ? 'Verification document not found or missing from storage.' : (err.message || 'Failed to load document');
+      } else if (err.response?.status !== 404 && err.message) {
+        errMsg = err.message;
       }
       setDocError(errMsg);
     } finally {

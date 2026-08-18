@@ -6,38 +6,60 @@ import { DataProvider } from './context/DataContext';
 import PrivateRoute from './components/common/PrivateRoute';
 import { PageLoader, ErrorBoundary } from './components/common';
 
-// Public & Auth Routes (Lazy Loaded)
-const Login = lazy(() => import('./pages/Login'));
-const Register = lazy(() => import('./pages/Register'));
-const NotFound = lazy(() => import('./pages/NotFound'));
-const PendingVerification = lazy(() => import('./pages/PendingVerification'));
-const RejectedVerification = lazy(() => import('./pages/RejectedVerification'));
-const ChangePassword = lazy(() => import('./pages/ChangePassword'));
-const JobDetails = lazy(() => import('./pages/JobDetails'));
+/**
+ * Helper to auto-retry dynamic component imports upon deployment chunk mismatches.
+ */
+const lazyWithRetry = (componentImport) =>
+  lazy(async () => {
+    const pageHasBeenRefreshed = JSON.parse(
+      window.sessionStorage.getItem('chunk-retry-refreshed') || 'false'
+    );
+    try {
+      const component = await componentImport();
+      window.sessionStorage.setItem('chunk-retry-refreshed', 'false');
+      return component;
+    } catch (error) {
+      if (!pageHasBeenRefreshed) {
+        window.sessionStorage.setItem('chunk-retry-refreshed', 'true');
+        window.location.reload();
+        return new Promise(() => {});
+      }
+      throw error;
+    }
+  });
 
-// Student Routes (Lazy Loaded)
-const StudentDashboard = lazy(() => import('./pages/student/StudentDashboard'));
-const StudentProfile = lazy(() => import('./pages/student/StudentProfile'));
-const StudentJobs = lazy(() => import('./pages/student/StudentJobs'));
-const StudentApplications = lazy(() => import('./pages/student/StudentApplications'));
-const StudentApplicationDetails = lazy(() => import('./pages/student/StudentApplicationDetails'));
+// Public & Auth Routes (Lazy Loaded with Retry)
+const Login = lazyWithRetry(() => import('./pages/Login'));
+const Register = lazyWithRetry(() => import('./pages/Register'));
+const NotFound = lazyWithRetry(() => import('./pages/NotFound'));
+const PendingVerification = lazyWithRetry(() => import('./pages/PendingVerification'));
+const RejectedVerification = lazyWithRetry(() => import('./pages/RejectedVerification'));
+const ChangePassword = lazyWithRetry(() => import('./pages/ChangePassword'));
+const JobDetails = lazyWithRetry(() => import('./pages/JobDetails'));
 
-// Alumni Routes (Lazy Loaded)
-const AlumniDashboard = lazy(() => import('./pages/alumni/AlumniDashboard'));
-const AlumniStudentApplications = lazy(() => import('./pages/alumni/AlumniStudentApplications'));
-const AlumniPostJob = lazy(() => import('./pages/alumni/AlumniPostJob'));
-const AlumniEditJob = lazy(() => import('./pages/alumni/AlumniEditJob'));
-const AlumniMyJobs = lazy(() => import('./pages/alumni/AlumniMyJobs'));
-const AlumniProfile = lazy(() => import('./pages/alumni/AlumniProfile'));
+// Student Routes (Lazy Loaded with Retry)
+const StudentDashboard = lazyWithRetry(() => import('./pages/student/StudentDashboard'));
+const StudentProfile = lazyWithRetry(() => import('./pages/student/StudentProfile'));
+const StudentJobs = lazyWithRetry(() => import('./pages/student/StudentJobs'));
+const StudentApplications = lazyWithRetry(() => import('./pages/student/StudentApplications'));
+const StudentApplicationDetails = lazyWithRetry(() => import('./pages/student/StudentApplicationDetails'));
 
-// Admin Routes (Lazy Loaded)
-const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
-const AdminVerifications = lazy(() => import('./pages/admin/AdminVerifications'));
-const AdminJobs = lazy(() => import('./pages/admin/AdminJobs'));
-const AdminAlumni = lazy(() => import('./pages/admin/AdminAlumni'));
-const AdminProfile = lazy(() => import('./pages/admin/AdminProfile'));
-const StudentsPage = lazy(() => import('./pages/admin/UserManagement/StudentsPage'));
-const AdminManagement = lazy(() => import('./pages/admin/UserManagement/AdminManagement'));
+// Alumni Routes (Lazy Loaded with Retry)
+const AlumniDashboard = lazyWithRetry(() => import('./pages/alumni/AlumniDashboard'));
+const AlumniStudentApplications = lazyWithRetry(() => import('./pages/alumni/AlumniStudentApplications'));
+const AlumniPostJob = lazyWithRetry(() => import('./pages/alumni/AlumniPostJob'));
+const AlumniEditJob = lazyWithRetry(() => import('./pages/alumni/AlumniEditJob'));
+const AlumniMyJobs = lazyWithRetry(() => import('./pages/alumni/AlumniMyJobs'));
+const AlumniProfile = lazyWithRetry(() => import('./pages/alumni/AlumniProfile'));
+
+// Admin Routes (Lazy Loaded with Retry)
+const AdminDashboard = lazyWithRetry(() => import('./pages/admin/AdminDashboard'));
+const AdminVerifications = lazyWithRetry(() => import('./pages/admin/AdminVerifications'));
+const AdminJobs = lazyWithRetry(() => import('./pages/admin/AdminJobs'));
+const AdminAlumni = lazyWithRetry(() => import('./pages/admin/AdminAlumni'));
+const AdminProfile = lazyWithRetry(() => import('./pages/admin/AdminProfile'));
+const StudentsPage = lazyWithRetry(() => import('./pages/admin/UserManagement/StudentsPage'));
+const AdminManagement = lazyWithRetry(() => import('./pages/admin/UserManagement/AdminManagement'));
 
 /**
  * TokenGuard - Simplified since JWT is now HttpOnly and cannot be parsed here.

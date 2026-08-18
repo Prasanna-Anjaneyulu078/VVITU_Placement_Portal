@@ -37,6 +37,7 @@ export { default as JobFilterBar } from './JobFilterBar';
 export { default as StudentDetailsDrawer } from './StudentDetailsDrawer';
 export { default as ProjectDrawer } from './ProjectDrawer';
 export { default as DeleteProjectDialog } from './DeleteProjectDialog';
+export { default as DeleteJobDialog } from './DeleteJobDialog';
 export { default as ProjectEmptyState } from './ProjectEmptyState';
 export { default as ProjectCard } from './ProjectCard';
 export { default as ChangePasswordCard } from './ChangePasswordCard';

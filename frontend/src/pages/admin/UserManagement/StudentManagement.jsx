@@ -134,18 +134,30 @@ const StudentManagement = forwardRef(({ isTab = false, onCountsUpdate }, ref) =>
     setViewerLoading(true);
     try {
       const res = await api.get(`/admin/students/${student.id}/resume/view`, { responseType: 'blob' });
+      
+      const contentType = res.headers['content-type'] || '';
+      if (contentType.includes('application/json')) {
+        const text = await res.data.text();
+        let msg = 'Resume document not found or missing from storage.';
+        try {
+          const parsed = JSON.parse(text);
+          if (parsed?.message) msg = parsed.message;
+        } catch (e) {}
+        setViewerError(msg);
+        return;
+      }
+
       const disposition = res.headers['content-disposition'] || '';
       const match = disposition.match(/filename="?([^"]+)"?/);
       const filename = match ? match[1] : `${student.rollNumber || 'Student'}_Resume.pdf`;
-      const blob = new Blob([res.data], { type: res.headers['content-type'] || 'application/pdf' });
+      const blob = new Blob([res.data], { type: contentType || 'application/pdf' });
       const url  = URL.createObjectURL(blob);
       
       setViewerUrl(url);
       setViewerMetadata(prev => ({ ...prev, fileName: filename }));
     } catch (err) {
-      console.error('Failed to view resume:', err);
       const status = err.response?.status;
-      const errMsg = status === 404 ? '404: Resume Not Found' : status === 403 ? '403: Forbidden' : (err.message || 'Failed to view resume.');
+      const errMsg = status === 404 ? 'Resume document not found or missing from storage.' : status === 403 ? '403: Access Forbidden' : (err.message || 'Failed to view resume.');
       setViewerError(errMsg);
     } finally {
       setViewerLoading(false);

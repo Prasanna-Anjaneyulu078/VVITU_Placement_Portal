@@ -127,10 +127,30 @@ const PdfViewer = ({ documentUrl, fileName }) => {
       try {
         let loadingTask;
         if (typeof documentUrl === 'string' && documentUrl.startsWith('blob:')) {
-          // Fetch arrayBuffer for reliable blob loading on mobile WebKit
+          // Fetch arrayBuffer for reliable blob loading
           const res = await fetch(documentUrl);
           const buffer = await res.arrayBuffer();
-          loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(buffer) });
+          const uint8 = new Uint8Array(buffer);
+
+          // Check magic bytes: PDF file must start with %PDF- (0x25, 0x50, 0x44, 0x46)
+          const isPdf = uint8.length >= 4 &&
+            uint8[0] === 0x25 && uint8[1] === 0x50 && uint8[2] === 0x44 && uint8[3] === 0x46;
+
+          if (!isPdf) {
+            // Read ASCII text payload (e.g. JSON error or plain text message)
+            const text = new TextDecoder('utf-8').decode(uint8);
+            try {
+              const parsed = JSON.parse(text);
+              if (parsed?.message) {
+                throw new Error(parsed.message);
+              }
+            } catch (jsonErr) {
+              if (jsonErr.message && jsonErr.message !== text) throw jsonErr;
+            }
+            throw new Error(text.slice(0, 150) || 'The document format is not a valid PDF.');
+          }
+
+          loadingTask = pdfjsLib.getDocument({ data: uint8 });
         } else {
           loadingTask = pdfjsLib.getDocument(documentUrl);
         }
@@ -143,7 +163,6 @@ const PdfViewer = ({ documentUrl, fileName }) => {
           setLoading(false);
         }
       } catch (err) {
-        console.error('PDF.js loading failed:', err);
         if (active) {
           setPdfError(err.message || 'Failed to render PDF preview.');
           setLoading(false);
@@ -171,10 +190,18 @@ const PdfViewer = ({ documentUrl, fileName }) => {
 
   if (pdfError || !pdf) {
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center bg-white rounded-xl border border-slate-200 p-6 text-center">
-        <object data={documentUrl} type="application/pdf" className="w-full h-full min-h-[300px]">
-          <iframe src={documentUrl} title={fileName || 'PDF Document'} className="w-full h-full border-0 min-h-[300px]" />
-        </object>
+      <div className="w-full h-full flex flex-col items-center justify-center bg-white rounded-xl border border-slate-200 p-8 text-center max-w-md mx-auto my-auto">
+        <div className="p-3 bg-amber-50 rounded-full mb-3 text-amber-500">
+          <FileQuestion size={40} />
+        </div>
+        <h4 className="text-base font-bold text-slate-800 mb-1">Document Unavailable</h4>
+        <p className="text-xs text-slate-500 mb-4">{pdfError || 'The document preview could not be loaded.'}</p>
+        <button
+          onClick={() => window.open(documentUrl, '_blank')}
+          className="px-4 py-2 bg-[#FFF4EB] border border-[#F47C20] text-[#F47C20] text-xs font-bold rounded-xl transition-all shadow-xs"
+        >
+          Open Document
+        </button>
       </div>
     );
   }

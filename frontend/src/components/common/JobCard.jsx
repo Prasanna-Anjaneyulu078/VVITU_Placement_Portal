@@ -377,6 +377,16 @@ function JobCard({
                 </button>
               </>
             )}
+            {onDelete && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onDelete(job); }}
+                className={BTN_CLASS_DANGER}
+                aria-label="Delete job"
+                title="Delete Job"
+              >
+                <Trash2 size={14} />
+              </button>
+            )}
           </>
         )}
       </div>

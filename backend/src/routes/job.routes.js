@@ -26,7 +26,7 @@ router.post('/:id/logo', authenticateToken, authorizeRoles('ALUMNI', 'ADMIN'), u
 // Job CRUD (authenticated)
 router.put('/:id/status', authenticateToken, authorizeRoles('ADMIN', 'SUPER_ADMIN'), JobController.updateJobStatus);
 router.put('/:id', authenticateToken, authorizeRoles('ALUMNI', 'ADMIN'), JobController.updateJob);
-router.delete('/:id', authenticateToken, authorizeRoles('ALUMNI', 'ADMIN'), JobController.deleteJob);
+router.delete('/:id', authenticateToken, authorizeRoles('ALUMNI', 'ADMIN', 'SUPER_ADMIN'), JobController.deleteJob);
 
 // Public parameterized route (keep last)
 router.get('/:id', JobController.getJobById);

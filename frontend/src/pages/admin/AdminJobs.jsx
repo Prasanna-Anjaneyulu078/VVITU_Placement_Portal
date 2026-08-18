@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { Briefcase, ChevronLeft, ChevronRight } from 'lucide-react';
-import { JobCard, JobFilterBar, PageHeader } from '../../components/common';
+import { JobCard, JobFilterBar, PageHeader, DeleteJobDialog } from '../../components/common';
 import Pagination from '../../components/common/Pagination';
 import { JobCardLoader } from '../../components/common/loading';
 import { useNavigate } from 'react-router-dom';
@@ -17,8 +17,6 @@ const GRID_CSS = `
   @media (min-width: 1200px) { .job-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 `;
 
-
-
 const ITEMS_PER_PAGE = 10;
 
 export default function AdminJobs() {
@@ -26,6 +24,11 @@ export default function AdminJobs() {
   const [isLoading, setIsLoading]     = useState(true);
   const [isError, setIsError]         = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+
+  /* Delete Modal State */
+  const [selectedJobToDelete, setSelectedJobToDelete] = useState(null);
+  const [showDeleteDialog, setShowDeleteDialog]       = useState(false);
+  const [isDeletingJob, setIsDeletingJob]             = useState(false);
 
   /* filters */
   const [searchTerm,    setSearchTerm]    = useState('');
@@ -71,16 +74,33 @@ export default function AdminJobs() {
     }
   }, []);
 
-  const handleDelete = useCallback(async (job) => {
-    if (!window.confirm(`Delete "${job.title}"? This cannot be undone.`)) return;
-    try {
-      await api.delete(`/jobs/${job.id}`);
-      toast.success('Job deleted');
-      setJobs(prev => prev.filter(j => j.id !== job.id));
-    } catch (err) {
-      toast.error('Failed to delete job');
-    }
+  const handleOpenDelete = useCallback((job) => {
+    setSelectedJobToDelete(job);
+    setShowDeleteDialog(true);
   }, []);
+
+  const handleCloseDelete = useCallback(() => {
+    if (isDeletingJob) return;
+    setShowDeleteDialog(false);
+    setSelectedJobToDelete(null);
+  }, [isDeletingJob]);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!selectedJobToDelete) return;
+    setIsDeletingJob(true);
+    try {
+      await api.delete(`/jobs/${selectedJobToDelete.id}`);
+      toast.success('Job deleted successfully');
+      setJobs(prev => prev.filter(j => j.id !== selectedJobToDelete.id));
+      setShowDeleteDialog(false);
+      setSelectedJobToDelete(null);
+    } catch (err) {
+      const errMsg = err.response?.data?.message || 'Failed to delete job';
+      toast.error(errMsg);
+    } finally {
+      setIsDeletingJob(false);
+    }
+  }, [selectedJobToDelete]);
 
   /* ── Derived ── */
   const uniqueCompanies = useMemo(() => [...new Set(jobs.map(j => j.company).filter(Boolean))], [jobs]);
@@ -211,7 +231,7 @@ export default function AdminJobs() {
                   onSelect={(j) => navigate(`/admin/jobs/${j.id}`)}
                   onApprove={(j) => updateJobStatus(j, 'ACTIVE')}
                   onReject={(j) => updateJobStatus(j, 'REJECTED')}
-                  onDelete={handleDelete}
+                  onDelete={handleOpenDelete}
                 />
               ))}
             </div>
@@ -226,6 +246,15 @@ export default function AdminJobs() {
           </>
         )}
       </div>
+
+      {/* Delete Job Confirmation Modal */}
+      <DeleteJobDialog
+        isOpen={showDeleteDialog}
+        onClose={handleCloseDelete}
+        onConfirm={handleConfirmDelete}
+        jobTitle={selectedJobToDelete?.title}
+        isDeleting={isDeletingJob}
+      />
     </DashboardLayout>
   );
 }

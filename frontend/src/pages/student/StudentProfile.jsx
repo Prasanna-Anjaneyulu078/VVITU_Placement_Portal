@@ -357,27 +357,39 @@ export default function StudentProfile() {
         responseType: 'blob',
         params: { t: Date.now() }
       });
+      
+      const contentType = res.headers['content-type'] || '';
+      if (contentType.includes('application/json')) {
+        const text = await res.data.text();
+        let msg = 'Resume document not found or missing from storage.';
+        try {
+          const parsed = JSON.parse(text);
+          if (parsed?.message) msg = parsed.message;
+        } catch (e) {}
+        setViewerError(msg);
+        return;
+      }
+
       const disposition = res.headers['content-disposition'] || '';
       const match = disposition.match(/filename="?([^"]+)"?/);
       const filename = match ? match[1] : `${academicInfo.rollNumber || 'Student'}_Resume.pdf`;
-      const file = new Blob([res.data], { type: res.headers['content-type'] || 'application/pdf' });
+      const file = new Blob([res.data], { type: contentType || 'application/pdf' });
       const fileURL = URL.createObjectURL(file);
       
       setViewerUrl(fileURL);
       setViewerMetadata(prev => ({ ...prev, fileName: filename }));
     } catch (err) {
-      console.error("Error viewing resume:", err);
-      let errMsg = 'Failed to view resume';
+      let errMsg = 'Resume document not found or missing from storage.';
       if (err.response?.data && err.response.data instanceof Blob) {
         try {
           const text = await err.response.data.text();
           const parsed = JSON.parse(text);
           if (parsed?.message) errMsg = parsed.message;
         } catch (e) {
-          errMsg = err.response?.status === 404 ? 'Resume document not found or missing from storage.' : err.message;
+          if (err.response?.status !== 404) errMsg = err.message || errMsg;
         }
-      } else {
-        errMsg = err.response?.status === 404 ? 'Resume document not found or missing from storage.' : (err.message || 'Failed to view resume');
+      } else if (err.response?.status !== 404 && err.message) {
+        errMsg = err.message;
       }
       setViewerError(errMsg);
     } finally {
