@@ -12,18 +12,18 @@ router.get('/all', JobController.getAllJobs);
 router.post(
   '/post',
   authenticateToken,
-  authorizeRoles('ALUMNI', 'ADMIN'),
+  authorizeRoles('ALUMNI', 'ADMIN', 'SUPER_ADMIN'),
   upload.uploadAnyFile,
   JobController.createJob
 );
-router.get('/my', authenticateToken, authorizeRoles('ALUMNI', 'ADMIN'), JobController.getMyJobs);
+router.get('/my', authenticateToken, authorizeRoles('ALUMNI', 'ADMIN', 'SUPER_ADMIN'), JobController.getMyJobs);
 
 // File upload routes (ALUMNI or ADMIN)
-router.post('/:id/logo', authenticateToken, authorizeRoles('ALUMNI', 'ADMIN'), upload.uploadAnyFile, JobController.uploadLogo);
+router.post('/:id/logo', authenticateToken, authorizeRoles('ALUMNI', 'ADMIN', 'SUPER_ADMIN'), upload.uploadAnyFile, JobController.uploadLogo);
 
 // Job CRUD (authenticated)
 router.put('/:id/status', authenticateToken, authorizeRoles('ADMIN', 'SUPER_ADMIN'), JobController.updateJobStatus);
-router.put('/:id', authenticateToken, authorizeRoles('ALUMNI', 'ADMIN'), JobController.updateJob);
+router.put('/:id', authenticateToken, authorizeRoles('ALUMNI', 'ADMIN', 'SUPER_ADMIN'), JobController.updateJob);
 router.delete('/:id', authenticateToken, authorizeRoles('ALUMNI', 'ADMIN', 'SUPER_ADMIN'), JobController.deleteJob);
 
 // Public parameterized route (keep last)
