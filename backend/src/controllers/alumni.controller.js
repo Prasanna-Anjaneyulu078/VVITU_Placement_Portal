@@ -147,6 +147,16 @@ class AlumniController {
       const { resolveResumeFilePath } = require('../utils/file.utils');
       const diskPath = resolveResumeFilePath(alumni.verificationDocumentUrl);
 
+      if (diskPath && (diskPath.startsWith('http://') || diskPath.startsWith('https://'))) {
+        const axios = require('axios');
+        const response = await axios({
+          url: diskPath,
+          method: 'GET',
+          responseType: 'stream'
+        });
+        return response.data.pipe(res);
+      }
+
       const fs = require('fs');
       if (!diskPath || !fs.existsSync(diskPath)) {
         return res.status(404).json({ success: false, message: 'Verification document is missing from storage.' });

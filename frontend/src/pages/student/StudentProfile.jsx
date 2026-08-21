@@ -91,7 +91,7 @@ export default function StudentProfile() {
       if (!silent) setIsLoading(true);
       const [profileRes, resumeRes] = await Promise.all([
         api.get('/student/profile', { params: { t: Date.now() } }).catch(() => ({ data: null })),
-        api.get('/student/resume/details').catch(() => ({ data: null }))
+        api.get('/student/resume/details', { params: { t: Date.now() } }).catch(() => ({ data: null }))
       ]);
 
       if (profileRes.data) {
@@ -321,6 +321,7 @@ export default function StudentProfile() {
     const updatedProf = data?.student;
     setResumeDetails({
       hasResume: true,
+      fileMissing: false,
       fileName: data?.fileName || updatedProf?.resumeFileName || 'Uploaded_Resume.pdf',
       fileType: data?.fileType || updatedProf?.resumeFileType || 'application/pdf',
       uploadedAt: data?.uploadedAt || updatedProf?.resumeUploadedAt || new Date().toISOString()

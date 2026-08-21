@@ -71,6 +71,14 @@ class SuperAdminController {
       next(err);
     }
   }
+  static async deleteAdmin(req, res, next) {
+    try {
+      const result = await SuperAdminService.deleteAdmin(req.params.id, req.user?.email);
+      res.status(200).json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 module.exports = SuperAdminController;

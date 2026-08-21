@@ -14,5 +14,6 @@ router.put('/admins/:id', SuperAdminController.updateAdminProfile);
 router.put('/admins/:id/email', SuperAdminController.changeAdminEmail);
 router.post('/admins/:id/reset-password', SuperAdminController.resetAdminPassword);
 router.put('/admins/:id/status', SuperAdminController.toggleAdminStatus);
+router.delete('/admins/:id', SuperAdminController.deleteAdmin);
 
 module.exports = router;

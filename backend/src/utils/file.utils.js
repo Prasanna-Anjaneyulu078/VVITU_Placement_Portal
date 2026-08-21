@@ -11,6 +11,10 @@ function resolveResumeFilePath(storedPath) {
     return null;
   }
 
+  if (storedPath.startsWith('http://') || storedPath.startsWith('https://')) {
+    return storedPath;
+  }
+
   // Strip query parameters and hash before extracting basename or resolving disk path
   const pathOnly = String(storedPath).split('?')[0].split('#')[0];
   const normalized = pathOnly.replace(/\\/g, '/');

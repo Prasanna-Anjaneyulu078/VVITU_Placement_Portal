@@ -198,6 +198,7 @@ export default function Register() {
   const [error, setError] = useState('');
   const [errorReasonCode, setErrorReasonCode] = useState('');
   const [showNameErrorModal, setShowNameErrorModal] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStage, setLoadingStage] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
@@ -231,6 +232,47 @@ export default function Register() {
 
   const rollInfo = formData.rollNumber ? parseRollNumberAndEligibility(formData.rollNumber) : null;
   const calculatedGradYear = (rollInfo && rollInfo.isValid && rollInfo.expectedGraduationYear) ? String(rollInfo.expectedGraduationYear) : '';
+
+  const validateStep = () => {
+    setError('');
+    if (currentStep === 1) {
+      if (!formData.fullName.trim()) { setError('Full Name is required.'); return false; }
+      if (!formData.email.trim()) { setError('Email is required.'); return false; }
+      if (!formData.mobile.trim()) { setError('Mobile Number is required.'); return false; }
+      return true;
+    }
+    if (currentStep === 2) {
+      if (!formData.rollNumber.trim()) { setError('Roll Number is required.'); return false; }
+      if (rollInfo && !rollInfo.isValid) { setError('Invalid Roll Number format.'); return false; }
+      if (rollInfo && !rollInfo.isEligible) { setError(rollInfo.message); return false; }
+      if (!formData.degree) { setError('Degree is required.'); return false; }
+      if (!formData.department) { setError('Department is required.'); return false; }
+      return true;
+    }
+    if (currentStep === 3) {
+      if (!formData.company.trim()) { setError('Current Company is required.'); return false; }
+      if (!formData.jobTitle.trim()) { setError('Job Title is required.'); return false; }
+      return true;
+    }
+    if (currentStep === 4) {
+      if (!formData.document) { setError('Verification document is required.'); return false; }
+      if (formData.password.length < 6) { setError('Password must be at least 6 characters long.'); return false; }
+      return true;
+    }
+    return true;
+  };
+
+  const handleNext = () => {
+    if (validateStep()) {
+      setCurrentStep(prev => prev + 1);
+    }
+  };
+
+  const handleBack = () => {
+    setError('');
+    setCurrentStep(prev => prev - 1);
+  };
+
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -335,7 +377,7 @@ export default function Register() {
         />
       )}
 
-      <div className="min-h-screen flex font-sans bg-gray-50">
+      <div className="h-screen overflow-hidden flex font-sans bg-gray-50">
         {/* ── Left Branding Column ── */}
         <div className="hidden lg:flex lg:w-5/12 relative bg-blue-900 overflow-hidden sticky top-0 h-screen">
           <div className="absolute inset-0">
@@ -385,7 +427,7 @@ export default function Register() {
         </div>
 
         {/* ── Right Form Column ── */}
-        <div className="w-full lg:w-7/12 flex flex-col px-6 py-12 sm:px-16 md:px-20 xl:px-28 relative overflow-y-auto">
+        <div className="w-full lg:w-7/12 flex flex-col px-6 py-12 sm:px-16 md:px-20 xl:px-28 relative overflow-y-auto h-full">
           <div className="w-full max-w-2xl mx-auto">
 
             {/* Mobile header */}
@@ -398,7 +440,7 @@ export default function Register() {
               </div>
               <button
                 onClick={() => navigate('/login')}
-                className="inline-flex items-center justify-center py-2 px-4 border border-orange-500 rounded-xl bg-[#FFF4EB] text-orange-600 font-bold text-sm min-h-[40px] shadow-2xs focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-colors"
+                className="inline-flex items-center justify-center py-2 px-4 text-orange-500 font-bold text-sm min-h-[40px] focus:outline-none transition-colors bg-transparent border-none shadow-none"
               >
                 Log In
               </button>
@@ -442,9 +484,27 @@ export default function Register() {
               );
             })()}
 
-            <form onSubmit={handleRegister} className="space-y-10">
+            <div className="mb-8">
+              <div className="flex items-center justify-between relative">
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-gray-200 rounded-full z-0"></div>
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-orange-500 rounded-full z-0 transition-all duration-300" style={{ width: `${((currentStep - 1) / 2) * 100}%` }}></div>
+                {[1, 2, 3].map((step) => (
+                  <div key={step} className={`relative z-10 flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm transition-all duration-300 ${currentStep >= step ? 'bg-orange-500 text-white shadow-md shadow-orange-500/30' : 'bg-gray-200 text-gray-500'}`}>
+                    {currentStep > step ? <CheckCircle className="w-4 h-4" /> : step}
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-between mt-2 text-xs font-semibold text-gray-500 px-1">
+                <span className={currentStep >= 1 ? 'text-orange-600' : ''}>Personal</span>
+                <span className={currentStep >= 2 ? 'text-orange-600' : ''}>Professional</span>
+                <span className={currentStep >= 3 ? 'text-orange-600' : ''}>Verify</span>
+              </div>
+            </div>
+
+            <form onSubmit={handleRegister} className="space-y-6">
 
               {/* ── Personal Information ── */}
+              <div className={currentStep === 1 ? "block animate-fade-in" : "hidden"}>
               <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100">
                 <h3 className="text-lg font-bold text-gray-800 border-b border-gray-100 pb-3 mb-6 flex items-center gap-2">
                   <User className="w-5 h-5 text-orange-500" /> Personal Information
@@ -616,7 +676,10 @@ export default function Register() {
                 </div>
               </div>
 
+              </div>
+
               {/* ── Professional Information ── */}
+              <div className={currentStep === 2 ? "block animate-fade-in" : "hidden"}>
               <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100">
                 <h3 className="text-lg font-bold text-gray-800 border-b border-gray-100 pb-3 mb-6 flex items-center gap-2">
                   <Briefcase className="w-5 h-5 text-orange-500" /> Professional Information
@@ -654,8 +717,11 @@ export default function Register() {
                   </div>
                 </div>
               </div>
+              
+              </div>
 
               {/* ── Verification & Security ── */}
+              <div className={currentStep === 3 ? "block animate-fade-in" : "hidden"}>
               <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100">
                 <h3 className="text-lg font-bold text-gray-800 border-b border-gray-100 pb-3 mb-6 flex items-center gap-2">
                   <Lock className="w-5 h-5 text-orange-500" /> Verification &amp; Security
@@ -741,6 +807,8 @@ export default function Register() {
                 </div>
               </div>
 
+              </div>
+
               {/* ── OCR Progress Overlay ── */}
               {isLoading && (
                 <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center">
@@ -778,19 +846,41 @@ export default function Register() {
                 </div>
               )}
 
-              {/* Submit */}
-              <button
-                type="submit"
-                disabled={isLoading}
-                className={`w-full flex justify-center items-center py-4 px-4 border border-transparent rounded-xl shadow-lg text-base font-bold text-white transition-all duration-200 mt-8 btn btn-primary
-                  ${isLoading ? 'opacity-70 cursor-not-allowed' : ' '}`}
-              >
-                {isLoading
-                  ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Processing…</>
-                  : <>Create Alumni Account <ArrowRight className="w-5 h-5 ml-2" /></>
-                }
-              </button>
+              {/* Action Buttons */}
+              <div className="flex items-center gap-3 mt-8 pt-4">
+                {currentStep > 1 && (
+                  <button
+                    type="button"
+                    onClick={handleBack}
+                    className="flex-1 py-3.5 px-4 text-orange-500 font-bold rounded-xl transition-colors outline-none bg-transparent"
+                  >
+                    Back
+                  </button>
+                )}
+                {currentStep < 3 ? (
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    className="flex-[2] flex justify-center items-center py-3.5 px-4 text-orange-500 font-bold rounded-xl transition-colors outline-none bg-transparent"
+                  >
+                    Next Step <ArrowRight className="w-5 h-5 ml-2" />
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className={`flex-[2] flex justify-center items-center py-3.5 px-4 rounded-xl text-base font-bold text-orange-500 transition-all duration-200 outline-none bg-transparent
+                      ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  >
+                    {isLoading
+                      ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Processing…</>
+                      : <><CheckCircle className="w-5 h-5 mr-2" /> Complete Registration</>
+                    }
+                  </button>
+                )}
+              </div>
             </form>
+
 
             <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
               <p className="text-sm font-medium text-gray-600">
@@ -799,7 +889,7 @@ export default function Register() {
               <button
                 type="button"
                 onClick={() => navigate('/login')}
-                className="w-full sm:w-auto inline-flex items-center justify-center py-2.5 px-6 border border-orange-500 rounded-xl bg-[#FFF4EB] text-orange-600 font-bold text-sm min-h-[44px] shadow-2xs focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-colors"
+                className="w-full sm:w-auto inline-flex items-center justify-center py-2.5 px-6 text-orange-500 font-bold text-sm min-h-[44px] focus:outline-none transition-colors bg-transparent border-none shadow-none"
               >
                 Log In
               </button>

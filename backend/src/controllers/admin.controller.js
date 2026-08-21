@@ -47,25 +47,18 @@ class AdminController {
       let imageUrl = req.body?.imageUrl;
 
       if (req.file) {
-        // Prefer the disk-saved file path (multer diskStorage already saved it)
-        if (req.file.filename) {
+        if (req.file.relativePath) {
+          imageUrl = req.file.relativePath;
+        } else if (req.file.path && typeof req.file.path === 'string' && req.file.path.startsWith('http')) {
+          imageUrl = req.file.path;
+        } else if (req.file.filename) {
           imageUrl = `/uploads/images/${req.file.filename}`;
-        } else if (req.file.path && fs.existsSync(req.file.path)) {
-          // File is on disk at req.file.path — build a relative uploads path
-          const path = require('path');
-          const env = require('../config/env');
-          const imagesDir = require('path').join(env.uploadDir, 'images');
-          if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
-          const ext = path.extname(req.file.path) || '.jpg';
-          const filename = `admin-${req.user.id}-${Date.now()}${ext}`;
-          const targetPath = path.join(imagesDir, filename);
-          fs.copyFileSync(req.file.path, targetPath);
-          imageUrl = `/uploads/images/${filename}`;
         } else if (req.file.buffer) {
           // memoryStorage fallback — save buffer to disk
           const path = require('path');
           const env = require('../config/env');
           const imagesDir = path.join(env.uploadDir, 'images');
+          const fs = require('fs');
           if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
           const ext = req.file.mimetype ? '.' + req.file.mimetype.split('/')[1] : '.jpg';
           const filename = `admin-${req.user.id}-${Date.now()}${ext}`;
@@ -147,9 +140,18 @@ class AdminController {
       const { diskPath, mimeType, fileName } = await AdminService.getAlumniDocument(req.params.id);
       
       res.setHeader('Content-Type', mimeType);
-      // Ensure safe filename by removing quotes and newlines
       const safeFileName = fileName.replace(/["\n\r]/g, '');
       res.setHeader('Content-Disposition', `inline; filename="${safeFileName}"`);
+
+      if (diskPath.startsWith('http://') || diskPath.startsWith('https://')) {
+        const axios = require('axios');
+        const response = await axios({
+          url: diskPath,
+          method: 'GET',
+          responseType: 'stream'
+        });
+        return response.data.pipe(res);
+      }
       
       return res.sendFile(diskPath);
     } catch (err) {
@@ -345,6 +347,17 @@ class AdminController {
 
       res.setHeader('Content-Type', contentType);
       res.setHeader('Content-Disposition', `${disposition}; filename="${fileName}"`);
+
+      if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+        const axios = require('axios');
+        try {
+          const proxyRes = await axios.get(filePath, { responseType: 'stream' });
+          return proxyRes.data.pipe(res);
+        } catch (axiosErr) {
+          return next({ statusCode: 502, message: 'Failed to fetch external resume from storage.' });
+        }
+      }
+
       res.sendFile(filePath, (err) => {
         if (err && !res.headersSent) {
           next({ statusCode: 404, message: 'Resume file missing from storage. Please ask student to re-upload resume.' });
@@ -358,6 +371,20 @@ class AdminController {
   static async downloadStudentResume(req, res, next) {
     try {
       const { filePath, fileName } = await AdminService.getStudentResumeFile(req.params.id);
+      
+      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+      
+      if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+        const axios = require('axios');
+        try {
+          const proxyRes = await axios.get(filePath, { responseType: 'stream' });
+          res.setHeader('Content-Type', proxyRes.headers['content-type'] || 'application/octet-stream');
+          return proxyRes.data.pipe(res);
+        } catch (axiosErr) {
+          return next({ statusCode: 502, message: 'Failed to fetch external resume from storage.' });
+        }
+      }
+      
       res.download(filePath, fileName);
     } catch (err) {
       next(err);

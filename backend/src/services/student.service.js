@@ -652,31 +652,19 @@ class StudentService {
     let imageUrl = body.profileImageUrl || body.url || body.imageUrl;
 
     if (file) {
-      const path = require('path');
-      const env = require('../config/env');
-      const imagesDir = path.join(env.uploadDir, 'images');
-      if (!fs.existsSync(imagesDir)) {
-        fs.mkdirSync(imagesDir, { recursive: true });
-      }
-
-      if (file.filename) {
+      if (file.relativePath) {
+        imageUrl = file.relativePath;
+      } else if (file.path) {
+        imageUrl = file.path;
+      } else if (file.filename) {
         imageUrl = `/uploads/images/${file.filename}`;
-      } else if (file.buffer) {
-        const ext = file.mimetype ? (file.mimetype.split('/')[1] || 'png') : 'png';
-        const filename = `student-${student.id}-${Date.now()}.${ext}`;
-        const targetPath = path.join(imagesDir, filename);
-        fs.writeFileSync(targetPath, file.buffer);
-        imageUrl = `/uploads/images/${filename}`;
-      } else if (file.path && fs.existsSync(file.path)) {
-        const ext = path.extname(file.path) || '.png';
-        const filename = `student-${student.id}-${Date.now()}${ext}`;
-        const targetPath = path.join(imagesDir, filename);
-        fs.copyFileSync(file.path, targetPath);
-        imageUrl = `/uploads/images/${filename}`;
+      } else {
+        throw { statusCode: 400, message: 'Invalid file format returned from upload middleware.' };
       }
     }
 
-    const sanitizedUrl = sanitizeUploadPath(imageUrl);
+    // Don't sanitize Cloudinary URLs as it strips the domain
+    const sanitizedUrl = imageUrl;
 
     if (!sanitizedUrl) {
       throw { statusCode: 400, message: 'Profile photo is required' };
@@ -751,8 +739,8 @@ class StudentService {
     return ResumeService.getResumeFileById(userId, resumeId, 'STUDENT');
   }
 
-  static async reExtractSkills(userId) {
-    console.log(`[SKILLS-REEXTRACT] studentId=${userId}`);
+  static async reExtractSkills(userId, providedBuffer = null) {
+    console.log(`[SKILLS-REEXTRACT] studentId=${userId}, providedBuffer=${!!providedBuffer}`);
     const student = await prisma.student.findUnique({
       where: { userId: BigInt(userId) }
     });
@@ -773,20 +761,38 @@ class StudentService {
     console.log(`[SKILLS-REEXTRACT] resumeId=${latestResume.id}`);
     console.log(`[SKILLS-REEXTRACT] filename=${latestResume.fileName}`);
 
-    const { resolveResumeFilePath } = require('../utils/file.utils');
-    const diskPath = resolveResumeFilePath(latestResume.filePath);
-    console.log(`[SKILLS-REEXTRACT] resolvedPath=${diskPath}`);
-
-    const fs = require('fs');
     const path = require('path');
-    const fileExists = fs.existsSync(diskPath);
-    console.log(`[SKILLS-REEXTRACT] fileExists=${fileExists}`);
+    let buffer = providedBuffer;
+    
+    if (!buffer) {
+      if (latestResume.filePath.startsWith('http://') || latestResume.filePath.startsWith('https://')) {
+        try {
+          console.log(`[SKILLS-REEXTRACT] Fetching remote file: ${latestResume.filePath}`);
+          const response = await fetch(latestResume.filePath);
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          const arrayBuffer = await response.arrayBuffer();
+          buffer = Buffer.from(arrayBuffer);
+        } catch (e) {
+          console.error('[SKILLS-REEXTRACT] Failed to fetch remote resume:', e);
+          throw { statusCode: 404, message: 'Resume file could not be downloaded. Please check Cloudinary Security settings to allow delivery of raw files, or re-upload.' };
+        }
+      } else {
+      const { resolveResumeFilePath } = require('../utils/file.utils');
+      const diskPath = resolveResumeFilePath(latestResume.filePath);
+      console.log(`[SKILLS-REEXTRACT] resolvedPath=${diskPath}`);
 
-    if (!fileExists) {
-      throw { statusCode: 404, message: 'Resume file is missing from storage. Please re-upload your resume.' };
+      const fs = require('fs');
+      const fileExists = fs.existsSync(diskPath);
+      console.log(`[SKILLS-REEXTRACT] fileExists=${fileExists}`);
+
+      if (!fileExists) {
+        throw { statusCode: 404, message: 'Resume file is missing from storage. Please re-upload your resume.' };
+      }
+      buffer = fs.readFileSync(diskPath);
+      }
     }
 
-    const ext = path.extname(diskPath).toLowerCase();
+    const ext = path.extname(latestResume.fileName || latestResume.filePath).toLowerCase();
     const mimetype = ext === '.pdf' ? 'application/pdf' : (ext === '.docx' ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : (ext === '.doc' ? 'application/msword' : 'text/plain'));
     console.log(`[SKILLS-REEXTRACT] extension=${ext}`);
     console.log(`[SKILLS-REEXTRACT] mimeType=${mimetype}`);
@@ -794,7 +800,6 @@ class StudentService {
     let rawText = '';
     try {
       const OcrService = require('./ocr.service');
-      const buffer = fs.readFileSync(diskPath);
       
       const fileObj = {
         buffer,

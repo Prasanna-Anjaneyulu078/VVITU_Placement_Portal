@@ -1,66 +1,45 @@
 const multer = require('multer');
 const path = require('path');
+const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
 const env = require('../config/env');
 
-// Ensure upload directories exist
-const uploadDirs = ['images', 'resumes', 'documents', 'job-logos'];
-uploadDirs.forEach((dir) => {
-  const fullPath = path.join(env.uploadDir, dir);
-  if (!fs.existsSync(fullPath)) {
-    fs.mkdirSync(fullPath, { recursive: true });
-  }
-});
+let useCloudinary = false;
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    let folder = 'documents';
-    const ext = path.extname(file.originalname).toLowerCase();
-    const originalUrl = req.originalUrl ? req.originalUrl.toLowerCase() : '';
+// Configure Cloudinary
+if (env.cloudinary && env.cloudinary.cloudName) {
+  cloudinary.config({
+    cloud_name: env.cloudinary.cloudName,
+    api_key: env.cloudinary.apiKey,
+    api_secret: env.cloudinary.apiSecret
+  });
+  useCloudinary = true;
+} else {
+  console.warn('[WARNING] Cloudinary is not configured. Falling back to local disk storage.');
+}
 
-    if (
-      file.fieldname === 'profileImage' ||
-      file.fieldname === 'image' ||
-      originalUrl.includes('/profile') ||
-      originalUrl.includes('/logo')
-    ) {
-      folder = 'images';
-    } else if (
-      file.fieldname === 'verificationDoc' ||
-      file.fieldname === 'document' ||
-      file.fieldname === 'verificationDocument' ||
-      originalUrl.includes('/documents') ||
-      originalUrl.includes('/register/alumni') ||
-      originalUrl.includes('/verify-document')
-    ) {
-      folder = 'documents';
-    } else if (
-      file.fieldname === 'resume' ||
-      originalUrl.includes('/resume')
-    ) {
-      folder = 'resumes';
-    } else if (file.mimetype.startsWith('image/')) {
-      folder = 'images';
-    } else if (
-      file.mimetype === 'application/pdf' ||
-      file.mimetype.includes('wordprocessingml') ||
-      file.mimetype.includes('msword') ||
-      ext === '.pdf' ||
-      ext === '.doc' ||
-      ext === '.docx'
-    ) {
-      folder = 'resumes';
+let storage;
+if (useCloudinary) {
+  storage = multer.memoryStorage();
+} else {
+  storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      let folder = 'documents';
+      const ext = path.extname(file.originalname).toLowerCase();
+      if (file.mimetype.startsWith('image/')) folder = 'images';
+      else if (file.mimetype === 'application/pdf' || ext === '.pdf') folder = 'resumes';
+      else if (file.mimetype.startsWith('video/')) folder = 'videos';
+
+      const destPath = path.join(env.uploadDir || path.join(__dirname, '../../uploads'), folder);
+      fs.mkdirSync(destPath, { recursive: true });
+      cb(null, destPath);
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      cb(null, uniqueSuffix + path.extname(file.originalname).toLowerCase());
     }
-
-    cb(null, path.join(env.uploadDir, folder));
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname).toLowerCase();
-    const prefix = file.fieldname === 'profileImage' || file.fieldname === 'image' ? 'img' : 'student';
-    cb(null, `${prefix}-${uniqueSuffix}${ext}`);
-  }
-});
+  });
+}
 
 const fileFilter = (req, file, cb) => {
   const allowedTypes = [
@@ -97,32 +76,73 @@ const upload = multer({
 
 const anyUpload = upload.any();
 
-const attachRelativePath = (f) => {
-  if (!f) return;
-  const destDir = f.destination || '';
-  const folder = path.basename(destDir) || 'documents';
-  f.relativePath = `/uploads/${folder}/${f.filename}`;
+    const uploadToCloudinary = (file) => {
+      return new Promise((resolve, reject) => {
+        const ext = path.extname(file.originalname).toLowerCase();
+        let folder = 'documents';
+        let resourceType = 'raw';
+        
+        if (file.mimetype.startsWith('image/')) {
+          folder = 'images';
+          resourceType = 'auto';
+        } else if (file.mimetype.startsWith('video/')) {
+          resourceType = 'auto';
+        } else if (file.mimetype === 'application/pdf' || ext === '.pdf') {
+          folder = 'resumes';
+          resourceType = 'raw';
+        }
+
+        const options = {
+          folder: `vvitu_placement_portal/${folder}`,
+          resource_type: resourceType
+        };
+
+    const stream = cloudinary.uploader.upload_stream(options, (error, result) => {
+      if (error) return reject(error);
+      resolve(result);
+    });
+
+    stream.end(file.buffer);
+  });
 };
 
-// Universal single-pass multipart handler that accepts any field name ('file', 'resume', 'document', 'verificationDoc', etc.)
 const uploadAnyFile = (req, res, next) => {
-  anyUpload(req, res, (err) => {
-    if (err) {
-      return next(err);
-    }
-    if (req.files && Array.isArray(req.files) && req.files.length > 0) {
-      req.files.forEach(attachRelativePath);
-      req.file = req.files.find((f) => f.fieldname === 'resume') ||
-                 req.files.find((f) => f.fieldname === 'file') ||
-                 req.files.find((f) => f.fieldname === 'document') ||
-                 req.files.find((f) => f.fieldname === 'verificationDoc') ||
-                 req.files.find((f) => f.fieldname === 'image') ||
-                 req.files.find((f) => f.fieldname === 'profileImage') ||
-                 req.files[0];
-      attachRelativePath(req.file);
+  anyUpload(req, res, async (err) => {
+    if (err) return next(err);
+
+    const files = req.files || [];
+    let fileToProcess = null;
+
+    if (files.length > 0) {
+      fileToProcess = files.find((f) => f.fieldname === 'resume') ||
+                 files.find((f) => f.fieldname === 'file') ||
+                 files.find((f) => f.fieldname === 'document') ||
+                 files.find((f) => f.fieldname === 'verificationDoc') ||
+                 files.find((f) => f.fieldname === 'image') ||
+                 files.find((f) => f.fieldname === 'profileImage') ||
+                 files[0];
     } else if (req.file) {
-      attachRelativePath(req.file);
+      fileToProcess = req.file;
     }
+
+    if (fileToProcess) {
+      if (useCloudinary && fileToProcess.buffer) {
+        try {
+          const result = await uploadToCloudinary(fileToProcess);
+          fileToProcess.relativePath = result.secure_url;
+          fileToProcess.path = result.secure_url; // Some parts might expect file.path
+          req.file = fileToProcess;
+        } catch (uploadErr) {
+          return next(uploadErr);
+        }
+      } else if (!useCloudinary && fileToProcess.filename) {
+        // Local upload case
+        const folderName = path.basename(path.dirname(fileToProcess.path));
+        fileToProcess.relativePath = `/uploads/${folderName}/${fileToProcess.filename}`;
+        req.file = fileToProcess;
+      }
+    }
+    
     next();
   });
 };

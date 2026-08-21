@@ -25,6 +25,10 @@ class ResumeController {
       const resumeId = req.params.id || null;
       const { filePath, fileName, mimeType } = await ResumeService.getResumeFileById(req.user.id, resumeId, req.user.role);
       
+      if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+        return res.redirect(filePath);
+      }
+
       const ext = path.extname(fileName || filePath).toLowerCase();
       let disposition = 'inline';
       let contentType = mimeType || 'application/pdf';
@@ -48,6 +52,11 @@ class ResumeController {
     try {
       const resumeId = req.params.id || null;
       const { filePath, fileName } = await ResumeService.getResumeFileById(req.user.id, resumeId, req.user.role);
+      
+      if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+        return res.redirect(filePath);
+      }
+      
       res.download(filePath, fileName);
     } catch (err) {
       next(err);

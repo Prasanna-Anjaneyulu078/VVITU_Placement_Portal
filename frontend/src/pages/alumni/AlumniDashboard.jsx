@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Briefcase, Users, CheckCircle, GraduationCap, Clock, FileText } from 'lucide-react';
 import { getImageUrl } from '../../utils/imageUrl';
 import DashboardLayout from '../../components/layout/DashboardLayout';
-import { Button, Avatar } from '../../components/common';
+import { Button, Avatar, CompanyLogo } from '../../components/common';
 import { CardLoader, SectionLoader } from '../../components/common/loading';
 import api from '../../utils/axiosConfig';
 import { toast } from 'react-toastify';
@@ -114,9 +114,12 @@ export default function AlumniDashboard() {
                 <div className="space-y-4">
                   {recentJobs.map(job => (
                     <div key={job.id} className="flex items-start gap-3 p-3 rounded-xl transition-colors border border-transparent cursor-pointer" onClick={() => navigate(`/alumni/my-jobs`)}>
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${job.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
-                        <Briefcase size={14}/>
-                      </div>
+                      <CompanyLogo 
+                        url={job.companyLogoUrl || job.imageUrl} 
+                        name={job.company || job.companyName || job.title} 
+                        size="sm" 
+                        className="shrink-0"
+                      />
                       <div>
                         <h4 className="text-sm font-bold text-slate-800 line-clamp-1">{job.title}</h4>
                         <div className="flex items-center gap-2 mt-1">

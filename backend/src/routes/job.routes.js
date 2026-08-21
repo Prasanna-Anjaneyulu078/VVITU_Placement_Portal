@@ -13,15 +13,13 @@ router.post(
   '/post',
   authenticateToken,
   authorizeRoles('ALUMNI', 'ADMIN'),
-  upload.fields([
-    { name: 'companyLogo', maxCount: 1 }
-  ]),
+  upload.uploadAnyFile,
   JobController.createJob
 );
 router.get('/my', authenticateToken, authorizeRoles('ALUMNI', 'ADMIN'), JobController.getMyJobs);
 
 // File upload routes (ALUMNI or ADMIN)
-router.post('/:id/logo', authenticateToken, authorizeRoles('ALUMNI', 'ADMIN'), upload.single('file'), JobController.uploadLogo);
+router.post('/:id/logo', authenticateToken, authorizeRoles('ALUMNI', 'ADMIN'), upload.uploadAnyFile, JobController.uploadLogo);
 
 // Job CRUD (authenticated)
 router.put('/:id/status', authenticateToken, authorizeRoles('ADMIN', 'SUPER_ADMIN'), JobController.updateJobStatus);

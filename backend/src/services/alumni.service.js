@@ -134,19 +134,31 @@ class AlumniService {
 
     return jobs.map((job) => ({
       id: Number(job.id),
-      title: job.title,
-      companyName: job.companyName,
-      description: job.description,
-      location: job.location,
-      salaryPackage: job.salaryPackage,
-      requiredCgpa: job.requiredCgpa,
-      maxBacklogs: job.maxBacklogs,
-      eligibleDepartments: job.eligibleDepartments,
-      status: job.status,
-      applicationDeadline: job.applicationDeadline,
-      requiredSkills: job.requiredSkills,
+      title: job.title || '',
+      companyName: job.companyName || '',
+      company: job.companyName || '',
+      description: job.description || '',
+      location: job.location || '',
+      jobType: job.jobType || '',
+      salaryPackage: job.salaryPackage || '',
+      packageDetails: job.salaryPackage || '',
+      experienceRequired: job.experienceRequired || '',
+      requiredCgpa: job.requiredCgpa || null,
+      minCgpa: job.requiredCgpa || null,
+      maxBacklogs: job.maxBacklogs || null,
+      eligibleSemester: job.eligibleSemester || null,
+      eligibleDepartments: job.eligibleDepartments || '',
+      status: job.status || 'PENDING',
+      applicationDeadline: job.applicationDeadline || null,
+      expiryDate: job.applicationDeadline || null,
+      requiredSkills: job.requiredSkills || '',
+      imageUrl: job.imageUrl || null,
+      companyLogoUrl: job.imageUrl || null,
+      openings: job.openings || null,
+      industry: job.industry || null,
+      companySize: job.companySize || null,
       applicationCount: job._count.applications,
-      createdAt: job.createdAt
+      createdAt: job.createdAt || null
     }));
   }
 
@@ -213,8 +225,20 @@ class AlumniService {
       throw { statusCode: 404, message: 'Alumni profile not found' };
     }
 
-    const rawPath = file.relativePath || `/uploads/images/${file.filename}`;
-    const imageUrl = sanitizeUploadPath(rawPath);
+    let imageUrl;
+    if (file.relativePath) {
+      imageUrl = file.relativePath;
+    } else if (file.path) {
+      imageUrl = file.path;
+    } else if (file.filename) {
+      imageUrl = `/uploads/images/${file.filename}`;
+    } else {
+      throw { statusCode: 400, message: 'Invalid file format returned from upload middleware.' };
+    }
+    
+    // Don't sanitize Cloudinary URLs as it strips the domain if there's any confusion
+    // but sanitizeUploadPath correctly ignores non-uploads/ URLs.
+    imageUrl = sanitizeUploadPath(imageUrl);
     const publicUrl = `/api/public/alumni/${alumni.id}/profile-image`;
     const now = new Date();
 

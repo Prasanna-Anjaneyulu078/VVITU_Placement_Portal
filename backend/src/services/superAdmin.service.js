@@ -296,6 +296,38 @@ class SuperAdminService {
 
     return this.getAdminById(adminId);
   }
+  static async deleteAdmin(adminId, operatorEmail = null) {
+    const admin = await prisma.adminProfile.findUnique({
+      where: { id: BigInt(adminId) },
+      include: { user: true }
+    });
+
+    if (!admin || admin.deletedAt) {
+      throw { statusCode: 404, message: `Admin profile not found with ID: ${adminId}` };
+    }
+
+    if (admin.user?.role === 'SUPER_ADMIN') {
+      const superAdminCount = await prisma.user.count({
+        where: { role: 'SUPER_ADMIN', accountStatus: 'ACTIVE' }
+      });
+      if (superAdminCount <= 1) {
+        throw { statusCode: 400, message: 'Cannot delete the last active SUPER_ADMIN' };
+      }
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: admin.userId },
+        data: { accountStatus: 'INACTIVE' } // Optionally update status or mark deleted
+      });
+      await tx.adminProfile.update({
+        where: { id: admin.id },
+        data: { deletedAt: new Date() }
+      });
+    });
+
+    return { success: true, message: 'Admin deleted successfully' };
+  }
 }
 
 module.exports = SuperAdminService;

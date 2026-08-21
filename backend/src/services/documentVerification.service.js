@@ -484,6 +484,11 @@ class DocumentVerificationService {
       return { match: true, status: 'MATCH', confidence: 1.0, reasonCode: 'NAME_EXACT_MATCH' };
     }
 
+    // Stage 2: Match without spaces (OCR commonly drops spaces)
+    if (formName.replace(/\s+/g, '') === ocrName.replace(/\s+/g, '')) {
+      return { match: true, status: 'MATCH', confidence: 0.95, reasonCode: 'NAME_SPACING_DIFFERENCE' };
+    }
+
     const globalSim = stringSimilarity.compareTwoStrings(formName, ocrName);
     if (globalSim < 0.5) {
       return { match: false, status: 'MISMATCH', confidence: 0, reasonCode: 'NAME_DIFFERENT' };

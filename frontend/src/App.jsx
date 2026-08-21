@@ -119,6 +119,10 @@ export default function App() {
                 <Route path="/admin/profile"       element={<PrivateRoute role="ADMIN"><AdminProfile /></PrivateRoute>} />
                 <Route path="/admin/users/admins"   element={<PrivateRoute role="SUPER_ADMIN"><AdminManagement /></PrivateRoute>} />
 
+                {/* Super Admin Redirects */}
+                <Route path="/super_admin/jobs"    element={<Navigate to="/admin/jobs" replace />} />
+                <Route path="/super_admin/*"       element={<Navigate to="/admin/dashboard" replace />} />
+
                 {/* 404 Catch-All */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

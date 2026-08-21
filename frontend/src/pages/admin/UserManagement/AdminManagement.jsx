@@ -25,7 +25,9 @@ export default function AdminManagement() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCredsModal, setShowCredsModal] = useState(false);
+  const [showDeactivateModal, setShowDeactivateModal] = useState(false);
   const [selectedAdmin, setSelectedAdmin] = useState(null);
+  const [adminToDeactivate, setAdminToDeactivate] = useState(null);
   
   
   
@@ -113,8 +115,26 @@ export default function AdminManagement() {
       toast.success(`Account ${newStatus === 'ACTIVE' ? 'activated' : 'deactivated'} successfully`);
       fetchAdmins();
       setOpenDropdownId(null);
+      setShowDeactivateModal(false);
+      setAdminToDeactivate(null);
     } catch (err) {
       toast.error('Failed to update admin account status');
+    }
+  };
+
+  const handleDeleteAdmin = async () => {
+    if (!adminToDeactivate) return;
+    try {
+      setIsSubmitting(true);
+      await api.delete(`/super-admin/admins/${adminToDeactivate.id}`);
+      toast.success('Admin deleted successfully');
+      fetchAdmins();
+      setShowDeactivateModal(false);
+      setAdminToDeactivate(null);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete admin');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -394,7 +414,14 @@ export default function AdminManagement() {
                               Edit
                             </button>
                             <button
-                              onClick={() => handleToggleStatus(admin.id, admin.accountStatus)}
+                              onClick={() => {
+                                if (isActive) {
+                                  setAdminToDeactivate(admin);
+                                  setShowDeactivateModal(true);
+                                } else {
+                                  handleToggleStatus(admin.id, admin.accountStatus);
+                                }
+                              }}
                               className="px-2.5 py-1.5 bg-white border border-[#F47C20]/40 text-[#F47C20] font-bold text-xs rounded-lg select-none"
                             >
                               {isActive ? 'Deactivate' : 'Activate'}
@@ -472,7 +499,14 @@ export default function AdminManagement() {
                         Edit
                       </button>
                       <button
-                        onClick={() => handleToggleStatus(admin.id, admin.accountStatus)}
+                        onClick={() => {
+                          if (isActive) {
+                            setAdminToDeactivate(admin);
+                            setShowDeactivateModal(true);
+                          } else {
+                            handleToggleStatus(admin.id, admin.accountStatus);
+                          }
+                        }}
                         className="flex-1 py-1.5 bg-white border border-[#F47C20] text-[#F47C20] font-extrabold text-xs rounded-xl text-center select-none"
                       >
                         {isActive ? 'Deactivate' : 'Activate'}
@@ -674,6 +708,55 @@ export default function AdminManagement() {
           </div>
         </div>
       )}
+
+      {/* Deactivate/Delete Modal */}
+      {showDeactivateModal && adminToDeactivate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden transform transition-all">
+            <div className="bg-red-50 p-5 flex flex-col items-center border-b border-red-100">
+              <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-3">
+                <ShieldAlert size={24} />
+              </div>
+              <h3 className="text-lg font-black text-slate-800 text-center">Manage Admin Access</h3>
+              <p className="text-sm text-slate-500 mt-1 text-center font-medium">
+                Choose an action for <strong>{adminToDeactivate.name}</strong>.
+              </p>
+            </div>
+            
+            <div className="p-5 space-y-3">
+              <button
+                onClick={() => handleToggleStatus(adminToDeactivate.id, adminToDeactivate.accountStatus)}
+                disabled={isSubmitting}
+                className="w-full py-2.5 px-4 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 font-bold rounded-xl flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+              >
+                <Ban size={18} />
+                Deactivate Admin
+              </button>
+              
+              <button
+                onClick={handleDeleteAdmin}
+                disabled={isSubmitting}
+                className="w-full py-2.5 px-4 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-bold rounded-xl flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+              >
+                <UserX size={18} />
+                Delete Admin
+              </button>
+              
+              <button
+                onClick={() => {
+                  setShowDeactivateModal(false);
+                  setAdminToDeactivate(null);
+                }}
+                disabled={isSubmitting}
+                className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl flex items-center justify-center gap-2 transition-colors mt-2 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </DashboardLayout>
   );
 }

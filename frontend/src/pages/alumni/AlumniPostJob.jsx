@@ -156,7 +156,7 @@ export default function AlumniPostJob({ role = 'alumni' }) {
       Object.keys(formData).forEach((key) => {
         if (key === 'eligibleDepartments') {
           postData.append('eligibleDepartments', depts.join(', '));
-        } else {
+        } else if (formData[key] !== '' && formData[key] !== null && formData[key] !== undefined) {
           postData.append(key, formData[key]);
         }
       });

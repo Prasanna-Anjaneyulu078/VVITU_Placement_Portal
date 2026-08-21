@@ -88,7 +88,7 @@ class ResumeService {
     try {
       if (strategy !== 'KEEP') {
         const StudentService = require('./student.service');
-        const extractResult = await StudentService.reExtractSkills(userId);
+        const extractResult = await StudentService.reExtractSkills(userId, file.buffer);
         skillsExtracted = extractResult.success;
         totalExtractedSkills = extractResult.totalSkills || 0;
       }

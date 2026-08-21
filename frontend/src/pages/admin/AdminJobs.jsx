@@ -155,21 +155,6 @@ export default function AdminJobs() {
 
       <div className="mt-6 pb-16">
         {/* Filter Bar */}
-        <JobFilterBar
-          searchTerm={searchTerm}
-          onSearchChange={handleSearchChange}
-          filterCompany={filterCompany}
-          onCompanyChange={handleCompanyChange}
-          companies={uniqueCompanies}
-          filterType={filterType}
-          onTypeChange={handleTypeChange}
-          filterStatus={filterStatus}
-          onStatusChange={handleStatusChange}
-          showStatus
-          hasActiveFilters={hasActiveFilters}
-          onClearFilters={resetFilters}
-          placeholder="Search jobs, companies…"
-        />
 
         {/* Summary Badges */}
         {!isLoading && !isError && (

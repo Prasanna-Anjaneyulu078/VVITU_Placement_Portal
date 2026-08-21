@@ -395,6 +395,7 @@ export default function JobDetails() {
                       <li><span className="font-medium text-gray-700">Year of graduation:</span> {job.eligibleSemester ? `Semester ${job.eligibleSemester} and above` : 'Final year students preferred.'}</li>
                       <li><span className="font-medium text-gray-700">Backlogs:</span> {job.maxBacklogs != null ? `Maximum ${job.maxBacklogs} active backlogs allowed.` : 'No active backlogs preferred.'}</li>
                       <li><span className="font-medium text-gray-700">Experience:</span> {job.experienceRequired || 'Entry Level / Fresher'}</li>
+                      <li><span className="font-medium text-gray-700">Eligible Branches:</span> {job.eligibleDepartments || job.eligibleBranches || 'All Branches'}</li>
                     </ul>
                   </div>
 
@@ -408,6 +409,20 @@ export default function JobDetails() {
                       <li>{job.location || 'Remote'}</li>
                     </ul>
                   </div>
+
+                  {/* Company Information */}
+                  {(job.industry || job.companySize) && (
+                    <div className="relative">
+                      <div className="flex items-center gap-3 mb-4 text-gray-800">
+                        <Building2 size={20} className="text-gray-400" />
+                        <h3 className="text-base font-semibold">Company Information</h3>
+                      </div>
+                      <ul className="list-disc pl-9 space-y-2 text-[14px] text-gray-600">
+                        {job.industry && <li><span className="font-medium text-gray-700">Industry:</span> {job.industry}</li>}
+                        {job.companySize && <li><span className="font-medium text-gray-700">Company Size:</span> {job.companySize}</li>}
+                      </ul>
+                    </div>
+                  )}
 
                   {/* Skills Required with Match Summary */}
                   <div className="relative">

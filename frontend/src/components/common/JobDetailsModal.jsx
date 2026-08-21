@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, Briefcase, DollarSign, Award, Calendar, Link as LinkIcon, CheckCircle, XCircle, Target, TrendingUp } from 'lucide-react';
-import { Modal, Button, Badge } from './index';
+import { Modal, Button, Badge, CompanyLogo } from './index';
 import Avatar from './Avatar';
 import { getPosterInfo } from '../../utils/roleUtils';
 import api from '../../utils/axiosConfig';
@@ -114,9 +114,12 @@ export default function JobDetailsModal({
       <div className="space-y-6">
         <div className="flex justify-between items-start border-b border-slate-100 pb-5">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#FFF4EB] to-[#FFE8D6] flex items-center justify-center text-[#F47C20] font-black text-2xl shadow-sm border border-[#F47C20]/20">
-              {(job.company || job.title || 'J').charAt(0)}
-            </div>
+            <CompanyLogo 
+              url={job.companyLogoUrl || job.imageUrl} 
+              name={job.company || job.companyName} 
+              size="xl" 
+              className="shadow-sm border-[#F47C20]/20 bg-gradient-to-br from-[#FFF4EB] to-[#FFE8D6]" 
+            />
             <div>
               <h2 className="text-2xl font-extrabold text-slate-800">{job.title}</h2>
               <p className="text-slate-500 font-bold mt-1 text-sm">{job.company} • {job.location || 'Remote'}</p>

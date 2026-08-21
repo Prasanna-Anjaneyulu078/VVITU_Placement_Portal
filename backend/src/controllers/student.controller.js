@@ -127,6 +127,17 @@ class StudentController {
 
       res.setHeader('Content-Type', contentType);
       res.setHeader('Content-Disposition', `${disposition}; filename="${fileName}"`);
+
+      if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+        const axios = require('axios');
+        try {
+          const proxyRes = await axios.get(filePath, { responseType: 'stream' });
+          return proxyRes.data.pipe(res);
+        } catch (axiosErr) {
+          return next({ statusCode: 502, message: 'Failed to fetch external resume from storage.' });
+        }
+      }
+
       res.sendFile(filePath, (err) => {
         if (err && !res.headersSent) {
           next({ statusCode: 404, message: 'Resume file missing from storage. Please re-upload your resume.' });
@@ -140,6 +151,20 @@ class StudentController {
   static async downloadResume(req, res, next) {
     try {
       const { filePath, fileName } = await StudentService.getResumeFile(req.user.id);
+      
+      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+      
+      if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+        const axios = require('axios');
+        try {
+          const proxyRes = await axios.get(filePath, { responseType: 'stream' });
+          res.setHeader('Content-Type', proxyRes.headers['content-type'] || 'application/octet-stream');
+          return proxyRes.data.pipe(res);
+        } catch (axiosErr) {
+          return next({ statusCode: 502, message: 'Failed to fetch external resume from storage.' });
+        }
+      }
+      
       res.download(filePath, fileName);
     } catch (err) {
       next(err);

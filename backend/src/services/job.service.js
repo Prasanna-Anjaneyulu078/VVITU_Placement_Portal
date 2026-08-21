@@ -3,15 +3,6 @@ const fs = require('fs');
 const prisma = require('../config/db');
 const env = require('../config/env');
 
-// Ensure job image directory exists
-const jobImageDirs = ['job-logos'];
-jobImageDirs.forEach((dir) => {
-  const fullPath = path.join(env.uploadDir, dir);
-  if (!fs.existsSync(fullPath)) {
-    fs.mkdirSync(fullPath, { recursive: true });
-  }
-});
-
 function extractPostedByInfo(job) {
   if (!job) {
     return { id: null, name: 'VVIT Placement Cell', role: 'ADMIN', profileImageUrl: null };
@@ -519,6 +510,7 @@ class JobService {
       salaryPackage: job.salaryPackage || '',
       packageDetails: job.salaryPackage || '',
       experienceRequired: job.experienceRequired || '',
+      requiredSkills: job.requiredSkills || '',
       requiredCgpa: job.requiredCgpa != null ? job.requiredCgpa : null,
       minCgpa: job.requiredCgpa != null ? job.requiredCgpa : null,
       minimumCgpa: job.requiredCgpa != null ? job.requiredCgpa : null,
@@ -527,6 +519,8 @@ class JobService {
       activeBacklogsAllowed: job.maxBacklogs != null ? job.maxBacklogs : null,
       eligibleDepartments: job.eligibleDepartments || '',
       eligibleBranches: job.eligibleDepartments || '',
+      industry: job.industry || '',
+      companySize: job.companySize || '',
       status: job.status || 'PENDING',
       applicationDeadline: job.applicationDeadline || null,
       expiryDate: job.applicationDeadline || null,
@@ -644,6 +638,8 @@ class JobService {
       eligibleSemester: job.eligibleSemester || null,
       maxBacklogs: job.maxBacklogs || null,
       eligibleDepartments: job.eligibleDepartments || '',
+      industry: job.industry || '',
+      companySize: job.companySize || '',
       status: job.status || 'APPROVED',
       applicationDeadline: job.applicationDeadline || null,
       expiryDate: job.applicationDeadline || null,
@@ -767,13 +763,18 @@ class JobService {
     let logoUrl = null;
     const logoFile = files?.companyLogo?.[0] || (files?.fieldname === 'companyLogo' ? files : null);
     if (logoFile) {
-      const targetDir = path.join(env.uploadDir, 'job-logos');
-      if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
-      const ext = path.extname(logoFile.originalname) || '.png';
-      const newFilename = `logo-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
-      const newFilePath = path.join(targetDir, newFilename);
-      fs.renameSync(logoFile.path, newFilePath);
-      logoUrl = `/uploads/job-logos/${newFilename}`;
+      if (logoFile.relativePath) {
+        logoUrl = logoFile.relativePath;
+      } else if (logoFile.path) {
+        logoUrl = logoFile.path;
+      } else if (logoFile.filename) {
+        logoUrl = `/uploads/job-logos/${logoFile.filename}`;
+      } else {
+        throw { statusCode: 400, message: 'Invalid logo file format from upload middleware' };
+      }
+      
+      const { sanitizeUploadPath } = require('../utils/file.utils');
+      logoUrl = sanitizeUploadPath(logoUrl);
     }
 
     const isEnableScreening = enableScreening === true || enableScreening === 'true';
@@ -791,11 +792,11 @@ class JobService {
         applicationLink: applicationLink ? applicationLink.trim() : null,
         requiredSkills: skillsString ? skillsString.trim() : null,
         requiredCgpa: resolvedCgpa ? parseFloat(resolvedCgpa) : null,
-        eligibleSemester: eligibleSemester !== undefined && eligibleSemester !== '' ? parseInt(eligibleSemester, 10) : null,
-        maxBacklogs: maxBacklogs !== undefined && maxBacklogs !== '' ? parseInt(maxBacklogs, 10) : null,
+        eligibleSemester: eligibleSemester !== undefined && eligibleSemester !== '' && !isNaN(parseInt(eligibleSemester, 10)) ? parseInt(eligibleSemester, 10) : null,
+        maxBacklogs: maxBacklogs !== undefined && maxBacklogs !== '' && !isNaN(parseInt(maxBacklogs, 10)) ? parseInt(maxBacklogs, 10) : null,
         industry: industry ? industry.trim() : null,
         companySize: companySize ? companySize.trim() : null,
-        openings: openings !== undefined && openings !== '' ? parseInt(openings, 10) : null,
+        openings: openings !== undefined && openings !== '' && !isNaN(parseInt(openings, 10)) ? parseInt(openings, 10) : null,
         eligibleDepartments: Array.isArray(eligibleDepartments)
           ? eligibleDepartments.join(',')
           : (eligibleDepartments || null),
@@ -928,19 +929,20 @@ class JobService {
       throw { statusCode: 404, message: 'Job not found' };
     }
 
-    const subDir = 'job-logos';
-    const targetDir = path.join(env.uploadDir, subDir);
-    if (!fs.existsSync(targetDir)) {
-      fs.mkdirSync(targetDir, { recursive: true });
+    let fileUrl = null;
+    if (file.relativePath) {
+      fileUrl = file.relativePath;
+    } else if (file.path) {
+      fileUrl = file.path;
+    } else if (file.filename) {
+      fileUrl = `/uploads/job-logos/${file.filename}`;
+    } else {
+      throw { statusCode: 400, message: 'Invalid logo file format from upload middleware' };
     }
+    
+    const { sanitizeUploadPath } = require('../utils/file.utils');
+    fileUrl = sanitizeUploadPath(fileUrl);
 
-    const ext = path.extname(file.originalname);
-    const newFilename = `logo-${jobIdParam}-${Date.now()}${ext}`;
-    const newFilePath = path.join(targetDir, newFilename);
-
-    fs.renameSync(file.path, newFilePath);
-
-    const fileUrl = `/uploads/${subDir}/${newFilename}`;
     await prisma.job.update({ where: { id: jobId }, data: { imageUrl: fileUrl } });
 
     return fileUrl;
@@ -1027,15 +1029,15 @@ class JobService {
           requiredCgpa: (minCgpa || requiredCgpa) ? parseFloat(minCgpa || requiredCgpa) : null
         }),
         ...(eligibleSemester !== undefined && {
-          eligibleSemester: eligibleSemester !== '' ? parseInt(eligibleSemester, 10) : null
+          eligibleSemester: eligibleSemester !== '' && !isNaN(parseInt(eligibleSemester, 10)) ? parseInt(eligibleSemester, 10) : null
         }),
         ...(maxBacklogs !== undefined && {
-          maxBacklogs: maxBacklogs !== '' ? parseInt(maxBacklogs, 10) : null
+          maxBacklogs: maxBacklogs !== '' && !isNaN(parseInt(maxBacklogs, 10)) ? parseInt(maxBacklogs, 10) : null
         }),
         ...(industry !== undefined && { industry: industry ? industry.trim() : null }),
         ...(companySize !== undefined && { companySize: companySize ? companySize.trim() : null }),
         ...(openings !== undefined && {
-          openings: openings !== '' ? parseInt(openings, 10) : null
+          openings: openings !== '' && !isNaN(parseInt(openings, 10)) ? parseInt(openings, 10) : null
         }),
         ...(eligibleDepartments !== undefined && {
           eligibleDepartments: Array.isArray(eligibleDepartments)

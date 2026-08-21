@@ -133,7 +133,10 @@ const StudentManagement = forwardRef(({ isTab = false, onCountsUpdate }, ref) =>
 
     setViewerLoading(true);
     try {
-      const res = await api.get(`/admin/students/${student.id}/resume/view`, { responseType: 'blob' });
+      const res = await api.get(`/admin/students/${student.id}/resume/view`, { 
+        responseType: 'blob',
+        params: { t: Date.now() }
+      });
       
       const contentType = res.headers['content-type'] || '';
       if (contentType.includes('application/json')) {
@@ -177,7 +180,10 @@ const StudentManagement = forwardRef(({ isTab = false, onCountsUpdate }, ref) =>
 
   const handleAdminDownloadResume = async (studentId, rollNumber) => {
     try {
-      const res = await api.get(`/admin/students/${studentId}/resume/download`, { responseType: 'blob' });
+      const res = await api.get(`/admin/students/${studentId}/resume/download`, { 
+        responseType: 'blob',
+        params: { t: Date.now() }
+      });
       // Try to read standardized filename from Content-Disposition header
       const disposition = res.headers['content-disposition'] || '';
       const match = disposition.match(/filename="?([^"]+)"?/);
@@ -482,123 +488,10 @@ const StudentManagement = forwardRef(({ isTab = false, onCountsUpdate }, ref) =>
   const inputCls  = "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-[#F47C20] focus:ring-2 focus:ring-[#F47C20]/20 transition-all";
   const buttonStyle = { minWidth: '140px' };
 
-  const StatCard = ({ title, count, icon: Icon, palette, active, onClick }) => (
-    <button onClick={onClick} className={`group relative w-full text-left p-4 rounded-xl border transition-all duration-200 overflow-hidden shadow-sm   focus:outline-none flex items-center justify-between ${active ? `border-[#F47C20] ${palette.bg}` : "bg-white border-slate-200  "}`}>
-      <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${palette.icon}`}><Icon size={18} /></div>
-      <div className="flex-1">
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{title}</p>
-        <p className={`text-xl font-extrabold ${palette.text}`}>{count}</p>
-      </div>
-    </button>
-  );
-
   const hasFilters = searchTerm || filters.department || filters.semester || filters.verificationStatus || filters.placementReady || filters.hasResume;
 
   const content = (
     <div className="student-management-content w-full">
-
-      {/* STAT CARDS */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard title="Total" count={stats.total} icon={Users}
-          palette={{ bg:"bg-blue-50", icon:"bg-blue-100 text-blue-600", text:"text-blue-700" }}
-          active={!hasFilters} onClick={resetFilters} />
-        <StatCard title="Verified" count={stats.verified} icon={ShieldCheck}
-          palette={{ bg:"bg-emerald-50", icon:"bg-emerald-100 text-emerald-600", text:"text-emerald-700" }}
-          active={filters.verificationStatus==="VERIFIED"} onClick={() => setFilters(p => ({...p, verificationStatus: "VERIFIED"}))} />
-        <StatCard title="Resumes" count={stats.resumeUploaded} icon={FileText}
-          palette={{ bg:"bg-purple-50", icon:"bg-purple-100 text-purple-600", text:"text-purple-700" }}
-          active={filters.hasResume==="true"} onClick={() => setFilters(p => ({...p, hasResume: "true"}))} />
-        <StatCard title="Ready" count={stats.placementReady} icon={Target}
-          palette={{ bg:"bg-orange-50", icon:"bg-orange-100 text-orange-500", text:"text-orange-600" }}
-          active={filters.placementReady==="READY"} onClick={() => setFilters(p => ({...p, placementReady: "READY"}))} />
-      </div>
-
-      {/* SEARCH & FILTER BAR */}
-      <div className="bg-white rounded-2xl p-3 sm:p-4 border border-slate-200 shadow-xs mb-6 flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between filter-toolbar-container w-full max-w-full">
-        <div className="relative flex-1 w-full min-w-0 filter-search-input">
-          <Search size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
-          <input
-            type="text"
-            placeholder="Search by name, roll number, email, or department..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full min-h-[44px] h-11 pl-10 pr-10 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#F47C20] focus:ring-2 focus:ring-[#F47C20]/20 focus:bg-white transition-all shadow-2xs"
-            aria-label="Search students"
-          />
-          {searchTerm && (
-            <button
-              type="button"
-              onClick={() => setSearchTerm('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 bg-slate-200/60 hover:bg-slate-200 rounded-full transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#F47C20]"
-              title="Clear search"
-              aria-label="Clear search"
-            >
-              <X size={14} />
-            </button>
-          )}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto filter-controls-group min-w-0 max-w-full">
-          <div className="relative flex-1 sm:flex-none min-w-[120px] max-w-full w-full sm:w-auto">
-            <select
-              value={filters.department}
-              onChange={(e) => setFilters(p => ({ ...p, department: e.target.value }))}
-              className="w-full min-h-[44px] h-11 px-3 pr-8 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] focus:ring-2 focus:ring-[#F47C20]/20 cursor-pointer truncate max-w-full min-w-0"
-              style={{ maxWidth: '100%', boxSizing: 'border-box' }}
-              aria-label="Filter by department"
-            >
-              <option value="">All Departments</option>
-              {departments.map(d => (
-                <option key={d.code} value={d.code}>
-                  {d.name || d.code}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="relative flex-1 sm:flex-none min-w-[120px] max-w-full w-full sm:w-auto">
-            <select
-              value={filters.verificationStatus}
-              onChange={(e) => setFilters(p => ({ ...p, verificationStatus: e.target.value }))}
-              className="w-full min-h-[44px] h-11 px-3 pr-8 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] focus:ring-2 focus:ring-[#F47C20]/20 cursor-pointer truncate max-w-full min-w-0"
-              style={{ maxWidth: '100%', boxSizing: 'border-box' }}
-              aria-label="Filter by verification status"
-            >
-              <option value="">All Verification Status</option>
-              <option value="VERIFIED">Verified</option>
-              <option value="PENDING">Pending</option>
-            </select>
-          </div>
-
-          {hasFilters && (
-            <button
-              type="button"
-              onClick={resetFilters}
-              className="min-h-[44px] h-11 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer shrink-0"
-              title="Reset filters"
-              aria-label="Clear active filters"
-            >
-              <RefreshCw size={14} /> Clear
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* STAT CARDS */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard title="Total" count={stats.total} icon={Users}
-          palette={{ bg:"bg-blue-50", icon:"bg-blue-100 text-blue-600", text:"text-blue-700" }}
-          active={!hasFilters} onClick={resetFilters} />
-        <StatCard title="Verified" count={stats.verified} icon={ShieldCheck}
-          palette={{ bg:"bg-emerald-50", icon:"bg-emerald-100 text-emerald-600", text:"text-emerald-700" }}
-          active={filters.verificationStatus==="VERIFIED"} onClick={() => setFilters(p => ({...p, verificationStatus: "VERIFIED"}))} />
-        <StatCard title="Resumes" count={stats.resumeUploaded} icon={FileText}
-          palette={{ bg:"bg-purple-50", icon:"bg-purple-100 text-purple-600", text:"text-purple-700" }}
-          active={filters.hasResume==="true"} onClick={() => setFilters(p => ({...p, hasResume: "true"}))} />
-        <StatCard title="Ready" count={stats.placementReady} icon={Target}
-          palette={{ bg:"bg-orange-50", icon:"bg-orange-100 text-orange-500", text:"text-orange-600" }}
-          active={filters.placementReady==="READY"} onClick={() => setFilters(p => ({...p, placementReady: "READY"}))} />
-      </div>
 
       {/* TABLE & MOBILE CARDS */}
       {isLoading ? (

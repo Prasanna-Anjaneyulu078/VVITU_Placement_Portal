@@ -373,11 +373,15 @@ class AdminService {
     }
 
     const { resolveResumeFilePath } = require('../utils/file.utils');
-    const diskPath = resolveResumeFilePath(alumni.verificationDocumentUrl);
+    const isUrl = alumni.verificationDocumentUrl.startsWith('http://') || alumni.verificationDocumentUrl.startsWith('https://');
+    let diskPath = alumni.verificationDocumentUrl;
 
-    const fs = require('fs');
-    if (!diskPath || !fs.existsSync(diskPath)) {
-      throw { statusCode: 404, message: 'Verification document is missing from storage. Please request the alumni to upload the document again.' };
+    if (!isUrl) {
+      diskPath = resolveResumeFilePath(alumni.verificationDocumentUrl);
+      const fs = require('fs');
+      if (!diskPath || !fs.existsSync(diskPath)) {
+        throw { statusCode: 404, message: 'Verification document is missing from storage. Please request the alumni to upload the document again.' };
+      }
     }
 
     const path = require('path');

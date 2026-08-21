@@ -30,7 +30,8 @@ class JobController {
 
   static async createJob(req, res, next) {
     try {
-      const job = await JobService.createJob(req.user.id, req.user.role, req.body, req.files);
+      const filesToPass = req.file || req.files;
+      const job = await JobService.createJob(req.user.id, req.user.role, req.body, filesToPass);
       res.status(201).json(job);
     } catch (err) {
       next(err);

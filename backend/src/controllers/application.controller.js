@@ -133,6 +133,17 @@ class ApplicationController {
 
       res.setHeader('Content-Type', contentType);
       res.setHeader('Content-Disposition', `${disposition}; filename="${fileName}"`);
+
+      if (filePath && (filePath.startsWith('http://') || filePath.startsWith('https://'))) {
+        const axios = require('axios');
+        const response = await axios({
+          url: filePath,
+          method: 'GET',
+          responseType: 'stream'
+        });
+        return response.data.pipe(res);
+      }
+
       res.sendFile(filePath, (err) => {
         if (err && !res.headersSent) {
           next({ statusCode: 404, message: 'Resume file missing from storage. Please ask student to re-upload resume.' });
@@ -147,6 +158,18 @@ class ApplicationController {
     try {
       const caller = { userId: req.user.id, role: req.user.role };
       const { filePath, fileName } = await ApplicationService.getApplicationResumeFile(req.params.id, caller);
+
+      if (filePath && (filePath.startsWith('http://') || filePath.startsWith('https://'))) {
+        const axios = require('axios');
+        const response = await axios({
+          url: filePath,
+          method: 'GET',
+          responseType: 'stream'
+        });
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+        return response.data.pipe(res);
+      }
+
       res.download(filePath, fileName);
     } catch (err) {
       next(err);
