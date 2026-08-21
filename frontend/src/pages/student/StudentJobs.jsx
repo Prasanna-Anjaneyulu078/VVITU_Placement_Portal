@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { Briefcase, AlertCircle, RefreshCw, FileText } from 'lucide-react';
-import { JobCard, JobFilterBar, PreApplicationScreeningModal, ScreeningAnswersViewModal, Pagination } from '../../components/common';
+import { JobCard, PreApplicationScreeningModal, ScreeningAnswersViewModal, Pagination } from '../../components/common';
 import { JobCardLoader } from '../../components/common/loading';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -351,26 +351,7 @@ export default function StudentJobs() {
           </div>
         </div>
 
-        {/* Filter Bar */}
-        <JobFilterBar
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          filterCompany={filterCompany}
-          onCompanyChange={setFilterCompany}
-          companies={uniqueCompanies}
-          filterType={filterType}
-          onTypeChange={setFilterType}
-          filterLocation={filterLocation}
-          onLocationChange={setFilterLocation}
-          locations={uniqueLocations}
-          sortBy={sortBy}
-          onSortChange={setSortBy}
-          hasActiveFilters={hasActiveFilters}
-          onClearFilters={resetFilters}
-          showLocation
-          showSort
-          placeholder="Search jobs, companies…"
-        />
+
 
         {/* States & Lists */}
         {isError ? (

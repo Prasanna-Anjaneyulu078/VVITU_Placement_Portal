@@ -124,7 +124,7 @@ export default function ProjectDrawer({
       <div className="absolute inset-0" onClick={handleSafeClose} aria-hidden="true" />
 
       <div className="absolute inset-0 sm:inset-y-0 sm:right-0 sm:left-auto max-w-full flex">
-        <div className="w-full h-full sm:h-auto sm:w-screen sm:max-w-xl md:max-w-2xl bg-white shadow-2xl flex flex-col border-0 sm:border-l border-slate-200 animate-in slide-in-from-right duration-300">
+        <div className="w-full h-full sm:h-auto sm:w-screen sm:max-w-xl md:max-w-3xl lg:max-w-4xl bg-white shadow-2xl flex flex-col border-0 sm:border-l border-slate-200 animate-in slide-in-from-right duration-300">
           
           {/* Drawer Header */}
           <div className="px-4 py-4 sm:px-6 sm:py-5 border-b border-slate-200 flex items-center justify-between bg-white sticky top-0 z-10 shadow-2xs">

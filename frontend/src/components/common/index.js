@@ -33,7 +33,7 @@ export { default as CategorizedSkillsSection } from './CategorizedSkillsSection'
 export { default as ProjectModal } from './ProjectModal';
 export { default as StudentProjectsSection } from './StudentProjectsSection';
 export { PROFILE_ICONS, ProfileIconCard, ProfilePlatformIcon } from './ProfileIcons';
-export { default as JobFilterBar } from './JobFilterBar';
+
 export { default as StudentDetailsDrawer } from './StudentDetailsDrawer';
 export { default as ProjectDrawer } from './ProjectDrawer';
 export { default as DeleteProjectDialog } from './DeleteProjectDialog';

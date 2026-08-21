@@ -52,11 +52,14 @@ export default function AdminDashboard() {
       <PageHeader 
         title={isSuperAdmin ? "Super Admin Dashboard" : "Admin Dashboard"} 
         subtitle="Platform overview, statistics, and moderation tasks."
-        actionButton={isSuperAdmin ? {
-          label: "Add Admin",
-          icon: <Plus size={16} />,
-          onClick: () => navigate('/admin/profile')
-        } : null}
+        actions={isSuperAdmin ? (
+          <button
+            onClick={() => navigate('/admin/profile')}
+            className="flex items-center gap-2 px-4 py-2 bg-transparent text-[#F47C20] border border-[#F47C20] rounded-xl text-sm font-bold shadow-sm transition-colors focus:outline-none"
+          >
+            <Plus size={16} /> Add Admin
+          </button>
+        ) : null}
       />
 
       <div className="space-y-8 mt-6">

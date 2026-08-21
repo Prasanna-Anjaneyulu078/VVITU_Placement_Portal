@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { Briefcase, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { PageHeader, JobCard, JobFilterBar, JobDetailsModal } from '../../components/common';
+import { PageHeader, JobCard, JobDetailsModal } from '../../components/common';
 import Pagination from '../../components/common/Pagination';
 import api from '../../utils/axiosConfig';
 import { toast } from 'react-toastify';
@@ -12,8 +12,8 @@ import useDebounce from '../../hooks/useDebounce';
 const GRID_CSS = `
   .job-grid { display: grid; gap: 24px; align-items: start; }
   @media (max-width: 767px) { .job-grid { grid-template-columns: 1fr; gap: 16px; } }
-  @media (min-width: 768px) and (max-width: 1199px) { .job-grid { grid-template-columns: 1fr; gap: 20px; } }
-  @media (min-width: 1200px) { .job-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (min-width: 768px) and (max-width: 1199px) { .job-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; } }
+  @media (min-width: 1200px) { .job-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; } }
 `;
 
 /* ─── Skeleton Card ─────────────────────────────────────────────────── */
@@ -158,30 +158,6 @@ export default function AlumniMyJobs() {
       />
 
       <div className="mt-6 pb-16">
-        {/* Filter Bar */}
-        <JobFilterBar
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          filterCompany={filterCompany}
-          onCompanyChange={setFilterCompany}
-          companies={uniqueCompanies}
-          filterType={filterType}
-          onTypeChange={setFilterType}
-          filterStatus={filterStatus}
-          onStatusChange={setFilterStatus}
-          showStatus
-          hasActiveFilters={hasActiveFilters}
-          onClearFilters={resetFilters}
-          placeholder="Search your jobs…"
-          rightSlot={
-            <button
-              onClick={() => navigate('/alumni/post-job')}
-              className="flex items-center gap-2 px-4 py-2.5 bg-[#FFF4EB] border border-[#F47C20] text-[#F47C20] text-sm font-bold rounded-xl transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F47C20]/50 whitespace-nowrap"
-            >
-              <Plus size={16} className="text-[#F47C20]" /> Post New Job
-            </button>
-          }
-        />
 
         {/* States */}
         {isError ? (
@@ -210,13 +186,9 @@ export default function AlumniMyJobs() {
                 ? 'Try adjusting your search or filter criteria.'
                 : 'Start by posting your first job opportunity to connect with talented students.'}
             </p>
-            {hasActiveFilters ? (
+            {hasActiveFilters && (
               <button onClick={resetFilters} className="px-6 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl transition-colors">
                 Clear Filters
-              </button>
-            ) : (
-              <button onClick={() => navigate('/alumni/post-job')} className="px-6 py-2.5 bg-[#FFF4EB] border border-[#F47C20] text-[#F47C20] font-bold rounded-xl transition-all shadow-sm">
-                Post Your First Job
               </button>
             )}
           </div>

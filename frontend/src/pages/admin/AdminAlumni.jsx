@@ -21,12 +21,8 @@ export default function AdminAlumni() {
   const [alumniUsers, setAlumniUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  
   const [filters, setFilters] = useState({
-    verificationStatus: '',
-    department: '',
-    graduationYear: '',
+    verificationStatus: ''
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -174,35 +170,12 @@ export default function AdminAlumni() {
   // Filtering Logic
   const filteredUsers = useMemo(() => {
     return alumniUsers.filter(u => {
-      const q = searchTerm.toLowerCase().trim();
-      const name = (u.user?.name || u.name || '').toLowerCase();
-      const email = (u.user?.email || u.email || '').toLowerCase();
-      const rollNumber = (u.rollNumber || u.rollNo || u.user?.rollNumber || '').toLowerCase();
-      const company = (u.companyName || u.company || u.currentCompany || '').toLowerCase();
-      const designation = (u.designation || u.role || '').toLowerCase();
-      const dept = (u.department || '').toLowerCase();
-      
-      const matchesSearch = !q || name.includes(q) || email.includes(q) || rollNumber.includes(q) || company.includes(q) || designation.includes(q) || dept.includes(q);
-      
-      let matchesVer = true;
       if (filters.verificationStatus) {
-        matchesVer = u.verificationStatus === filters.verificationStatus;
+        return u.verificationStatus === filters.verificationStatus;
       }
-      
-      let matchesDept = true;
-      if (filters.department) {
-        matchesDept = u.department === filters.department;
-      }
-
-      let matchesYear = true;
-      if (filters.graduationYear) {
-        const passout = u.passoutYear || u.graduationYear || u.graduation;
-        matchesYear = String(passout) === String(filters.graduationYear);
-      }
-
-      return matchesSearch && matchesVer && matchesDept && matchesYear;
+      return true;
     });
-  }, [alumniUsers, searchTerm, filters]);
+  }, [alumniUsers, filters]);
 
   // Pagination
   const totalPages = Math.max(1, Math.ceil(filteredUsers.length / itemsPerPage));
@@ -213,15 +186,14 @@ export default function AdminAlumni() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, filters]);
+  }, [filters]);
 
   const resetFilters = () => {
-    setFilters({ verificationStatus: '', department: '', graduationYear: '' });
-    setSearchTerm('');
+    setFilters({ verificationStatus: '' });
     setCurrentPage(1);
   };
 
-  const hasActiveFilters = Boolean(searchTerm || filters.verificationStatus || filters.department || filters.graduationYear);
+  const hasActiveFilters = Boolean(filters.verificationStatus);
 
   const getStatusStyle = (status) => {
     if(status === 'VERIFIED') return 'bg-emerald-50 text-emerald-600 border-emerald-200';
@@ -229,7 +201,7 @@ export default function AdminAlumni() {
     return 'bg-[#FFF4EB] text-[#F47C20] border-[#F47C20]/30';
   };
 
-  const departments = [...new Set(alumniUsers.map(u => u.department).filter(Boolean))];
+
 
   const StatCard = ({ title, count, icon: Icon, palette, active, onClick }) => (
     <button onClick={onClick} className={`group relative w-full text-left p-4 rounded-xl border transition-all duration-200 overflow-hidden shadow-xs focus:outline-none flex items-center justify-between h-[76px] ${active ? `border-[#F47C20] ${palette.bg}` : "bg-white border-slate-200"}`}>
@@ -273,75 +245,7 @@ export default function AdminAlumni() {
             active={filters.verificationStatus==="REJECTED"} onClick={() => setFilters(p => ({...p, verificationStatus:"REJECTED"}))} />
         </div>
 
-        {/* ALUMNI SEARCH & FILTER TOOLBAR */}
-        <div className="bg-white rounded-2xl p-3 sm:p-4 border border-slate-200 shadow-xs flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between filter-toolbar-container w-full max-w-full">
-          <div className="relative flex-1 w-full min-w-0 filter-search-input">
-            <Search size={17} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" />
-            <input
-              type="text"
-              placeholder="Search by alumni name, email, company, or department..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full min-h-[44px] h-11 pl-10 pr-10 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#F47C20] focus:ring-2 focus:ring-[#F47C20]/20 focus:bg-white transition-all shadow-2xs"
-              aria-label="Search alumni"
-            />
-            {searchTerm && (
-              <button
-                type="button"
-                onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 bg-slate-200/60 hover:bg-slate-200 rounded-full transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#F47C20]"
-                title="Clear search"
-                aria-label="Clear search"
-              >
-                <X size={14} />
-              </button>
-            )}
-          </div>
 
-          <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto filter-controls-group min-w-0 max-w-full">
-            {departments.length > 0 && (
-              <div className="relative flex-1 sm:flex-none min-w-[120px] max-w-full w-full sm:w-auto">
-                <select
-                  value={filters.department}
-                  onChange={(e) => setFilters(p => ({ ...p, department: e.target.value }))}
-                  className="w-full min-h-[44px] h-11 px-3 pr-8 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] focus:ring-2 focus:ring-[#F47C20]/20 cursor-pointer truncate max-w-full min-w-0"
-                  style={{ maxWidth: '100%', boxSizing: 'border-box' }}
-                  aria-label="Filter by department"
-                >
-                  <option value="">All Departments</option>
-                  {departments.map(d => <option key={d} value={d}>{d}</option>)}
-                </select>
-              </div>
-            )}
-
-            <div className="relative flex-1 sm:flex-none min-w-[120px] max-w-full w-full sm:w-auto">
-              <select
-                value={filters.verificationStatus}
-                onChange={(e) => setFilters(p => ({ ...p, verificationStatus: e.target.value }))}
-                className="w-full min-h-[44px] h-11 px-3 pr-8 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-[#F47C20] focus:ring-2 focus:ring-[#F47C20]/20 cursor-pointer truncate max-w-full min-w-0"
-                style={{ maxWidth: '100%', boxSizing: 'border-box' }}
-                aria-label="Filter by status"
-              >
-                <option value="">All Verification Status</option>
-                <option value="VERIFIED">Verified</option>
-                <option value="PENDING">Pending</option>
-                <option value="REJECTED">Rejected</option>
-              </select>
-            </div>
-
-            {hasActiveFilters && (
-              <button
-                type="button"
-                onClick={resetFilters}
-                className="min-h-[44px] h-11 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer shrink-0"
-                title="Reset filters"
-                aria-label="Clear all active filters"
-              >
-                <RefreshCw size={14} /> Clear
-              </button>
-            )}
-          </div>
-        </div>
 
         {/* ALUMNI CONTENT AREA: ERROR, LOADING, EMPTY, TABLE & CARDS */}
         {isError ? (

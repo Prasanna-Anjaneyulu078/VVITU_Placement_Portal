@@ -464,7 +464,7 @@ export default function AdminProfile() {
               <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
                  <h4 className="font-bold text-[#F47C20] text-sm uppercase tracking-wider flex items-center gap-2"><Settings size={16}/> Administrative Operations</h4>
                  {canCreateAdmin(profile?.role) && (
-                   <button onClick={() => setShowAddAdminModal(true)} className="px-4 py-2 bg-[#F47C20] text-white rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition-colors">
+                   <button onClick={() => setShowAddAdminModal(true)} className="px-4 py-2 bg-transparent text-[#F47C20] border border-[#F47C20] rounded-xl text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition-colors focus:outline-none">
                      <Plus size={14} /> Add Admin
                    </button>
                  )}
@@ -594,7 +594,7 @@ export default function AdminProfile() {
             </div>
             <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
               <button type="button" onClick={() => setShowAddAdminModal(false)} className="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold transition-colors">Cancel</button>
-              <button type="submit" disabled={isSubmittingAdmin} className="px-6 py-2.5 bg-[#F47C20] text-white rounded-xl text-sm font-bold hover:bg-[#d96612] transition-colors flex items-center gap-2">
+              <button type="submit" disabled={isSubmittingAdmin} className="px-6 py-2.5 bg-transparent border border-[#F47C20] text-[#F47C20] rounded-xl text-sm font-bold hover:bg-orange-50 transition-colors flex items-center gap-2 focus:outline-none">
                 {isSubmittingAdmin ? 'Creating Admin...' : 'Create Admin Account'}
               </button>
             </div>

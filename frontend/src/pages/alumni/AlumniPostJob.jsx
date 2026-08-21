@@ -73,27 +73,31 @@ const SkillsTagInput = ({ tags, setTags, error, setError }) => {
 };
 
 const AVAILABLE_DEPARTMENTS = [
-  { code: 'AIDS', name: 'Artificial Intelligence & Data Science' },
-  { code: 'CSE',  name: 'Computer Science & Engineering' },
-  { code: 'ECE',  name: 'Electronics & Communication Engineering' },
-  { code: 'EEE',  name: 'Electrical & Electronics Engineering' },
-  { code: 'MECH', name: 'Mechanical Engineering' },
-  { code: 'CIVIL', name: 'Civil Engineering' },
-  { code: 'IT',   name: 'Information Technology' },
-  { code: 'CSM',  name: 'CSE (AI & Machine Learning)' },
-  { code: 'CSD',  name: 'CSE (Data Science)' }
+  { code: 'CSE',   name: 'Computer Science and Engineering (CSE)' },
+  { code: 'IT',    name: 'Information Technology (IT)' },
+  { code: 'AIML',  name: 'Artificial Intelligence and Machine Learning (AIML)' },
+  { code: 'CSM',   name: 'Computer Science and Engineering (Artificial Intelligence & Machine Learning) (CSM)' },
+  { code: 'AIDS',  name: 'Artificial Intelligence and Data Science (AIDS)' },
+  { code: 'CSO',   name: 'Computer Science and Engineering (Internet of Things) (CSO)' },
+  { code: 'CIC',   name: 'Computer Science and Information Technology (CIC)' },
+  { code: 'ECE',   name: 'Electronics and Communication Engineering (ECE)' },
+  { code: 'EEE',   name: 'Electrical and Electronics Engineering (EEE)' },
+  { code: 'CIVIL', name: 'Civil Engineering (CIVIL)' },
+  { code: 'MECH',  name: 'Mechanical Engineering (MECH)' }
 ];
 
 const DEPT_COLOR_MAP = {
-  AIDS: { bg: 'bg-indigo-50',  text: 'text-indigo-700',  border: 'border-indigo-200',  dot: 'bg-indigo-500' },
-  CSE:  { bg: 'bg-blue-50',    text: 'text-blue-700',    border: 'border-blue-200',    dot: 'bg-blue-500' },
-  ECE:  { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', dot: 'bg-emerald-500' },
-  EEE:  { bg: 'bg-amber-50',   text: 'text-amber-700',   border: 'border-amber-200',   dot: 'bg-amber-500' },
-  MECH: { bg: 'bg-rose-50',    text: 'text-rose-700',    border: 'border-rose-200',    dot: 'bg-rose-500' },
-  CIVIL:{ bg: 'bg-cyan-50',    text: 'text-cyan-700',    border: 'border-cyan-200',    dot: 'bg-cyan-500' },
-  IT:   { bg: 'bg-purple-50',  text: 'text-purple-700',  border: 'border-purple-200',  dot: 'bg-purple-500' },
-  CSM:  { bg: 'bg-teal-50',    text: 'text-teal-700',    border: 'border-teal-200',    dot: 'bg-teal-500' },
-  CSD:  { bg: 'bg-sky-50',     text: 'text-sky-700',     border: 'border-sky-200',     dot: 'bg-sky-500' }
+  CSE:   { bg: 'bg-blue-50',     text: 'text-blue-700',     border: 'border-blue-200',     dot: 'bg-blue-500' },
+  IT:    { bg: 'bg-purple-50',   text: 'text-purple-700',   border: 'border-purple-200',   dot: 'bg-purple-500' },
+  AIML:  { bg: 'bg-fuchsia-50',  text: 'text-fuchsia-700',  border: 'border-fuchsia-200',  dot: 'bg-fuchsia-500' },
+  CSM:   { bg: 'bg-teal-50',     text: 'text-teal-700',     border: 'border-teal-200',     dot: 'bg-teal-500' },
+  AIDS:  { bg: 'bg-indigo-50',   text: 'text-indigo-700',   border: 'border-indigo-200',   dot: 'bg-indigo-500' },
+  CSO:   { bg: 'bg-cyan-50',     text: 'text-cyan-700',     border: 'border-cyan-200',     dot: 'bg-cyan-500' },
+  CIC:   { bg: 'bg-pink-50',     text: 'text-pink-700',     border: 'border-pink-200',     dot: 'bg-pink-500' },
+  ECE:   { bg: 'bg-emerald-50',  text: 'text-emerald-700',  border: 'border-emerald-200',  dot: 'bg-emerald-500' },
+  EEE:   { bg: 'bg-amber-50',    text: 'text-amber-700',    border: 'border-amber-200',    dot: 'bg-amber-500' },
+  CIVIL: { bg: 'bg-stone-50',    text: 'text-stone-700',    border: 'border-stone-200',    dot: 'bg-stone-500' },
+  MECH:  { bg: 'bg-rose-50',     text: 'text-rose-700',     border: 'border-rose-200',     dot: 'bg-rose-500' }
 };
 
 export default function AlumniPostJob({ role = 'alumni' }) {
@@ -189,12 +193,13 @@ export default function AlumniPostJob({ role = 'alumni' }) {
         subtitle={role === 'alumni' ? "Share opportunities with students from your alma mater." : "Publish new job opportunities for students."} 
       />
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 mt-6 pb-12 max-w-4xl mx-auto">
+      <div className="max-w-5xl mx-auto mt-8 pb-16">
         <form className="space-y-8" onSubmit={handleSubmit}>
           
-          <div className="space-y-6">
-            <h3 className="text-lg font-extrabold text-[#F47C20] flex items-center gap-2 pb-4 border-b border-slate-100 uppercase tracking-wider">
-              <Briefcase size={20} />
+          {/* Section 1: Job Details */}
+          <div className="bg-white rounded-2xl shadow-xs border border-slate-200 p-6 sm:p-8 lg:p-10 transition-all hover:shadow-sm">
+            <h3 className="text-lg font-extrabold text-[#F47C20] flex items-center gap-2 pb-5 border-b border-slate-100 uppercase tracking-wider mb-6">
+              <Briefcase size={22} />
               Job Details
             </h3>
             
@@ -313,10 +318,10 @@ export default function AlumniPostJob({ role = 'alumni' }) {
               />
             </div>
           </div>
-
-          <div className="space-y-6 pt-6">
-            <h3 className="text-lg font-extrabold text-[#F47C20] flex items-center gap-2 pb-4 border-b border-slate-100 uppercase tracking-wider">
-              <DollarSign size={20} />
+          {/* Section 2: Requirements & Eligibility */}
+          <div className="bg-white rounded-2xl shadow-xs border border-slate-200 p-6 sm:p-8 lg:p-10 transition-all hover:shadow-sm">
+            <h3 className="text-lg font-extrabold text-[#F47C20] flex items-center gap-2 pb-5 border-b border-slate-100 uppercase tracking-wider mb-6">
+              <DollarSign size={22} />
               Requirements & Eligibility Criteria
             </h3>
             
@@ -368,8 +373,8 @@ export default function AlumniPostJob({ role = 'alumni' }) {
             </div>
 
             {/* BRANCH & ELIGIBILITY CRITERIA SECTION */}
-            <div className="space-y-5 pt-5 border-t border-slate-100">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+            <div className="space-y-5 pt-8 mt-8 border-t border-slate-100">
+              <div className="flex flex-row items-center justify-between pb-4 border-b border-slate-100 gap-3">
                 <h4 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-2">
                   Branch &amp; Eligibility Criteria
                 </h4>
@@ -523,10 +528,10 @@ export default function AlumniPostJob({ role = 'alumni' }) {
             </div>
           </div>
 
-          {/* PRE-APPLICATION SCREENING SECTION */}
-          <div className="space-y-6 pt-6">
-            <h3 className="text-lg font-extrabold text-[#F47C20] flex items-center gap-2 pb-4 border-b border-slate-100 uppercase tracking-wider">
-              <HelpCircle size={20} />
+          {/* Section 3: Pre-Application Screening */}
+          <div className="bg-white rounded-2xl shadow-xs border border-slate-200 p-6 sm:p-8 lg:p-10 transition-all hover:shadow-sm">
+            <h3 className="text-lg font-extrabold text-[#F47C20] flex items-center gap-2 pb-5 border-b border-slate-100 uppercase tracking-wider mb-6">
+              <HelpCircle size={22} />
               Pre-Application Screening
             </h3>
             
@@ -566,18 +571,18 @@ export default function AlumniPostJob({ role = 'alumni' }) {
             </div>
           </div>
 
-          <div className="pt-6 border-t border-slate-100 flex justify-end gap-4">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-4 mt-8 pt-4">
             <button 
               type="button" 
               onClick={() => navigate(-1)}
-              className="px-6 py-3 bg-white border border-slate-200 text-[#F47C20] rounded-xl text-sm font-bold transition-colors"
+              className="px-8 py-3.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-extrabold transition-all hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200"
             >
               Cancel
             </button>
             <button 
               type="submit" 
               disabled={isSubmitting}
-              className="px-8 py-3 bg-[#F47C20] text-[#F47C20] rounded-xl text-sm font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-10 py-3.5 bg-transparent border-2 border-[#F47C20] text-[#F47C20] rounded-xl text-sm font-extrabold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-orange-50 transition-all shadow-sm hover:shadow focus:outline-none focus:ring-2 focus:ring-[#F47C20]/50"
             >
               {isSubmitting ? 'Publishing...' : 'Publish Job'}
             </button>

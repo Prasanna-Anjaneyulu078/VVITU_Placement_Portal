@@ -93,7 +93,7 @@ export default function ProjectModal({
       isOpen={isOpen}
       onClose={onClose}
       title={project ? "Edit Project Details" : "Add New Project"}
-      size="lg"
+      size="xl"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         
