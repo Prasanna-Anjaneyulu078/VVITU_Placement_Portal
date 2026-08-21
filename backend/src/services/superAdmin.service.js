@@ -23,6 +23,7 @@ class SuperAdminService {
       employeeId: ap.employeeId || null,
       phone: ap.mobileNumber || ap.phone || '',
       mobileNumber: ap.mobileNumber || ap.phone || '',
+      profileImageUrl: ap.profileImageUrl || null,
       createdAt: ap.user?.createdAt || ap.createdAt
     }));
   }
@@ -49,6 +50,7 @@ class SuperAdminService {
       employeeId: admin.employeeId || null,
       phone: admin.mobileNumber || admin.phone || '',
       mobileNumber: admin.mobileNumber || admin.phone || '',
+      profileImageUrl: admin.profileImageUrl || null,
       createdAt: admin.user?.createdAt || admin.createdAt
     };
   }
