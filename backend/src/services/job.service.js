@@ -368,10 +368,16 @@ class JobService {
     };
   }
 
-  static async getAllJobs(filters = {}) {
+  static async getAllJobs(filters = {}, accessScope = null) {
     const page = Math.max(parseInt(filters.page, 10) || 1, 1);
     const limit = Math.min(Math.max(parseInt(filters.limit, 10) || 6, 1), 100);
     const { search, status, department } = filters;
+
+    let adminDepartmentFilter = {};
+    if (accessScope && accessScope.type === 'DEPARTMENT') {
+      const AccessControlService = require('./accessControl.service');
+      adminDepartmentFilter = AccessControlService.getJobDepartmentFilter(accessScope);
+    }
 
     const where = {
       deletedAt: null,
@@ -383,7 +389,8 @@ class JobService {
           { companyName: { contains: search, mode: 'insensitive' } },
           { description: { contains: search, mode: 'insensitive' } }
         ]
-      })
+      }),
+      ...adminDepartmentFilter
     };
 
     const totalItems = await prisma.job.count({ where });
@@ -463,7 +470,7 @@ class JobService {
     return data;
   }
 
-  static async getJobById(jobIdParam) {
+  static async getJobById(jobIdParam, accessScope = null) {
     let jobId;
     try {
       jobId = BigInt(jobIdParam);
@@ -480,7 +487,7 @@ class JobService {
             name: true,
             email: true,
             role: true,
-            adminProfile: { select: { profileImageUrl: true } },
+            adminProfile: { select: { department: true, profileImageUrl: true } },
             alumni: { select: { profileImageUrl: true } }
           }
         },
@@ -493,6 +500,13 @@ class JobService {
 
     if (!job || job.deletedAt) {
       throw { statusCode: 404, message: 'Job not found' };
+    }
+
+    if (accessScope && accessScope.type === 'DEPARTMENT') {
+      const AccessControlService = require('./accessControl.service');
+      if (!AccessControlService.canAccessJob(accessScope, job)) {
+        throw { statusCode: 403, message: 'Forbidden: Cannot access jobs outside your department scope.' };
+      }
     }
 
     const posterName = job.postedByAlumni?.user?.name || (job.postedByAlumniId ? null : 'Placement Administration');
@@ -954,7 +968,7 @@ class JobService {
    * ADMIN can update any job.
    * Maps frontend field names to Prisma field names.
    */
-  static async updateJob(jobIdParam, userId, userRole, jobData) {
+  static async updateJob(jobIdParam, userId, userRole, jobData, accessScope = null) {
     let jobId;
     try {
       jobId = BigInt(jobIdParam);
@@ -962,7 +976,13 @@ class JobService {
       throw { statusCode: 400, message: 'Invalid job ID format' };
     }
 
-    const job = await prisma.job.findUnique({ where: { id: jobId } });
+    const job = await prisma.job.findUnique({
+      where: { id: jobId },
+      include: {
+        createdBy: { select: { adminProfile: { select: { department: true } } } },
+        postedByAlumni: { select: { department: true } }
+      }
+    });
     if (!job || job.deletedAt) {
       throw { statusCode: 404, message: 'Job not found' };
     }
@@ -972,6 +992,11 @@ class JobService {
       const alumni = await prisma.alumni.findUnique({ where: { userId: BigInt(userId) } });
       if (!alumni || job.postedByAlumniId !== alumni.id) {
         throw { statusCode: 403, message: 'You do not have permission to edit this job' };
+      }
+    } else if (userRole === 'ADMIN' && accessScope && accessScope.type === 'DEPARTMENT') {
+      const AccessControlService = require('./accessControl.service');
+      if (!AccessControlService.canAccessJob(accessScope, job)) {
+        throw { statusCode: 403, message: 'Forbidden: Cannot edit jobs outside your department scope.' };
       }
     }
 
@@ -1066,7 +1091,7 @@ class JobService {
    * ALUMNI can only delete their own jobs.
    * ADMIN can delete any job.
    */
-  static async deleteJob(jobIdParam, userId, userRole) {
+  static async deleteJob(jobIdParam, userId, userRole, accessScope = null) {
     let jobId;
     try {
       jobId = BigInt(jobIdParam);
@@ -1074,7 +1099,13 @@ class JobService {
       throw { statusCode: 400, message: 'Invalid job ID format' };
     }
 
-    const job = await prisma.job.findUnique({ where: { id: jobId } });
+    const job = await prisma.job.findUnique({
+      where: { id: jobId },
+      include: {
+        createdBy: { select: { adminProfile: { select: { department: true } } } },
+        postedByAlumni: { select: { department: true } }
+      }
+    });
     if (!job || job.deletedAt) {
       throw { statusCode: 404, message: 'Job not found' };
     }
@@ -1084,6 +1115,11 @@ class JobService {
       if (!alumni || job.postedByAlumniId !== alumni.id) {
         throw { statusCode: 403, message: 'You do not have permission to delete this job' };
       }
+    } else if (userRole === 'ADMIN' && accessScope && accessScope.type === 'DEPARTMENT') {
+      const AccessControlService = require('./accessControl.service');
+      if (!AccessControlService.canAccessJob(accessScope, job)) {
+        throw { statusCode: 403, message: 'Forbidden: Cannot delete jobs outside your department scope.' };
+      }
     }
 
     await prisma.job.update({ where: { id: jobId }, data: { deletedAt: new Date() } });
@@ -1092,7 +1128,7 @@ class JobService {
   /**
    * Update a job's status (admin moderation: APPROVED / REJECTED / EXPIRED).
    */
-  static async updateJobStatus(jobIdParam, status, reason) {
+  static async updateJobStatus(jobIdParam, status, reason, accessScope = null) {
     let jobId;
     try {
       jobId = BigInt(jobIdParam);
@@ -1110,9 +1146,22 @@ class JobService {
       throw { statusCode: 400, message: `Invalid status. Must be one of: ${validStatuses.join(', ')}` };
     }
 
-    const job = await prisma.job.findUnique({ where: { id: jobId } });
+    const job = await prisma.job.findUnique({
+      where: { id: jobId },
+      include: {
+        createdBy: { select: { adminProfile: { select: { department: true } } } },
+        postedByAlumni: { select: { department: true } }
+      }
+    });
     if (!job || job.deletedAt) {
       throw { statusCode: 404, message: 'Job not found' };
+    }
+
+    if (accessScope && accessScope.type === 'DEPARTMENT') {
+      const AccessControlService = require('./accessControl.service');
+      if (!AccessControlService.canAccessJob(accessScope, job)) {
+        throw { statusCode: 403, message: 'Forbidden: Cannot update status of jobs outside your department scope.' };
+      }
     }
 
     const updated = await prisma.job.update({

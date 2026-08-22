@@ -431,7 +431,7 @@ export default function JobDetails() {
                         <Award size={20} className="text-gray-400" />
                         <h3 className="text-base font-semibold">Skills Required {requiredSkills.length > 0 && `(${requiredSkills.length})`}</h3>
                       </div>
-                      {job.requiredSkills && (
+                      {job.requiredSkills && role === 'student' && (
                         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold ${
                           skillMatchPercentage >= 75 ? 'bg-green-100 text-green-700' :
                           skillMatchPercentage >= 40 ? 'bg-amber-100 text-amber-700' :

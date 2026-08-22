@@ -21,7 +21,12 @@ class JobController {
 
   static async getJobById(req, res, next) {
     try {
-      const job = await JobService.getJobById(req.params.id);
+      let accessScope = null;
+      if (req.user && (req.user.role === 'ADMIN' || req.user.role === 'SUPER_ADMIN')) {
+        const AccessControlService = require('../services/accessControl.service');
+        accessScope = await AccessControlService.getAdminAccessScope(req.user.id);
+      }
+      const job = await JobService.getJobById(req.params.id, accessScope);
       res.status(200).json(job);
     } catch (err) {
       next(err);
@@ -49,7 +54,12 @@ class JobController {
 
   static async updateJob(req, res, next) {
     try {
-      const job = await JobService.updateJob(req.params.id, req.user.id, req.user.role, req.body);
+      let accessScope = null;
+      if (req.user && (req.user.role === 'ADMIN' || req.user.role === 'SUPER_ADMIN')) {
+        const AccessControlService = require('../services/accessControl.service');
+        accessScope = await AccessControlService.getAdminAccessScope(req.user.id);
+      }
+      const job = await JobService.updateJob(req.params.id, req.user.id, req.user.role, req.body, accessScope);
       res.status(200).json(job);
     } catch (err) {
       next(err);
@@ -58,7 +68,12 @@ class JobController {
 
   static async deleteJob(req, res, next) {
     try {
-      await JobService.deleteJob(req.params.id, req.user.id, req.user.role);
+      let accessScope = null;
+      if (req.user && (req.user.role === 'ADMIN' || req.user.role === 'SUPER_ADMIN')) {
+        const AccessControlService = require('../services/accessControl.service');
+        accessScope = await AccessControlService.getAdminAccessScope(req.user.id);
+      }
+      await JobService.deleteJob(req.params.id, req.user.id, req.user.role, accessScope);
       res.status(200).json({ success: true, message: 'Job deleted successfully' });
     } catch (err) {
       next(err);
@@ -67,10 +82,15 @@ class JobController {
 
   static async updateJobStatus(req, res, next) {
     try {
+      let accessScope = null;
+      if (req.user && (req.user.role === 'ADMIN' || req.user.role === 'SUPER_ADMIN')) {
+        const AccessControlService = require('../services/accessControl.service');
+        accessScope = await AccessControlService.getAdminAccessScope(req.user.id);
+      }
       // Support both query param (?status=APPROVED) and body ({ status, reason })
       const status = req.query.status || req.body.status;
       const reason = req.query.reason || req.body.reason || null;
-      const job = await JobService.updateJobStatus(req.params.id, status, reason);
+      const job = await JobService.updateJobStatus(req.params.id, status, reason, accessScope);
       res.status(200).json(job);
     } catch (err) {
       next(err);

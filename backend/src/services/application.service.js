@@ -303,7 +303,7 @@ class ApplicationService {
     // IDOR protection: verify the application exists first
     const application = await prisma.application.findFirst({
       where: { id: BigInt(applicationId), deletedAt: null },
-      include: { job: { select: { postedByAlumniId: true } } }
+      include: { job: { select: { postedByAlumniId: true } }, student: { select: { department: true } } }
     });
 
     if (!application) {
@@ -319,6 +319,10 @@ class ApplicationService {
       }
       if (!application.job || Number(application.job.postedByAlumniId) !== Number(alumni.id)) {
         throw { statusCode: 403, message: 'Forbidden: You do not have permission to update the status of this application' };
+      }
+    } else if (caller && (caller.role === 'ADMIN' || caller.role === 'SUPER_ADMIN')) {
+      if (caller.accessScope && caller.accessScope.type === 'DEPARTMENT' && application.student?.department?.toLowerCase() !== caller.accessScope.departmentId.toLowerCase()) {
+        throw { statusCode: 403, message: 'Forbidden: Cannot update application status for students from other departments.' };
       }
     }
 
@@ -368,7 +372,11 @@ class ApplicationService {
       if (!alumni || application.job?.postedByAlumniId !== alumni.id) {
         throw { statusCode: 403, message: 'Forbidden' };
       }
-    } else if (caller.role !== 'ADMIN' && caller.role !== 'SUPER_ADMIN') {
+    } else if (caller.role === 'ADMIN' || caller.role === 'SUPER_ADMIN') {
+      if (caller.accessScope && caller.accessScope.type === 'DEPARTMENT' && application.student?.department?.toLowerCase() !== caller.accessScope.departmentId.toLowerCase()) {
+        throw { statusCode: 403, message: 'Forbidden: Cannot view applications of students from other departments.' };
+      }
+    } else {
       throw { statusCode: 403, message: 'Forbidden' };
     }
 
@@ -557,7 +565,11 @@ class ApplicationService {
       if (!alumni || application.job?.postedByAlumniId !== alumni.id) {
         throw { statusCode: 403, message: 'Forbidden' };
       }
-    } else if (caller.role !== 'ADMIN' && caller.role !== 'SUPER_ADMIN') {
+    } else if (caller.role === 'ADMIN' || caller.role === 'SUPER_ADMIN') {
+      if (caller.accessScope && caller.accessScope.type === 'DEPARTMENT' && application.student?.department?.toLowerCase() !== caller.accessScope.departmentId.toLowerCase()) {
+        throw { statusCode: 403, message: 'Forbidden: Cannot view resumes of students from other departments.' };
+      }
+    } else {
       throw { statusCode: 403, message: 'Forbidden' };
     }
 

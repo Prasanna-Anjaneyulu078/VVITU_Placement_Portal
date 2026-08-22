@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { X, MapPin, DollarSign, Briefcase, Search } from 'lucide-react';
-import { PageHeader, Table, Modal, Button, LoadingSpinner } from '../../components/common';
+import { PageHeader, Table, Modal, Button, LoadingSpinner, CompanyLogo } from '../../components/common';
 import { TableLoader } from '../../components/common/loading';
 import { getImageUrl } from '../../utils/imageUrl';
 import api from '../../utils/axiosConfig';
@@ -38,6 +38,7 @@ export default function StudentApplications() {
           date: app.appliedAt ? new Date(app.appliedAt).toLocaleDateString() : 'N/A',
           status: app.status,
           interviewStatus: app.interviewStatus || 'N/A',
+          companyLogoUrl: app.job?.companyLogoUrl || app.job?.imageUrl || null,
           jobDetails: app.job || {
             title: role,
             company: comp,
@@ -92,7 +93,15 @@ export default function StudentApplications() {
   };
 
   const columns = [
-    { header: 'Company', accessor: 'company', className: 'font-semibold text-gray-900' },
+    { 
+      header: 'Company', 
+      render: (app) => (
+        <div className="flex items-center gap-3">
+          <CompanyLogo url={app.companyLogoUrl} name={app.company} size="sm" />
+          <span className="font-semibold text-gray-900">{app.company}</span>
+        </div>
+      )
+    },
     { header: 'Role', accessor: 'role', className: 'text-gray-600' },
     { header: 'Date Applied', accessor: 'date', className: 'text-gray-500' },
     {

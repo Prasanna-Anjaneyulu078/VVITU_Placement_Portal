@@ -1,11 +1,13 @@
 const fs = require('fs');
 const AdminService = require('../services/admin.service');
 const AuthService = require('../services/auth.service');
+const AccessControlService = require('../services/accessControl.service');
 
 class AdminController {
   static async getStats(req, res, next) {
     try {
-      const stats = await AdminService.getStats();
+      const accessScope = await AccessControlService.getAdminAccessScope(req.user.id);
+      const stats = await AdminService.getStats(accessScope);
       res.status(200).json(stats);
     } catch (err) {
       next(err);
@@ -14,7 +16,8 @@ class AdminController {
 
   static async getDashboardMetrics(req, res, next) {
     try {
-      const metrics = await AdminService.getDashboardMetrics();
+      const accessScope = await AccessControlService.getAdminAccessScope(req.user.id);
+      const metrics = await AdminService.getDashboardMetrics(accessScope);
       res.status(200).json(metrics);
     } catch (err) {
       next(err);
@@ -99,7 +102,8 @@ class AdminController {
 
   static async getShortlistedApplications(req, res, next) {
     try {
-      const applications = await AdminService.getShortlistedApplications();
+      const accessScope = await AccessControlService.getAdminAccessScope(req.user.id);
+      const applications = await AdminService.getShortlistedApplications(accessScope);
       res.status(200).json(applications);
     } catch (err) {
       next(err);
@@ -119,7 +123,8 @@ class AdminController {
 
   static async getAllStudents(req, res, next) {
     try {
-      const students = await AdminService.getAllStudents(req.query);
+      const accessScope = await AccessControlService.getAdminAccessScope(req.user.id);
+      const students = await AdminService.getAllStudents(req.query, accessScope);
       res.status(200).json(students);
     } catch (err) {
       next(err);
@@ -128,7 +133,8 @@ class AdminController {
 
   static async getAllAlumni(req, res, next) {
     try {
-      const alumni = await AdminService.getAllAlumni(req.query);
+      const accessScope = await AccessControlService.getAdminAccessScope(req.user.id);
+      const alumni = await AdminService.getAllAlumni(req.query, accessScope);
       res.status(200).json(alumni);
     } catch (err) {
       next(err);
@@ -137,7 +143,8 @@ class AdminController {
 
   static async getAlumniDocument(req, res, next) {
     try {
-      const { diskPath, mimeType, fileName } = await AdminService.getAlumniDocument(req.params.id);
+      const accessScope = await AccessControlService.getAdminAccessScope(req.user.id);
+      const { diskPath, mimeType, fileName } = await AdminService.getAlumniDocument(req.params.id, accessScope);
       
       res.setHeader('Content-Type', mimeType);
       const safeFileName = fileName.replace(/["\n\r]/g, '');
@@ -172,7 +179,8 @@ class AdminController {
 
       const dbStatus = status === 'APPROVE' ? 'VERIFIED' : 'REJECTED';
 
-      const result = await AdminService.verifyAlumni(req.params.id, dbStatus);
+      const accessScope = await AccessControlService.getAdminAccessScope(req.user.id);
+      const result = await AdminService.verifyAlumni(req.params.id, dbStatus, accessScope);
       res.status(200).json(result);
     } catch (err) {
       next(err);
@@ -191,7 +199,8 @@ class AdminController {
       const operatorEmail = req.user?.email || null;
       const ipAddress = req.ip || null;
       
-      const result = await AdminService.deleteAlumni(alumniId, operatorEmail, ipAddress);
+      const accessScope = await AccessControlService.getAdminAccessScope(req.user.id);
+      const result = await AdminService.deleteAlumni(alumniId, accessScope, operatorEmail, ipAddress);
       res.status(200).json(result);
     } catch (err) {
       next(err);
@@ -200,8 +209,10 @@ class AdminController {
 
   static async getAllJobs(req, res, next) {
     try {
+      const AccessControlService = require('../services/accessControl.service');
+      const accessScope = await AccessControlService.getAdminAccessScope(req.user.id);
       const JobService = require('../services/job.service');
-      const jobs = await JobService.getAllJobs(req.query);
+      const jobs = await JobService.getAllJobs(req.query, accessScope);
       res.status(200).json(jobs);
     } catch (err) {
       next(err);
@@ -210,8 +221,10 @@ class AdminController {
 
   static async getPendingJobs(req, res, next) {
     try {
+      const AccessControlService = require('../services/accessControl.service');
+      const accessScope = await AccessControlService.getAdminAccessScope(req.user.id);
       const JobService = require('../services/job.service');
-      const jobs = await JobService.getAllJobs({ ...req.query, status: 'PENDING' });
+      const jobs = await JobService.getAllJobs({ ...req.query, status: 'PENDING' }, accessScope);
       res.status(200).json(jobs);
     } catch (err) {
       next(err);
@@ -233,8 +246,10 @@ class AdminController {
       const isApproved = approved === true || approved === 'true';
       const newStatus = isApproved ? 'APPROVED' : 'REJECTED';
 
+      const AccessControlService = require('../services/accessControl.service');
+      const accessScope = await AccessControlService.getAdminAccessScope(req.user.id);
       const JobService = require('../services/job.service');
-      const result = await JobService.updateJobStatus(jobId, newStatus, rejectionReason || null);
+      const result = await JobService.updateJobStatus(jobId, newStatus, rejectionReason || null, accessScope);
       res.status(200).json(result);
     } catch (err) {
       next(err);
@@ -244,8 +259,10 @@ class AdminController {
   static async updateJobStatus(req, res, next) {
     try {
       const { status, reason } = req.body;
+      const AccessControlService = require('../services/accessControl.service');
+      const accessScope = await AccessControlService.getAdminAccessScope(req.user.id);
       const JobService = require('../services/job.service');
-      const result = await JobService.updateJobStatus(req.params.id, status, reason || null);
+      const result = await JobService.updateJobStatus(req.params.id, status, reason || null, accessScope);
       res.status(200).json(result);
     } catch (err) {
       next(err);
@@ -254,7 +271,8 @@ class AdminController {
 
   static async deleteStudent(req, res, next) {
     try {
-      const result = await AdminService.deleteStudent(req.params.id, req.user?.email, req.ip);
+      const accessScope = await AccessControlService.getAdminAccessScope(req.user.id);
+      const result = await AdminService.deleteStudent(req.params.id, accessScope, req.user?.email, req.ip);
       res.status(200).json(result);
     } catch (err) {
       next(err);
@@ -263,7 +281,8 @@ class AdminController {
 
   static async resetStudentPassword(req, res, next) {
     try {
-      const result = await AdminService.resetStudentPassword(req.params.id);
+      const accessScope = await AccessControlService.getAdminAccessScope(req.user.id);
+      const result = await AdminService.resetStudentPassword(req.params.id, accessScope);
       res.status(200).json(result);
     } catch (err) {
       next(err);
@@ -282,8 +301,11 @@ class AdminController {
 
   static async exportStudents(req, res, next) {
     try {
+      const AccessControlService = require('../services/accessControl.service');
+      const accessScope = await AccessControlService.getAdminAccessScope(req.user.id);
+      
       const AdminExportService = require('../services/adminExport.service');
-      const { fileBuffer, contentType, filename } = await AdminExportService.exportStudents(req.body, req.user?.email);
+      const { fileBuffer, contentType, filename } = await AdminExportService.exportStudents(req.body, req.user?.email, accessScope);
       res.setHeader('Content-Type', contentType);
       res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
       res.status(200).send(fileBuffer);
@@ -303,7 +325,8 @@ class AdminController {
 
   static async approveStudent(req, res, next) {
     try {
-      const result = await AdminService.approveStudent(req.params.id);
+      const accessScope = await AccessControlService.getAdminAccessScope(req.user.id);
+      const result = await AdminService.approveStudent(req.params.id, accessScope);
       res.status(200).json(result);
     } catch (err) {
       next(err);
@@ -313,7 +336,8 @@ class AdminController {
   static async toggleStudentStatus(req, res, next) {
     try {
       const status = req.query.status || req.body.status;
-      const result = await AdminService.toggleStudentStatus(req.params.id, status);
+      const accessScope = await AccessControlService.getAdminAccessScope(req.user.id);
+      const result = await AdminService.toggleStudentStatus(req.params.id, status, accessScope);
       res.status(200).json(result);
     } catch (err) {
       next(err);
@@ -322,7 +346,8 @@ class AdminController {
 
   static async getStudentDetails(req, res, next) {
     try {
-      const result = await AdminService.getStudentDetails(req.params.id);
+      const accessScope = await AccessControlService.getAdminAccessScope(req.user.id);
+      const result = await AdminService.getStudentDetails(req.params.id, accessScope);
       res.status(200).json(result);
     } catch (err) {
       next(err);
@@ -332,7 +357,8 @@ class AdminController {
   static async viewStudentResume(req, res, next) {
     try {
       const path = require('path');
-      const { filePath, fileName, mimeType } = await AdminService.getStudentResumeFile(req.params.id);
+      const accessScope = await AccessControlService.getAdminAccessScope(req.user.id);
+      const { filePath, fileName, mimeType } = await AdminService.getStudentResumeFile(req.params.id, accessScope);
 
       const ext = path.extname(fileName || filePath).toLowerCase();
       let disposition = 'inline';
@@ -370,7 +396,8 @@ class AdminController {
 
   static async downloadStudentResume(req, res, next) {
     try {
-      const { filePath, fileName } = await AdminService.getStudentResumeFile(req.params.id);
+      const accessScope = await AccessControlService.getAdminAccessScope(req.user.id);
+      const { filePath, fileName } = await AdminService.getStudentResumeFile(req.params.id, accessScope);
       
       res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
       

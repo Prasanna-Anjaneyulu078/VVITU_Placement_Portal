@@ -1,25 +1,36 @@
 const prisma = require('../config/db');
+const AccessControlService = require('./accessControl.service');
 
 class AdminService {
-  static async getStats() {
-    const totalStudents = await prisma.student.count({ where: { deletedAt: null } });
-    const totalVerifiedStudents = await prisma.student.count({ where: { verificationStatus: 'VERIFIED', deletedAt: null } });
-    const totalAlumni = await prisma.alumni.count({ where: { deletedAt: null } });
-    const totalVerifiedAlumni = await prisma.alumni.count({ where: { verificationStatus: 'VERIFIED', deletedAt: null } });
-    const totalJobs = await prisma.job.count({ where: { deletedAt: null } });
-    const totalApplications = await prisma.application.count({ where: { deletedAt: null } });
-    const shortlisted = await prisma.application.count({ where: { status: 'SHORTLISTED', deletedAt: null } });
-    const selected = await prisma.application.count({ where: { status: 'SELECTED', deletedAt: null } });
-    const activeJobs = await prisma.job.count({ where: { status: 'APPROVED', deletedAt: null } });
+  static async getStats(accessScope) {
+    const studentWhere = { deletedAt: null, ...AccessControlService.getDepartmentFilter(accessScope) };
+    const alumniWhere = { deletedAt: null, ...AccessControlService.getDepartmentFilter(accessScope) };
+    const appWhere = { deletedAt: null };
+    if (accessScope && accessScope.type === 'DEPARTMENT') {
+      appWhere.student = AccessControlService.getDepartmentFilter(accessScope);
+    }
+    const totalStudents = await prisma.student.count({ where: studentWhere });
+    const totalVerifiedStudents = await prisma.student.count({ where: { ...studentWhere, verificationStatus: 'VERIFIED' } });
+    const totalAlumni = await prisma.alumni.count({ where: alumniWhere });
+    const totalVerifiedAlumni = await prisma.alumni.count({ where: { ...alumniWhere, verificationStatus: 'VERIFIED' } });
+    const totalJobs = await prisma.job.count({ where: { deletedAt: null, ...AccessControlService.getJobDepartmentFilter(accessScope) } });
+    const totalApplications = await prisma.application.count({ where: appWhere });
+    const shortlisted = await prisma.application.count({ where: { ...appWhere, status: 'SHORTLISTED' } });
+    const selected = await prisma.application.count({ where: { ...appWhere, status: 'SELECTED' } });
+    const activeJobs = await prisma.job.count({ where: { status: 'APPROVED', deletedAt: null, ...AccessControlService.getJobDepartmentFilter(accessScope) } });
 
-    const pendingStudentVerifications = await prisma.student.count({ where: { verificationStatus: 'PENDING', deletedAt: null } });
-    const pendingAlumniVerifications = await prisma.alumni.count({ where: { verificationStatus: 'PENDING', deletedAt: null } });
+    const pendingStudentVerifications = await prisma.student.count({ where: { ...studentWhere, verificationStatus: 'PENDING' } });
+    const pendingAlumniVerifications = await prisma.alumni.count({ where: { ...alumniWhere, verificationStatus: 'PENDING' } });
     const pendingVerifications = pendingStudentVerifications + pendingAlumniVerifications;
 
-    const resumesUploaded = await prisma.resume.count({ where: { deletedAt: null } });
+    let resumeWhere = { deletedAt: null };
+    if (accessScope && accessScope.type === 'DEPARTMENT') {
+      resumeWhere.student = AccessControlService.getDepartmentFilter(accessScope);
+    }
+    const resumesUploaded = await prisma.resume.count({ where: resumeWhere });
 
     const verifiedStudentsWithResume = await prisma.student.findMany({
-      where: { verificationStatus: 'VERIFIED', deletedAt: null, cgpa: { gte: 6.5 } },
+      where: { ...studentWhere, verificationStatus: 'VERIFIED', cgpa: { gte: 6.5 } },
       include: { resumes: { where: { deletedAt: null } } }
     });
     const placementReady = verifiedStudentsWithResume.filter((s) => s.resumes && s.resumes.length > 0).length;
@@ -40,8 +51,8 @@ class AdminService {
     };
   }
 
-  static async getDashboardMetrics() {
-    return this.getStats();
+  static async getDashboardMetrics(accessScope) {
+    return this.getStats(accessScope);
   }
 
   static async getAdminProfile(userIdOrEmail) {
@@ -201,13 +212,20 @@ class AdminService {
     return { success: true, message: 'Profile image deleted successfully' };
   }
 
-  static async getShortlistedApplications() {
+  static async getShortlistedApplications(accessScope) {
     const statuses = ['SHORTLISTED', 'INTERVIEW_SCHEDULED', 'SELECTED', 'OFFER_RELEASED'];
+    
+    let whereClause = {
+      status: { in: statuses },
+      deletedAt: null
+    };
+
+    if (accessScope && accessScope.type === 'DEPARTMENT') {
+      whereClause.student = AccessControlService.getDepartmentFilter(accessScope);
+    }
+
     const applications = await prisma.application.findMany({
-      where: {
-        status: { in: statuses },
-        deletedAt: null
-      },
+      where: whereClause,
       include: {
         job: true,
         student: {
@@ -266,17 +284,26 @@ class AdminService {
     });
   }
 
-  static async getAllStudents(query = {}) {
+  static async getAllStudents(query = {}, accessScope) {
     try {
       const page = Math.max(parseInt(query.page, 10) || 1, 1);
       const limit = Math.min(Math.max(parseInt(query.limit, 10) || 10, 1), 100);
       const search = (query.search || '').trim();
-      const department = (query.department || '').trim();
       const verificationStatus = (query.verificationStatus || '').trim();
+      
+      let departmentFilter = {};
+      if (accessScope && accessScope.type === 'DEPARTMENT') {
+        departmentFilter = AccessControlService.getDepartmentFilter(accessScope, 'department');
+      } else {
+        const department = (query.department || '').trim();
+        if (department) {
+          departmentFilter = { department: { equals: department, mode: 'insensitive' } };
+        }
+      }
 
       const where = {
         deletedAt: null,
-        ...(department && { department: { equals: department, mode: 'insensitive' } }),
+        ...departmentFilter,
         ...(verificationStatus && { verificationStatus: { equals: verificationStatus, mode: 'insensitive' } }),
         ...(search && {
           OR: [
@@ -359,13 +386,17 @@ class AdminService {
     }
   }
 
-  static async getAlumniDocument(id) {
+  static async getAlumniDocument(id, accessScope) {
     const alumni = await prisma.alumni.findUnique({
       where: { id: BigInt(id) }
     });
 
     if (!alumni) {
       throw { statusCode: 404, message: 'Alumni not found' };
+    }
+
+    if (accessScope && accessScope.type === 'DEPARTMENT' && !AccessControlService.canAccessDepartment(accessScope, alumni.department)) {
+      throw { statusCode: 403, message: 'Forbidden: Cannot access documents of alumni from other departments.' };
     }
 
     if (!alumni.verificationDocumentUrl) {
@@ -402,11 +433,21 @@ class AdminService {
     };
   }
 
-  static async getAllAlumni(query = {}) {
-    const { sortBy, sortOrder, order, search, department, verificationStatus } = query;
+  static async getAllAlumni(query = {}, accessScope) {
+    const { sortBy, sortOrder, order, search, verificationStatus } = query;
     const page = Math.max(parseInt(query.page, 10) || 1, 1);
     const limit = Math.min(Math.max(parseInt(query.limit, 10) || 10, 1), 100);
     const direction = (sortOrder || order || '').toLowerCase() === 'asc' ? 'asc' : 'desc';
+
+    let departmentFilter = {};
+    if (accessScope && accessScope.type === 'DEPARTMENT') {
+      departmentFilter = AccessControlService.getDepartmentFilter(accessScope, 'department');
+    } else {
+      const department = (query.department || '').trim();
+      if (department) {
+        departmentFilter = { department: { equals: department, mode: 'insensitive' } };
+      }
+    }
 
     const allowedFields = {
       company: { company: direction },
@@ -428,7 +469,7 @@ class AdminService {
 
     const where = {
       deletedAt: null,
-      ...(department && { department: { equals: department, mode: 'insensitive' } }),
+      ...departmentFilter,
       ...(verificationStatus && { verificationStatus: { equals: verificationStatus, mode: 'insensitive' } }),
       ...(search && {
         OR: [
@@ -488,7 +529,7 @@ class AdminService {
     return data;
   }
 
-  static async verifyAlumni(alumniId, status) {
+  static async verifyAlumni(alumniId, status, accessScope) {
     const validStatuses = ['VERIFIED', 'REJECTED', 'NEEDS_CORRECTION'];
     if (!validStatuses.includes(status)) {
       throw { statusCode: 400, message: 'Invalid verification status' };
@@ -500,6 +541,10 @@ class AdminService {
 
     if (!alumni) {
       throw { statusCode: 404, message: 'Alumni account not found.' };
+    }
+    
+    if (accessScope && accessScope.type === 'DEPARTMENT' && !AccessControlService.canAccessDepartment(accessScope, alumni.department)) {
+      throw { statusCode: 403, message: 'Forbidden: Cannot verify alumni from other departments.' };
     }
 
     const updated = await prisma.alumni.update({
@@ -553,7 +598,7 @@ class AdminService {
     return { success: true, message: `Job status updated to ${status}`, job: updated };
   }
 
-  static async deleteStudent(studentId, operatorEmail = null, ipAddress = null) {
+  static async deleteStudent(studentId, accessScope, operatorEmail = null, ipAddress = null) {
     let student;
     try {
       student = await prisma.student.findUnique({
@@ -566,6 +611,10 @@ class AdminService {
 
     if (!student) {
       throw { statusCode: 404, message: 'Student account not found.' };
+    }
+    
+    if (accessScope && accessScope.type === 'DEPARTMENT' && !AccessControlService.canAccessDepartment(accessScope, student.department)) {
+      throw { statusCode: 403, message: 'Forbidden: Cannot delete students from other departments.' };
     }
 
     const sid = student.id;
@@ -611,7 +660,7 @@ class AdminService {
     };
   }
 
-  static async deleteAlumni(alumniId, operatorEmail = null, ipAddress = null) {
+  static async deleteAlumni(alumniId, accessScope, operatorEmail = null, ipAddress = null) {
     let alumni;
     try {
       alumni = await prisma.alumni.findUnique({
@@ -624,6 +673,10 @@ class AdminService {
 
     if (!alumni) {
       throw { statusCode: 404, message: 'Alumni account not found.' };
+    }
+    
+    if (accessScope && accessScope.type === 'DEPARTMENT' && !AccessControlService.canAccessDepartment(accessScope, alumni.department)) {
+      throw { statusCode: 403, message: 'Forbidden: Cannot delete alumni from other departments.' };
     }
 
     if (alumni.user?.role === 'ADMIN' || alumni.user?.role === 'SUPER_ADMIN') {
@@ -680,7 +733,7 @@ class AdminService {
     };
   }
 
-  static async resetStudentPassword(studentId) {
+  static async resetStudentPassword(studentId, accessScope) {
     const { hashPassword } = require('../utils/password.utils');
     const { generateStudentDefaultPassword } = require('../utils/studentPassword.util');
     let student;
@@ -695,6 +748,10 @@ class AdminService {
 
     if (!student || !student.user) {
       throw { statusCode: 404, message: 'Student account not found.' };
+    }
+    
+    if (accessScope && accessScope.type === 'DEPARTMENT' && !AccessControlService.canAccessDepartment(accessScope, student.department)) {
+      throw { statusCode: 403, message: 'Forbidden: Cannot reset password for students from other departments.' };
     }
 
     const rollNumber = student.rollNumber;
@@ -799,6 +856,10 @@ class AdminService {
     if (!student) {
       throw { statusCode: 404, message: 'Student account not found' };
     }
+    
+    if (accessScope && accessScope.type === 'DEPARTMENT' && !AccessControlService.canAccessDepartment(accessScope, student.department)) {
+      throw { statusCode: 403, message: 'Forbidden: Cannot approve students from other departments.' };
+    }
 
     if (student.verificationStatus === 'VERIFIED') {
       return { success: false, message: 'Student is already approved' };
@@ -812,7 +873,7 @@ class AdminService {
     return { success: true, message: 'Student approved successfully' };
   }
 
-  static async toggleStudentStatus(studentIdOrUserId, status) {
+  static async toggleStudentStatus(studentIdOrUserId, status, accessScope) {
     let user = null;
     try {
       user = await prisma.user.findUnique({
@@ -833,6 +894,15 @@ class AdminService {
       throw { statusCode: 404, message: 'User account not found' };
     }
 
+    if (accessScope && accessScope.type === 'DEPARTMENT') {
+      const student = await prisma.student.findUnique({
+        where: { userId: user.id }
+      });
+      if (student && !AccessControlService.canAccessDepartment(accessScope, student.department)) {
+        throw { statusCode: 403, message: 'Forbidden: Cannot toggle status for students from other departments.' };
+      }
+    }
+
     const nextStatus = (status || '').toUpperCase() === 'ACTIVE' ? 'ACTIVE' : 'SUSPENDED';
 
     await prisma.user.update({
@@ -843,7 +913,7 @@ class AdminService {
     return { success: true, message: `Account status updated to ${nextStatus}` };
   }
 
-  static async getStudentDetails(studentIdParam) {
+  static async getStudentDetails(studentIdParam, accessScope) {
     let studentId;
     try {
       studentId = BigInt(studentIdParam);
@@ -875,6 +945,10 @@ class AdminService {
 
     if (!student || student.deletedAt) {
       throw { statusCode: 404, message: 'Student account not found.' };
+    }
+    
+    if (accessScope && accessScope.type === 'DEPARTMENT' && !AccessControlService.canAccessDepartment(accessScope, student.department)) {
+      throw { statusCode: 403, message: 'Forbidden: Cannot view details of students from other departments.' };
     }
 
     const user = student.user || {};
@@ -950,7 +1024,7 @@ class AdminService {
     };
   }
 
-  static async getStudentResumeFile(studentIdParam) {
+  static async getStudentResumeFile(studentIdParam, accessScope) {
     let studentId;
     try {
       studentId = BigInt(studentIdParam);
@@ -970,6 +1044,10 @@ class AdminService {
 
     if (!student || student.deletedAt) {
       throw { statusCode: 404, message: 'Student not found.' };
+    }
+    
+    if (accessScope && accessScope.type === 'DEPARTMENT' && !AccessControlService.canAccessDepartment(accessScope, student.department)) {
+      throw { statusCode: 403, message: 'Forbidden: Cannot access resumes of students from other departments.' };
     }
 
     const resumeRecord = await prisma.resume.findFirst({

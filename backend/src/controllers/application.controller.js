@@ -1,4 +1,5 @@
 const ApplicationService = require('../services/application.service');
+const AccessControlService = require('../services/accessControl.service');
 
 class ApplicationController {
   static async applyForJob(req, res, next) {
@@ -43,6 +44,9 @@ class ApplicationController {
     try {
       const { status } = req.body;
       const caller = { userId: req.user.id, role: req.user.role };
+      if (req.user.role === 'ADMIN' || req.user.role === 'SUPER_ADMIN') {
+        caller.accessScope = await AccessControlService.getAdminAccessScope(req.user.id);
+      }
       const result = await ApplicationService.updateStatus(req.params.id, status, caller);
       res.status(200).json(result);
     } catch (err) {
@@ -59,12 +63,18 @@ class ApplicationController {
         const applications = await ApplicationService.getJobApplicationsForAlumni(req.user.id, jobId);
         return res.status(200).json(applications);
       } else {
+        const accessScope = await AccessControlService.getAdminAccessScope(req.user.id);
         const prisma = require('../config/db');
+        let whereClause = {
+          jobId: BigInt(jobId),
+          deletedAt: null
+        };
+        if (accessScope && accessScope.type === 'DEPARTMENT') {
+          whereClause.student = AccessControlService.getDepartmentFilter(accessScope, 'department');
+        }
+
         const applications = await prisma.application.findMany({
-          where: {
-            jobId: BigInt(jobId),
-            deletedAt: null
-          },
+          where: whereClause,
           include: {
             student: {
               include: {
@@ -107,6 +117,9 @@ class ApplicationController {
   static async getApplicationDetails(req, res, next) {
     try {
       const caller = { userId: req.user.id, role: req.user.role };
+      if (req.user.role === 'ADMIN' || req.user.role === 'SUPER_ADMIN') {
+        caller.accessScope = await AccessControlService.getAdminAccessScope(req.user.id);
+      }
       const details = await ApplicationService.getApplicationDetails(req.params.id, caller);
       res.status(200).json(details);
     } catch (err) {
@@ -118,6 +131,9 @@ class ApplicationController {
     try {
       const path = require('path');
       const caller = { userId: req.user.id, role: req.user.role };
+      if (req.user.role === 'ADMIN' || req.user.role === 'SUPER_ADMIN') {
+        caller.accessScope = await AccessControlService.getAdminAccessScope(req.user.id);
+      }
       const { filePath, fileName, mimeType } = await ApplicationService.getApplicationResumeFile(req.params.id, caller);
 
       const ext = path.extname(fileName || filePath).toLowerCase();
@@ -157,6 +173,9 @@ class ApplicationController {
   static async downloadResume(req, res, next) {
     try {
       const caller = { userId: req.user.id, role: req.user.role };
+      if (req.user.role === 'ADMIN' || req.user.role === 'SUPER_ADMIN') {
+        caller.accessScope = await AccessControlService.getAdminAccessScope(req.user.id);
+      }
       const { filePath, fileName } = await ApplicationService.getApplicationResumeFile(req.params.id, caller);
 
       if (filePath && (filePath.startsWith('http://') || filePath.startsWith('https://'))) {

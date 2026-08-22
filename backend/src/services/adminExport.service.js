@@ -1,17 +1,21 @@
 const prisma = require('../config/db');
 
 class AdminExportService {
-  static async exportStudents(requestData, operatorEmail = null) {
+  static async exportStudents(requestData, operatorEmail = null, accessScope = null) {
     const { studentIds, format = 'CSV', fields = ['Roll Number', 'Name', 'Email', 'Department', 'Mobile Number', 'CGPA', 'Status'] } = requestData;
 
     if (!Array.isArray(studentIds) || studentIds.length === 0) {
       throw { statusCode: 400, message: 'Student IDs array cannot be empty' };
     }
+    
+    const AccessControlService = require('./accessControl.service');
+    const deptFilter = accessScope ? AccessControlService.getDepartmentFilter(accessScope, 'department') : {};
 
     const students = await prisma.student.findMany({
       where: {
         id: { in: studentIds.map((id) => BigInt(id)) },
-        deletedAt: null
+        deletedAt: null,
+        ...deptFilter
       },
       include: {
         user: { select: { name: true, email: true } }
