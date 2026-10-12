@@ -657,3 +657,18 @@ No explicit license has been specified for this repository. All rights reserved 
 
 **Developed for Vasireddy Venkatadri Institute of Technology (VVIT)**  
 *Maintained by Institutional Placement & Engineering Team*
+# #   A I   P l a c e m e n t   A s s i s t a n t  
+ T h i s   p r o j e c t   i n c l u d e s   a n   A I   P l a c e m e n t   A s s i s t a n t   u s i n g   G o o g l e   G e m i n i   a n d   R e t r i e v a l - A u g m e n t e d   G e n e r a t i o n   ( R A G ) .  
+ # # #   R A G   A r c h i t e c t u r e  
+ U s e r   Q u e s t i o n   - >   A u t h e n t i c a t i o n   - >   Q u e s t i o n   E m b e d d i n g   - >   V e c t o r   R e t r i e v a l   ( p g v e c t o r )   - >   A u t h o r i z e d   C o n t e x t   - >   G e m i n i   L L M   - >   G r o u n d e d   A n s w e r   - >   S o u r c e s  
+ # # #   E n v i r o n m e n t   V a r i a b l e s  
+ E n s u r e   y o u   c o n f i g u r e   t h e   f o l l o w i n g   i n   y o u r   \ . e n v \ :  
+ -   \ G E M I N I _ A P I _ K E Y = \ "   > >   R E A D M E . m d 
+ e c h o    
+ -  
+ \ G E M I N I _ M O D E L = g e m i n i - 2 . 5 - f l a s h \ "  
+ -   \ E M B E D D I N G _ M O D E L = t e x t - e m b e d d i n g - 0 0 4 \ "   > >   R E A D M E . m d 
+ e c h o    
+ -  
+ \ R A G _ T O P _ K = 5 \ "  
+ 

@@ -3,8 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { DataProvider } from './context/DataContext';
-import PrivateRoute from './components/common/PrivateRoute';
-import { PageLoader, ErrorBoundary } from './components/common';
+import PrivateRoute from './shared/components/PrivateRoute/index.jsx';
+import { PageLoader, ErrorBoundary } from './shared/components/';
 
 /**
  * Helper to auto-retry dynamic component imports upon deployment chunk mismatches.
@@ -29,37 +29,37 @@ const lazyWithRetry = (componentImport) =>
   });
 
 // Public & Auth Routes (Lazy Loaded with Retry)
-const Login = lazyWithRetry(() => import('./pages/Login'));
-const Register = lazyWithRetry(() => import('./pages/Register'));
-const NotFound = lazyWithRetry(() => import('./pages/NotFound'));
-const PendingVerification = lazyWithRetry(() => import('./pages/PendingVerification'));
-const RejectedVerification = lazyWithRetry(() => import('./pages/RejectedVerification'));
-const ChangePassword = lazyWithRetry(() => import('./pages/ChangePassword'));
-const JobDetails = lazyWithRetry(() => import('./pages/JobDetails'));
+const Login = lazyWithRetry(() => import('./features/auth/pages/Login'));
+const Register = lazyWithRetry(() => import('./features/auth/pages/Register'));
+const NotFound = lazyWithRetry(() => import('./pages/NotFound/index.jsx'));
+const PendingVerification = lazyWithRetry(() => import('./features/auth/pages/PendingVerification'));
+const RejectedVerification = lazyWithRetry(() => import('./features/auth/pages/RejectedVerification'));
+const ChangePassword = lazyWithRetry(() => import('./features/auth/pages/ChangePassword'));
+const JobDetails = lazyWithRetry(() => import('./pages/JobDetails/index.jsx'));
 
 // Student Routes (Lazy Loaded with Retry)
-const StudentDashboard = lazyWithRetry(() => import('./pages/student/StudentDashboard'));
-const StudentProfile = lazyWithRetry(() => import('./pages/student/StudentProfile'));
-const StudentJobs = lazyWithRetry(() => import('./pages/student/StudentJobs'));
-const StudentApplications = lazyWithRetry(() => import('./pages/student/StudentApplications'));
-const StudentApplicationDetails = lazyWithRetry(() => import('./pages/student/StudentApplicationDetails'));
+const StudentDashboard = lazyWithRetry(() => import('./features/student/pages/StudentDashboard'));
+const StudentProfile = lazyWithRetry(() => import('./features/student/pages/StudentProfile'));
+const StudentJobs = lazyWithRetry(() => import('./features/student/pages/StudentJobs'));
+const StudentApplications = lazyWithRetry(() => import('./features/student/pages/StudentApplications'));
+const StudentApplicationDetails = lazyWithRetry(() => import('./features/student/pages/StudentApplicationDetails'));
 
 // Alumni Routes (Lazy Loaded with Retry)
-const AlumniDashboard = lazyWithRetry(() => import('./pages/alumni/AlumniDashboard'));
-const AlumniStudentApplications = lazyWithRetry(() => import('./pages/alumni/AlumniStudentApplications'));
-const AlumniPostJob = lazyWithRetry(() => import('./pages/alumni/AlumniPostJob'));
-const AlumniEditJob = lazyWithRetry(() => import('./pages/alumni/AlumniEditJob'));
-const AlumniMyJobs = lazyWithRetry(() => import('./pages/alumni/AlumniMyJobs'));
-const AlumniProfile = lazyWithRetry(() => import('./pages/alumni/AlumniProfile'));
+const AlumniDashboard = lazyWithRetry(() => import('./features/alumni/pages/AlumniDashboard'));
+const AlumniStudentApplications = lazyWithRetry(() => import('./features/alumni/pages/AlumniStudentApplications'));
+const AlumniPostJob = lazyWithRetry(() => import('./features/alumni/pages/AlumniPostJob'));
+const AlumniEditJob = lazyWithRetry(() => import('./features/alumni/pages/AlumniEditJob'));
+const AlumniMyJobs = lazyWithRetry(() => import('./features/alumni/pages/AlumniMyJobs'));
+const AlumniProfile = lazyWithRetry(() => import('./features/alumni/pages/AlumniProfile'));
 
 // Admin Routes (Lazy Loaded with Retry)
-const AdminDashboard = lazyWithRetry(() => import('./pages/admin/AdminDashboard'));
-const AdminVerifications = lazyWithRetry(() => import('./pages/admin/AdminVerifications'));
-const AdminJobs = lazyWithRetry(() => import('./pages/admin/AdminJobs'));
-const AdminAlumni = lazyWithRetry(() => import('./pages/admin/AdminAlumni'));
-const AdminProfile = lazyWithRetry(() => import('./pages/admin/AdminProfile'));
-const StudentsPage = lazyWithRetry(() => import('./pages/admin/UserManagement/StudentsPage'));
-const AdminManagement = lazyWithRetry(() => import('./pages/admin/UserManagement/AdminManagement'));
+const AdminDashboard = lazyWithRetry(() => import('./features/admin/pages/AdminDashboard'));
+const AdminVerifications = lazyWithRetry(() => import('./features/admin/pages/AdminVerifications'));
+const AdminJobs = lazyWithRetry(() => import('./features/admin/pages/AdminJobs'));
+const AdminAlumni = lazyWithRetry(() => import('./features/admin/pages/AdminAlumni'));
+const AdminProfile = lazyWithRetry(() => import('./features/admin/pages/AdminProfile'));
+const StudentsPage = lazyWithRetry(() => import('./features/admin/pages/UserManagement/StudentsPage'));
+const AdminManagement = lazyWithRetry(() => import('./features/admin/pages/UserManagement/AdminManagement'));
 
 /**
  * TokenGuard - Simplified since JWT is now HttpOnly and cannot be parsed here.
@@ -134,3 +134,4 @@ export default function App() {
     </DataProvider>
   );
 }
+

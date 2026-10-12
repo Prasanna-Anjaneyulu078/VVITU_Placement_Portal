@@ -1,4 +1,5 @@
 const JobService = require('../services/job.service');
+const ragService = require('../ai/rag.service');
 
 class JobController {
   static async getApprovedJobs(req, res, next) {
@@ -37,6 +38,10 @@ class JobController {
     try {
       const filesToPass = req.file || req.files;
       const job = await JobService.createJob(req.user.id, req.user.role, req.body, filesToPass);
+      // Index job asynchronously if approved
+      if (job.status === 'APPROVED') {
+        ragService.indexJob(job).catch(err => console.error('RAG Indexing error:', err));
+      }
       res.status(201).json(job);
     } catch (err) {
       next(err);
@@ -60,6 +65,9 @@ class JobController {
         accessScope = await AccessControlService.getAdminAccessScope(req.user.id);
       }
       const job = await JobService.updateJob(req.params.id, req.user.id, req.user.role, req.body, accessScope);
+      if (job.status === 'APPROVED') {
+        ragService.indexJob(job).catch(err => console.error('RAG Indexing error:', err));
+      }
       res.status(200).json(job);
     } catch (err) {
       next(err);
@@ -91,6 +99,9 @@ class JobController {
       const status = req.query.status || req.body.status;
       const reason = req.query.reason || req.body.reason || null;
       const job = await JobService.updateJobStatus(req.params.id, status, reason, accessScope);
+      if (job.status === 'APPROVED') {
+        ragService.indexJob(job).catch(err => console.error('RAG Indexing error:', err));
+      }
       res.status(200).json(job);
     } catch (err) {
       next(err);

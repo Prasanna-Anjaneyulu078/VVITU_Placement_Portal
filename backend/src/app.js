@@ -16,6 +16,7 @@ const resumeRoutes = require('./routes/resume.routes');
 const eligibilityRoutes = require('./routes/eligibility.routes');
 const superAdminRoutes = require('./routes/superAdmin.routes');
 const publicRoutes = require('./routes/public.routes');
+const aiRoutes = require('./routes/ai.routes');
 
 const app = express();
 
@@ -62,6 +63,7 @@ app.use('/api/resumes', resumeRoutes);
 app.use('/api/eligibility', eligibilityRoutes);
 // Public routes: /api/departments and /api/health (health also served above)
 app.use('/api', publicRoutes);
+app.use('/api/ai', aiRoutes);
 
 // 6. Error Handlers
 app.use(notFoundHandler);
