@@ -5,11 +5,13 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.1-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![Node.js](https://img.shields.io/badge/Node.js-v18+-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
 [![Express](https://img.shields.io/badge/Express-4.21-000000?logo=express&logoColor=white)](https://expressjs.com/)
-[![Prisma](https://img.shields.io/badge/Prisma-6.4-2D3748?logo=prisma&logoColor=white)](https://www.prisma.io/)
+[![Prisma](https://img.shields.io/badge/Prisma-5.10-2D3748?logo=prisma&logoColor=white)](https://www.prisma.io/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-v14+-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![pgvector](https://img.shields.io/badge/pgvector-0.2.1-336791?logo=postgresql&logoColor=white)](https://github.com/pgvector/pgvector)
+[![Google Gemini](https://img.shields.io/badge/Google_Gemini-2.5_Flash-8E75B2?logo=googlegemini&logoColor=white)](https://ai.google.dev/)
 [![Cloudflare Pages](https://img.shields.io/badge/Cloudflare_Pages-Deployed-F38020?logo=cloudflare&logoColor=white)](https://vvitu-placement-portal.pages.dev/)
 
-A centralized, enterprise-grade **Campus Placement & Recruitment Portal** engineered for Vasireddy Venkatadri Institute of Technology (VVIT). The platform seamlessly connects students, alumni recruiters, placement officers, and super administrators to manage job postings, student eligibility matching, resume parsing, OCR document verification, screening questionnaires, and application tracking.
+A centralized, enterprise-grade **Campus Placement & Recruitment Portal** engineered for Vasireddy Venkatadri Institute of Technology (VVIT). The platform seamlessly connects students, alumni recruiters, placement officers, and super administrators to manage job postings, student eligibility matching, resume parsing, neural OCR degree verification, customizable screening questionnaires, end-to-end application lifecycle tracking, and an **AI Placement Assistant powered by Google Gemini 2.5 Flash and pgvector RAG**.
 
 ---
 
@@ -20,25 +22,27 @@ A centralized, enterprise-grade **Campus Placement & Recruitment Portal** engine
   - [1. Project Overview](#1-project-overview)
   - [2. Problem Statement](#2-problem-statement)
   - [3. Key Features](#3-key-features)
-    - [Authentication \& Security](#authentication--security)
+    - [Authentication & Security](#authentication--security)
     - [Student Capabilities](#student-capabilities)
     - [Alumni / Recruiter Capabilities](#alumni--recruiter-capabilities)
     - [Administrator Capabilities](#administrator-capabilities)
     - [Super Admin Capabilities](#super-admin-capabilities)
+    - [AI Placement Assistant (RAG Engine)](#ai-placement-assistant-rag-engine)
   - [4. Application Workflow](#4-application-workflow)
   - [5. System Architecture](#5-system-architecture)
   - [6. Technology Stack](#6-technology-stack)
   - [7. Repository Directory Structure](#7-repository-directory-structure)
   - [8. Frontend Architecture](#8-frontend-architecture)
   - [9. Backend Architecture](#9-backend-architecture)
-  - [10. Authentication \& Authorization](#10-authentication--authorization)
+  - [10. Authentication & Authorization](#10-authentication--authorization)
   - [11. Core System Modules](#11-core-system-modules)
     - [Student Module](#student-module)
-    - [Alumni Module \& OCR Engine](#alumni-module--ocr-engine)
-    - [Admin \& Moderation Module](#admin--moderation-module)
-    - [Job Lifecycle \& Application Workflows](#job-lifecycle--application-workflows)
-  - [12. Resume \& Document Handling](#12-resume--document-handling)
-  - [13. Database Schema \& Entity Relationships](#13-database-schema--entity-relationships)
+    - [Alumni Module & OCR Engine](#alumni-module--ocr-engine)
+    - [Admin & Moderation Module](#admin--moderation-module)
+    - [Job Lifecycle & Application Workflows](#job-lifecycle--application-workflows)
+    - [AI Placement Assistant & RAG Subsystem](#ai-placement-assistant--rag-subsystem)
+  - [12. Resume & Document Handling](#12-resume--document-handling)
+  - [13. Database Schema & Entity Relationships](#13-database-schema--entity-relationships)
   - [14. REST API Documentation](#14-rest-api-documentation)
     - [Authentication Endpoints (`/api/auth`)](#authentication-endpoints-apiauth)
     - [Student Endpoints (`/api/student`)](#student-endpoints-apistudent)
@@ -46,13 +50,14 @@ A centralized, enterprise-grade **Campus Placement & Recruitment Portal** engine
     - [Job Endpoints (`/api/jobs`)](#job-endpoints-apijobs)
     - [Admin Endpoints (`/api/admin`)](#admin-endpoints-apiadmin)
     - [Super Admin Endpoints (`/api/super-admin`)](#super-admin-endpoints-apisuper-admin)
-  - [15. Environment Setup \& Configuration](#15-environment-setup--configuration)
-  - [16. Local Installation \& Setup Guide](#16-local-installation--setup-guide)
-  - [17. Automated \& Manual Testing](#17-automated--manual-testing)
+    - [AI Placement Assistant Endpoints (`/api/ai`)](#ai-placement-assistant-endpoints-apiai)
+  - [15. Environment Setup & Configuration](#15-environment-setup--configuration)
+  - [16. Local Installation & Setup Guide](#16-local-installation--setup-guide)
+  - [17. Automated & Manual Testing](#17-automated--manual-testing)
   - [18. Security Architecture](#18-security-architecture)
-  - [19. Error Handling \& Reliability](#19-error-handling--reliability)
+  - [19. Error Handling & Reliability](#19-error-handling--reliability)
   - [20. Deployment Architecture](#20-deployment-architecture)
-  - [21. Known Limitations \& Future Roadmap](#21-known-limitations--future-roadmap)
+  - [21. Known Limitations & Future Roadmap](#21-known-limitations--future-roadmap)
   - [22. Contributing](#22-contributing)
   - [23. License](#23-license)
 
@@ -60,12 +65,12 @@ A centralized, enterprise-grade **Campus Placement & Recruitment Portal** engine
 
 ## 1. Project Overview
 
-The **VVITU Placement Portal** modernizes and automates institutional placement operations. Traditionally, placement officers rely on manual spreadsheets, unverified communication channels, and fragmented Google Forms. This portal unifies the placement lifecycle into a role-governed web application.
+The **VVITU Placement Portal** modernizes and automates institutional placement operations. Traditionally, placement officers rely on manual spreadsheets, unverified communication channels, and fragmented Google Forms. This portal unifies the placement lifecycle into a role-governed web application with real-time analytics and conversational AI assistance.
 
 - **Target Users**:
-  - **Students**: Search matching placement opportunities, verify eligibility (CGPA, backlogs, department), upload resumes, fill screening questionnaires, and track application statuses.
-  - **Alumni / Recruiters**: Post job openings, upload company details, undergo degree verification (OCR backed), screen applicants, and manage candidate pipelines.
-  - **Placement Officers (Admins)**: Approve or reject job postings, verify alumni registrations, manage student records, view placement statistics, export candidate lists to Excel/CSV/PDF, and delete obsolete postings.
+  - **Students**: Search matching placement opportunities, verify eligibility (CGPA, backlogs, department), upload resumes, fill screening questionnaires, track application statuses, and consult the AI Placement Assistant.
+  - **Alumni / Recruiters**: Post job openings, upload company details, undergo degree verification (neural OCR backed), screen applicants, and manage candidate pipelines.
+  - **Placement Officers (Admins)**: Approve or reject job postings, verify alumni registrations, manage student records, view placement statistics, export candidate lists to Excel/CSV/PDF, synchronize RAG embeddings, and delete obsolete postings.
   - **Super Administrators**: Create and manage administrator accounts, set institutional parameters, and inspect security audit logs.
 
 ---
@@ -73,13 +78,15 @@ The **VVITU Placement Portal** modernizes and automates institutional placement 
 ## 2. Problem Statement
 
 Higher education institutions face critical operational bottlenecks during recruitment drives:
+
 1. **Manual Eligibility Verification**: Filtering hundreds of students based on CGPA thresholds, backlog limits, and branch restrictions is error-prone.
 2. **Unverified Job Postings**: Fraudulent or unapproved job offers jeopardize student safety.
 3. **Application Fragmentation**: Tracking applicant statuses across multiple recruiters creates communication gaps.
 4. **Document Loss Across Sessions**: Misconfigured relative upload storage causes files to disappear across restarts.
 5. **Lack of Screening Integration**: Recruiters require custom screening questions (notice period, location preference) prior to candidate shortlisting.
+6. **Repetitive Placement Inquiries**: Students flood placement officers with queries regarding job eligibility, deadline dates, and offer policies.
 
-The VVITU Placement Portal solves these issues via automated matching rules, OCR degree verification, deterministic relative storage resolution, customizable screening questionnaires, and soft-delete capabilities.
+The VVITU Placement Portal solves these issues via automated matching rules, OCR degree verification, deterministic relative storage resolution, customizable screening questionnaires, soft-delete capabilities, and a 24/7 grounded AI assistant.
 
 ---
 
@@ -94,7 +101,7 @@ The VVITU Placement Portal solves these issues via automated matching rules, OCR
 ### Student Capabilities
 - **Dashboard & Placement Readiness**: Dynamic progress bar calculating profile completeness, CGPA status, and resume upload state.
 - **Job Discovery & Matching Engine**: Filter jobs by company, job type, status, and department. Instant eligibility feedback based on CGPA and backlog criteria.
-- **Resume Management & Skill Extraction**: PDF resume upload with automated skill extraction and inline PDF preview.
+- **Resume Management & Skill Extraction**: PDF resume upload with automated skill extraction and inline canvas PDF preview.
 - **Pre-Application Screening Modal**: Custom questionnaire modal for job postings requiring screening answers.
 - **Application Tracking**: Real-time status updates (`APPLIED`, `SHORTLISTED`, `SELECTED`, `REJECTED`).
 
@@ -109,9 +116,16 @@ The VVITU Placement Portal solves these issues via automated matching rules, OCR
 - **Student Directory & Bulk Actions**: Inspect student profiles, reset passwords, filter by verification status, and perform bulk export (`Excel`, `CSV`, `PDF`).
 - **Alumni Verification Desk**: Review alumni verification documents, inspect OCR confidence scores, and verify accounts.
 - **Placement Analytics**: Statistical summary widgets for active jobs, total applications, eligible candidate counts, and shortlisted candidates.
+- **RAG Knowledge Base Sync**: Trigger automated vector indexing and monitor indexed chunk counts.
 
 ### Super Admin Capabilities
 - **Admin Management**: Create new administrator accounts, assign designations, toggle active/suspended status, and reset admin passwords.
+
+### AI Placement Assistant (RAG Engine)
+- **Zero-Hallucination Answers**: Powered by Google Gemini 2.5 Flash and PostgreSQL `pgvector`.
+- **Semantic Job Search**: Generates 768-dimensional embeddings (`gemini-embedding-2`) to retrieve matching job details, prerequisites, and placement guidelines.
+- **Personalized Context**: Evaluates the authenticated user's CGPA, branch, and application status before answering eligibility queries.
+- **Source Attribution**: Transparently cites the exact job postings and knowledge items referenced in each generated response.
 
 ---
 
@@ -122,30 +136,24 @@ flowchart TD
     A[User Enters Portal] --> B{Role Authenticated?}
     B -->|No| C[Login / Register]
     B -->|Yes| D{User Role}
-
     C -->|Student Register| E[Create Student Profile]
     C -->|Alumni Register| F[Upload Degree Doc & OCR Check]
-
     D -->|STUDENT| G[Student Dashboard]
     D -->|ALUMNI| H[Alumni Dashboard]
     D -->|ADMIN| I[Admin Dashboard]
     D -->|SUPER_ADMIN| J[Super Admin Panel]
-
     H --> K[Post New Job]
     K --> L[Job Marked PENDING]
     I --> M[Review Job Moderation Queue]
-    M -->|Approve| N[Job Published - Status ACTIVE]
+    M -->|Approve| N[Job Published & Vector Indexed in pgvector]
     M -->|Reject| O[Job Rejected with Reason]
-
-    G --> P[Browse Active Jobs]
+    G --> P[Browse Active Jobs / Consult AI Assistant]
     P --> Q{Eligible?}
     Q -->|Yes| R[Fill Screening & Submit Application]
     Q -->|No| S[Eligibility Warning Displayed]
-
     H --> T[Review Applications & Screening Answers]
     T --> U[Update Application Stage: SHORTLISTED / SELECTED]
-    
-    I --> V[Manage Students, Verify Alumni & Delete Jobs]
+    I --> V[Manage Students, Verify Alumni, Export Data & Sync RAG]
     J --> W[Provision Admin Accounts & Audit Logs]
 ```
 
@@ -154,38 +162,38 @@ flowchart TD
 ## 5. System Architecture
 
 ```text
-                               +----------------------------------+
-                               |     Browser Client (SPA)         |
-                               | React 19 + Vite 6 + Tailwind v4  |
-                               +----------------------------------+
-                                                |
-                                    HTTPS / REST API Requests
-                                                |
-                                                v
-                               +----------------------------------+
-                               |       Node.js + Express API      |
-                               |    Port 8082 / Production Origin |
-                               +----------------------------------+
-                                   |            |            |
-             +---------------------+            |            +---------------------+
-             |                                  |                                  |
-             v                                  v                                  v
-+------------------------+          +-----------------------+          +------------------------+
-|  JWT Auth & RBAC       |          |  Upload Storage       |          |  OCR Verification      |
-|  Middleware            |          |  /uploads/{subfolder} |          |  Tesseract.js Engine   |
-+------------------------+          +-----------------------+          +------------------------+
-             |                                  |                                  |
-             +---------------------+            |            +---------------------+
-                                   |            |            |
-                                   v            v            v
-                               +----------------------------------+
-                               |       Prisma ORM Client          |
-                               +----------------------------------+
-                                                |
-                                                v
-                               +----------------------------------+
-                               |      PostgreSQL Database         |
-                               +----------------------------------+
++-------------------------------------------------------------+
+|                     Browser Client (SPA)                    |
+|          React 19 + Vite 6 + Tailwind CSS v4 + Motion       |
+|            (Floating AI Placement Assistant Widget)         |
++-------------------------------------------------------------+
+                               |
+                               | HTTPS / REST API Requests
+                               v
++-------------------------------------------------------------+
+|                  Node.js + Express API Server               |
+|                     Port 8082 / Production Origin           |
++-------------------------------------------------------------+
+   |            |                 |                     |
+   v            v                 v                     v
++------------+ +---------------+ +------------------+ +-----------------+
+| JWT & RBAC | | File Storage  | | Neural OCR Engine| | RAG & AI Engine |
+| Middleware | | Local / Cloud | | Tesseract.js 7.0 | | Google Gemini   |
+|            | | /uploads      | | Sharp Processor  | | 2.5 Flash SDK   |
++------------+ +---------------+ +------------------+ +-----------------+
+   |                                                    |
+   +-----------------------+----------------------------+
+                           |
+                           v
++-------------------------------------------------------------+
+|                      Prisma ORM Client                      |
++-------------------------------------------------------------+
+                           |
+                           v
++-------------------------------------------------------------+
+|                     PostgreSQL Database                     |
+|          (Relational Tables + pgvector 768-dim Vectors)     |
++-------------------------------------------------------------+
 ```
 
 ---
@@ -197,19 +205,22 @@ flowchart TD
 | **Frontend Core** | React | `^19.0.0` | UI Component Framework |
 | **Build System** | Vite | `^6.2.0` | Production Bundler & Dev Server |
 | **Styling** | Tailwind CSS | `^4.1.14` | Utility-First CSS Engine |
+| **UI Motion** | Motion | `^12.23.24` | Smooth Micro-animations & Transitions |
 | **Icons** | Lucide React | `^0.546.0` | UI Icons |
 | **Routing** | React Router DOM | `^7.13.1` | Client-side SPA Routing |
 | **HTTP Client** | Axios | `^1.18.1` | REST API Client & Interceptors |
 | **PDF Rendering** | PDF.js | `^5.6.205` | Browser Canvas PDF Previewer |
 | **Excel Export** | XLSX (SheetJS) | `^0.18.5` | Spreadsheet Export Engine |
 | **Backend Runtime** | Node.js | `v18+` | Server Runtime Environment |
-| **API Framework** | Express.js | `^4.21.2` | HTTP Server & REST API |
-| **Database ORM** | Prisma | `^6.4.1` | Type-Safe Database Client |
-| **Database Engine** | PostgreSQL | `v14+` | Relational Database Storage |
-| **Auth & Security** | JWT & bcryptjs | `^9.0.2` / `^3.0.2` | Token Auth & Password Hashing |
+| **API Framework** | Express.js | `^4.18.3` | HTTP Server & REST API |
+| **Database ORM** | Prisma | `^5.10.0` | Type-Safe Database Client with pgvector extension |
+| **Database Engine** | PostgreSQL | `v14+` | Relational & Vector Database Storage (Neon / Local) |
+| **Vector Search** | pgvector | `^0.2.1` | Cosine similarity vector search over 768-dim embeddings |
+| **Generative AI** | Google Gen AI SDK | `^2.26.0` | Gemini 2.5 Flash generation & gemini-embedding-2 |
+| **Auth & Security** | JWT & bcryptjs | `^9.0.2` / `^2.4.3` | Token Auth & Password Hashing |
 | **File Processing** | Multer | `^1.4.5-lts.1` | Multipart Form File Uploads |
-| **OCR Processing** | Tesseract.js | `^6.0.0` | Certificate Text Extraction |
-| **Testing** | Jest & Vitest | `^29.7` / `^4.1` | Unit & Integration Test Runners |
+| **OCR Processing** | Tesseract.js & Sharp | `^7.0.0` / `^0.35.3` | Certificate Text Extraction & Image Optimization |
+| **Testing** | Jest & Vitest | `^29.7.0` / `^4.1.10` | Unit & Integration Test Runners |
 | **Hosting** | Cloudflare Pages | Live | Frontend Static Edge Deployment |
 
 ---
@@ -218,48 +229,52 @@ flowchart TD
 
 ```text
 VVITU Placement Portal/
-├── frontend/                        # React 19 + Vite Frontend Project
-│   ├── public/                      # Static public assets (_redirects for SPA routing)
+├── frontend/                     # React 19 + Vite Frontend Project
+│   ├── public/                   # Static public assets (_redirects for SPA routing)
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── common/              # Reusable UI components (Modal, JobCard, DeleteJobDialog, etc.)
-│   │   │   └── layout/              # DashboardLayout, Sidebar, Header
-│   │   ├── context/                 # DataContext.jsx (Global Image & Profile State)
-│   │   ├── hooks/                   # Custom Hooks (useAuth, useDebounce, useDepartments)
+│   │   │   ├── common/           # Reusable UI components (Modal, JobCard, DeleteJobDialog, etc.)
+│   │   │   └── layout/           # DashboardLayout, Sidebar, Header
+│   │   ├── shared/
+│   │   │   └── components/
+│   │   │       └── AIAssistant/  # Floating AI Placement Assistant drawer & chat widget
+│   │   ├── context/              # DataContext.jsx (Global Image & Profile State)
+│   │   ├── hooks/                # Custom Hooks (useAuth, useDebounce, useDepartments)
 │   │   ├── pages/
-│   │   │   ├── admin/               # Admin pages (AdminDashboard, AdminJobs, AdminVerifications, etc.)
-│   │   │   ├── alumni/              # Alumni pages (AlumniDashboard, AlumniPostJob, AlumniMyJobs, etc.)
-│   │   │   ├── student/             # Student pages (StudentDashboard, StudentJobs, StudentProfile, etc.)
-│   │   │   ├── Login.jsx            # Authentication Login Page
-│   │   │   ├── Register.jsx         # Multi-role Registration Page
-│   │   │   └── NotFound.jsx         # 404 Catch-All Page
-│   │   ├── utils/                   # Client utilities (fileUrlResolver, imageUrl, axiosConfig, etc.)
-│   │   ├── App.jsx                  # Main App Router & lazyWithRetry Dynamic Loading
-│   │   └── main.jsx                 # Entry Point
+│   │   │   ├── admin/            # Admin pages (AdminDashboard, AdminJobs, AdminVerifications, etc.)
+│   │   │   ├── alumni/           # Alumni pages (AlumniDashboard, AlumniPostJob, AlumniMyJobs, etc.)
+│   │   │   ├── student/          # Student pages (StudentDashboard, StudentJobs, StudentProfile, etc.)
+│   │   │   ├── Login.jsx         # Authentication Login Page
+│   │   │   ├── Register.jsx      # Multi-role Registration Page
+│   │   │   └── NotFound.jsx      # 404 Catch-All Page
+│   │   ├── utils/                # Client utilities (fileUrlResolver, imageUrl, axiosConfig, etc.)
+│   │   ├── App.jsx               # Main App Router & lazyWithRetry Dynamic Loading
+│   │   └── main.jsx              # Application Entry Point
 │   ├── package.json
 │   ├── vite.config.ts
-│   └── wrangler.toml                # Cloudflare Pages Deployment Config
+│   └── wrangler.toml             # Cloudflare Pages Deployment Config
 │
-├── backend/                         # Node.js + Express Backend Project
+├── backend/                      # Node.js + Express Backend Project
 │   ├── prisma/
-│   │   └── schema.prisma            # Prisma Database Schema Definition
-│   ├── scripts/                     # Maintenance & DB Seed Utility Scripts
+│   │   └── schema.prisma         # Prisma Database Schema Definition (with pgvector)
+│   ├── scripts/                  # Maintenance, DB Seed, and Super Admin Reset Scripts
 │   ├── src/
-│   │   ├── config/                  # Configuration (db.js, env.js)
-│   │   ├── controllers/             # Express API Controllers
-│   │   ├── middleware/              # Auth, Upload, Error, and Validation Middlewares
-│   │   ├── routes/                  # Express Express API Routers
-│   │   ├── services/                # Business Logic Layer (Auth, Student, Alumni, Admin, Job, OCR)
-│   │   ├── utils/                   # File resolvers, password hashing, roll number parsing
-│   │   └── app.js                   # Express Application Setup
-│   ├── tests/                       # Jest Integration & Unit Test Suites (35 Test Suites)
-│   ├── uploads/                     # Server File Storage (/images, /documents, /resumes, /job-logos)
+│   │   ├── ai/                   # AI Service Layer (gemini.service.js, rag.service.js)
+│   │   ├── config/               # Configuration (db.js, env.js)
+│   │   ├── controllers/          # Express API Controllers (auth, student, alumni, admin, job, ai)
+│   │   ├── middleware/           # Auth, Upload, Error, and Validation Middlewares
+│   │   ├── routes/               # Express API Routers (auth, student, alumni, jobs, admin, ai)
+│   │   ├── services/             # Business Logic Layer (Auth, Student, Alumni, Admin, Job, OCR)
+│   │   ├── utils/                # File resolvers, password hashing, roll number parsing
+│   │   └── app.js                # Express Application Setup
+│   ├── tests/                    # Jest Integration & Unit Test Suites (35 Test Suites)
+│   ├── uploads/                  # Server File Storage (/images, /documents, /resumes, /job-logos)
 │   ├── package.json
-│   └── server.js                    # HTTP Server Entry Point
+│   └── server.js                 # HTTP Server Entry Point
 │
-├── walkthrough.md                   # Feature Walkthrough Documentation
-├── implementation_plan.md           # Technical Implementation Artifacts
-└── README.md                        # Global Production Documentation
+├── walkthrough.md                # Feature Walkthrough Documentation
+├── implementation_plan.md        # Technical Implementation Artifacts
+└── README.md                     # Global Production Documentation
 ```
 
 ---
@@ -269,6 +284,7 @@ VVITU Placement Portal/
 - **Dynamic Module Chunk Loading (`lazyWithRetry`)**: Custom lazy import wrapper in `App.jsx` preventing stale chunk deployment errors. If a new production build redeploys with new hash names, chunk mismatches reload the page once automatically instead of crashing.
 - **Robust Error Boundary**: `ErrorBoundary.jsx` catches rendering runtime errors and exposes a "Try Again" recovery action.
 - **Universal File URL Resolver (`fileUrlResolver.js`)**: Converts relative file paths (`/uploads/images/...`, `documents/...`) or legacy URLs into active backend origin URLs without returning `null` or clearing local storage state.
+- **AI Placement Assistant Floating Drawer**: An interactive floating chat component integrated into authenticated dashboards, offering conversational answers, Markdown response formatting, and source chips linking to active job listings.
 - **State Management**:
   - `DataContext.jsx`: Manages active user profile image, force-refresh cache-busting, and sync with `localStorage`.
   - `useAuth`: Custom hook exposing JWT credentials, user roles, user names, and logout routines.
@@ -281,23 +297,23 @@ The backend follows a strict **Layered Controller-Service-Repository Architectur
 
 ```text
 Client HTTP Request
-       │
-       ▼
+        │
+        ▼
 Express Router (`/api/...`)
-       │
-       ▼
+        │
+        ▼
 Middleware Layer (JWT Authentication, RBAC Authorization, Multer Uploads)
-       │
-       ▼
+        │
+        ▼
 Controller Layer (`*Controller.js` - Extract Request, Form Response)
-       │
-       ▼
-Service Layer (`*Service.js` - Validation, Business Logic, OCR Engine)
-       │
-       ▼
-Prisma ORM Client (`prisma.*`)
-       │
-       ▼
+        │
+        ▼
+Service Layer (`*Service.js` - Validation, Business Logic, OCR Engine, RAG Pipeline)
+        │
+        ▼
+Prisma ORM Client (`prisma.*`) with pgvector raw queries
+        │
+        ▼
 PostgreSQL Database
 ```
 
@@ -308,16 +324,15 @@ PostgreSQL Database
 ## 10. Authentication & Authorization
 
 - **Supported Roles**:
-  - `STUDENT`: Access to student dashboard, profile, application tracking, job board.
-  - `ALUMNI`: Access to alumni dashboard, job creation, candidate screening, applicant evaluation.
-  - `ADMIN`: Access to job moderation, student directory, alumni verification, bulk export, job deletion.
-  - `SUPER_ADMIN`: Access to admin account creation, permission management, audit logs.
-
+  - `STUDENT`: Access to student dashboard, profile, application tracking, job board, and AI assistant.
+  - `ALUMNI`: Access to alumni dashboard, job creation, candidate screening, and applicant evaluation.
+  - `ADMIN`: Access to job moderation, student directory, alumni verification, bulk export, job deletion, and RAG sync.
+  - `SUPER_ADMIN`: Access to admin account creation, permission management, and audit logs.
 - **Authentication Flow**:
   1. User submits credentials to `POST /api/auth/login`.
   2. `AuthService.login` verifies account status (`ACTIVE`) and checks `bcrypt` password hash.
   3. Server generates signed JWT token containing `userId`, `email`, and `role`.
-  4. Token returned in JSON response and attached as HttpOnly cookie.
+  4. Token returned in JSON response and attached as an HttpOnly cookie.
   5. Subsequent requests pass `Authorization: Bearer <token>`.
 
 ---
@@ -332,7 +347,7 @@ PostgreSQL Database
 
 ### Alumni Module & OCR Engine
 - Alumni registration requiring passout year, company, designation, and degree certificate upload.
-- Automated OCR verification engine analyzing degree images/PDFs using Tesseract text parsing to compare name, roll number, and institution against registration details.
+- Automated OCR verification engine analyzing degree images/PDFs using Tesseract text parsing and Sharp preprocessing to compare name, roll number, and institution against registration details.
 
 ### Admin & Moderation Module
 - Moderation queue for job postings (`APPROVE`, `REJECT`).
@@ -344,28 +359,59 @@ PostgreSQL Database
 
 ```text
 [Alumni Creates Job] ──> Status: PENDING
-                               │
-                               ▼
-                    [Admin Moderation Review]
-                    ┌──────────┴──────────┐
-                    ▼                     ▼
-             [Status: REJECTED]    [Status: APPROVED]
-                                          │
-                                          ▼
-                               [Published - Status: ACTIVE]
-                                          │
-                                          ▼
-                             [Student Fills Screening & Applies]
-                                          │
-                                          ▼
-                             [Status: APPLIED in Database]
-                                          │
-                                          ▼
-                            [Alumni/Admin Evaluates Candidate]
-                            ┌─────────────┴─────────────┐
-                            ▼                           ▼
-                   [Status: SHORTLISTED]       [Status: SELECTED]
+       │
+       ▼
+[Admin Moderation Review]
+ ┌──────────┴──────────┐
+ ▼                     ▼
+[Status: REJECTED]   [Status: APPROVED]
+                       │
+                       ├─> [Indexed in pgvector for RAG Assistant]
+                       │
+                       ▼
+             [Published - Status: ACTIVE]
+                       │
+                       ▼
+         [Student Fills Screening & Applies]
+                       │
+                       ▼
+             [Status: APPLIED in Database]
+                       │
+                       ▼
+         [Alumni/Admin Evaluates Candidate]
+          ┌─────────────┴─────────────┐
+          ▼                           ▼
+[Status: SHORTLISTED]        [Status: SELECTED]
 ```
+
+### AI Placement Assistant & RAG Subsystem
+
+The AI Placement Assistant delivers real-time query resolution regarding recruitment drives, eligibility rules, and institutional placement policies:
+
+```text
+User Question
+      │
+      ▼
+Authentication & Context Extraction (Role, Profile, CGPA, Applications)
+      │
+      ▼
+Question Embedding Generation (gemini-embedding-2 / 768 dimensions)
+      │
+      ▼
+Vector Cosine Similarity Retrieval (PostgreSQL pgvector <=> operator)
+      │
+      ▼
+Strict Grounding Guardrails (Anti-Hallucination & Anti-Prompt Injection)
+      │
+      ▼
+LLM Generation (Google Gemini 2.5 Flash SDK)
+      │
+      ▼
+Response + Verified Source Citations Returned to Client
+```
+
+- **Database-Grounded Context**: Queries against the user's active records (e.g., student CGPA, backlogs, existing job applications) ensure factual answers rather than estimations.
+- **Knowledge Base Sync**: When an administrator approves a job, it is split into chunks and indexed with 768-dimensional embeddings for immediate searchability.
 
 ---
 
@@ -388,6 +434,9 @@ erDiagram
     USER ||--o| STUDENT : "has student profile"
     USER ||--o| ALUMNI : "has alumni profile"
     USER ||--o| ADMIN_PROFILE : "has admin profile"
+    USER ||--o{ AI_CONVERSATION : "owns"
+    AI_CONVERSATION ||--o{ AI_MESSAGE : "contains"
+    KNOWLEDGE_DOCUMENT ||--o{ KNOWLEDGE_CHUNK : "split into"
     STUDENT ||--o{ APPLICATION : "submits"
     JOB ||--o{ APPLICATION : "receives"
     ALUMNI ||--o{ JOB : "posts"
@@ -400,7 +449,6 @@ erDiagram
         string role
         string accountStatus
     }
-
     STUDENT {
         bigint id PK
         bigint userId FK
@@ -410,7 +458,6 @@ erDiagram
         int backlogs
         boolean placementReady
     }
-
     ALUMNI {
         bigint id PK
         bigint userId FK
@@ -418,7 +465,6 @@ erDiagram
         string verificationStatus
         string verificationDocumentUrl
     }
-
     JOB {
         bigint id PK
         string title
@@ -428,13 +474,37 @@ erDiagram
         string status
         datetime deletedAt
     }
-
     APPLICATION {
         bigint id PK
         bigint jobId FK
         bigint studentId FK
         string status
         json screeningAnswers
+    }
+    KNOWLEDGE_DOCUMENT {
+        bigint id PK
+        string sourceId
+        string type
+        string title
+        text content
+    }
+    KNOWLEDGE_CHUNK {
+        bigint id PK
+        bigint documentId FK
+        text content
+        json metadata
+        vector embedding
+    }
+    AI_CONVERSATION {
+        bigint id PK
+        bigint userId FK
+    }
+    AI_MESSAGE {
+        bigint id PK
+        bigint conversationId FK
+        string role
+        text content
+        json sources
     }
 ```
 
@@ -443,6 +513,7 @@ erDiagram
 ## 14. REST API Documentation
 
 ### Authentication Endpoints (`/api/auth`)
+
 | Method | Endpoint | Auth | Description |
 | :--- | :--- | :--- | :--- |
 | `POST` | `/api/auth/register/student` | Public | Register a new student account |
@@ -453,6 +524,7 @@ erDiagram
 | `PUT` | `/api/auth/change-password` | Authenticated | Change account password |
 
 ### Student Endpoints (`/api/student`)
+
 | Method | Endpoint | Auth | Role | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `GET` | `/api/student/profile` | Required | `STUDENT` | Fetch academic & personal student profile |
@@ -463,6 +535,7 @@ erDiagram
 | `GET` | `/api/student/applications` | Required | `STUDENT` | Fetch student's submitted applications |
 
 ### Alumni Endpoints (`/api/alumni`)
+
 | Method | Endpoint | Auth | Role | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `GET` | `/api/alumni/profile` | Required | `ALUMNI` | Fetch alumni profile details |
@@ -470,6 +543,7 @@ erDiagram
 | `GET` | `/api/alumni/jobs/:jobId/applications` | Required | `ALUMNI` | Fetch candidates for an alumni's job posting |
 
 ### Job Endpoints (`/api/jobs`)
+
 | Method | Endpoint | Auth | Role | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `GET` | `/api/jobs/all` | Public | All | Fetch all jobs (with optional filters) |
@@ -480,6 +554,7 @@ erDiagram
 | `DELETE`| `/api/jobs/:id` | Required | `ADMIN`, `SUPER_ADMIN`, `ALUMNI` | Soft-delete a job posting |
 
 ### Admin Endpoints (`/api/admin`)
+
 | Method | Endpoint | Auth | Role | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `GET` | `/api/admin/stats` | Required | `ADMIN` | Fetch dashboard aggregate placement statistics |
@@ -492,11 +567,20 @@ erDiagram
 | `POST` | `/api/admin/users/students/export` | Required | `ADMIN` | Export student records (Excel, CSV, PDF) |
 
 ### Super Admin Endpoints (`/api/super-admin`)
+
 | Method | Endpoint | Auth | Role | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `GET` | `/api/super-admin/admins` | Required | `SUPER_ADMIN` | List administrator directory |
 | `POST` | `/api/super-admin/admins` | Required | `SUPER_ADMIN` | Provision a new administrator account |
 | `PUT` | `/api/super-admin/admins/:id` | Required | `SUPER_ADMIN` | Update administrator details or permissions |
+
+### AI Placement Assistant Endpoints (`/api/ai`)
+
+| Method | Endpoint | Auth | Role | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `POST` | `/api/ai/chat` | Required | `STUDENT`, `ALUMNI`, `ADMIN`, `SUPER_ADMIN` | Query AI assistant with grounded RAG context |
+| `POST` | `/api/ai/sync` | Required | `ADMIN`, `SUPER_ADMIN` | Trigger full indexing of approved jobs into vector database |
+| `GET` | `/api/ai/stats` | Required | `ADMIN`, `SUPER_ADMIN` | Inspect knowledge document and vector chunk counts |
 
 ---
 
@@ -505,18 +589,27 @@ erDiagram
 Create a `.env` file inside `backend/` and `frontend/`:
 
 ### Backend Environment (`backend/.env`)
+
 ```env
 PORT=8082
 NODE_ENV=development
 DATABASE_URL="postgresql://postgres:password@localhost:5432/vvitu_placement_portal?schema=public"
+DIRECT_URL="postgresql://postgres:password@localhost:5432/vvitu_placement_portal?schema=public"
 JWT_SECRET="your-super-secret-jwt-key-change-in-production"
 UPLOAD_DIR="./uploads"
 CORS_ORIGIN="http://localhost:5173"
+
+# Google Gemini & RAG Configuration
+GEMINI_API_KEY="your-google-gemini-api-key"
+GEMINI_MODEL="gemini-2.5-flash"
+EMBEDDING_MODEL="gemini-embedding-2"
+RAG_TOP_K="5"
 ```
 
 ### Frontend Environment (`frontend/.env`)
+
 ```env
-VITE_API_BASE_URL=http://localhost:8082/api
+VITE_API_BASE_URL="http://localhost:8082/api"
 ```
 
 ---
@@ -524,8 +617,8 @@ VITE_API_BASE_URL=http://localhost:8082/api
 ## 16. Local Installation & Setup Guide
 
 ### Prerequisites
-- **Node.js**: v18.0.0 or higher
-- **PostgreSQL**: v14.0 or higher running locally or via cloud host
+- **Node.js**: `v18.0.0` or higher
+- **PostgreSQL**: `v14.0` or higher with the `pgvector` extension enabled
 
 ### Step 1: Clone Repository
 ```bash
@@ -537,6 +630,9 @@ cd "VVITU Placement Portal"
 ```bash
 cd backend
 npm install
+
+# Ensure PostgreSQL has pgvector extension:
+# CREATE EXTENSION IF NOT EXISTS vector;
 
 # Push Prisma schema to PostgreSQL database
 npx prisma db push
@@ -555,12 +651,14 @@ npm install
 ```
 
 ### Step 4: Run Application Locally
+
 - **Start Backend API Server**:
   ```bash
   cd backend
   npm run dev
   # Server starts on http://localhost:8082
   ```
+
 - **Start Frontend Vite Dev Server**:
   ```bash
   cd frontend
@@ -580,7 +678,7 @@ npm test
 ```
 
 ### Frontend Vitest Test Suites
-Execute frontend unit tests:
+Execute frontend unit and component tests:
 ```bash
 cd frontend
 npm test
@@ -592,6 +690,7 @@ npm test
 - [x] Alumni degree document upload & OCR processing
 - [x] Job creation, moderation (`APPROVE`, `REJECT`), and soft-deletion
 - [x] Candidate eligibility check & pre-application screening modal submission
+- [x] Grounded RAG query resolution with cited job listings via AI Placement Assistant
 - [x] Bulk export of student records to Excel, CSV, and PDF
 
 ---
@@ -602,6 +701,7 @@ npm test
 - **Strict Role-Based Access Control**: Middleware enforces exact role permissions before executing controller logic.
 - **Deterministic Storage Security**: File paths are validated against allowed subdirectories (`images/`, `documents/`, `resumes/`, `job-logos/`) to prevent path traversal attacks.
 - **Soft Deletion Integrity**: Job deletions use soft-delete flags (`deletedAt`) to preserve relational integrity for student application records.
+- **Prompt Injection Defense**: System prompts treat retrieved vector chunks strictly as untrusted data reference to prevent jailbreaking or instruction hijacking.
 
 ---
 
@@ -609,7 +709,8 @@ npm test
 
 - **Stale Chunk Auto-Recovery**: Frontend `lazyWithRetry` reloads the page seamlessly if a production deployment updates bundle chunk hashes.
 - **Blob Error Decoding**: If binary document endpoints return a 404/500 JSON error, the frontend decodes ASCII text and renders a clean error card without crashing PDF.js.
-- **401 Silent Token Expiry**: Expired JWT tokens trigger silent redirection to login without dumping error tracebacks into browser console.
+- **401 Silent Token Expiry**: Expired JWT tokens trigger silent redirection to login without dumping error tracebacks into the browser console.
+- **Graceful AI Fallback**: If vector embeddings are unpopulated or the Gemini API is unavailable, informative fallback guidance is displayed to the user.
 
 ---
 
@@ -621,17 +722,18 @@ npm test
   - **Output Directory**: `dist`
 - **Backend API Deployment**: Node.js/Express service hosted on **Render** or Linux VPS.
   - **Production Origin**: `https://vvitu-placement-portal-api.onrender.com/api`
+- **Database**: PostgreSQL with `pgvector` hosted on **Neon DB**.
 
 ---
 
 ## 21. Known Limitations & Future Roadmap
 
 ### Known Limitations
-- **Local Disk Upload Storage**: Uploaded files reside on local server disk storage; multi-region production scale requires S3/GCS bucket integration.
-- **Single Institutional Scope**: Hardcoded for VVIT organizational structure.
+- **Local Disk Upload Storage**: Uploaded files reside on local server disk storage; multi-region production scale requires S3/Cloudinary/GCS bucket integration.
+- **Single Institutional Scope**: Optimized for VVIT organizational structure.
 
 ### Future Roadmap
-- [ ] AWS S3 / Google Cloud Storage Integration for distributed file assets.
+- [ ] AWS S3 / Cloudinary cloud storage integration for distributed file assets.
 - [ ] Automated Email & Push Notifications for application status updates.
 - [ ] AI-Powered Resume Scoring & ATS Match Rate Recommendations.
 - [ ] Real-time WebSocket Messaging between recruiters and applicants.
@@ -657,18 +759,3 @@ No explicit license has been specified for this repository. All rights reserved 
 
 **Developed for Vasireddy Venkatadri Institute of Technology (VVIT)**  
 *Maintained by Institutional Placement & Engineering Team*
-# #   A I   P l a c e m e n t   A s s i s t a n t  
- T h i s   p r o j e c t   i n c l u d e s   a n   A I   P l a c e m e n t   A s s i s t a n t   u s i n g   G o o g l e   G e m i n i   a n d   R e t r i e v a l - A u g m e n t e d   G e n e r a t i o n   ( R A G ) .  
- # # #   R A G   A r c h i t e c t u r e  
- U s e r   Q u e s t i o n   - >   A u t h e n t i c a t i o n   - >   Q u e s t i o n   E m b e d d i n g   - >   V e c t o r   R e t r i e v a l   ( p g v e c t o r )   - >   A u t h o r i z e d   C o n t e x t   - >   G e m i n i   L L M   - >   G r o u n d e d   A n s w e r   - >   S o u r c e s  
- # # #   E n v i r o n m e n t   V a r i a b l e s  
- E n s u r e   y o u   c o n f i g u r e   t h e   f o l l o w i n g   i n   y o u r   \ . e n v \ :  
- -   \ G E M I N I _ A P I _ K E Y = \ "   > >   R E A D M E . m d 
- e c h o    
- -  
- \ G E M I N I _ M O D E L = g e m i n i - 2 . 5 - f l a s h \ "  
- -   \ E M B E D D I N G _ M O D E L = t e x t - e m b e d d i n g - 0 0 4 \ "   > >   R E A D M E . m d 
- e c h o    
- -  
- \ R A G _ T O P _ K = 5 \ "  
- 
